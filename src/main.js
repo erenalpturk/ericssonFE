@@ -17,7 +17,7 @@ document.querySelector('#app').innerHTML = `
         <div id="resultArea" class="mt-4"></div>
       </div>
       <div class="card-footer text-muted text-center">
-        <small>Prepared by Alp | Inspired by Kübra K.</small>
+        <small>Prepared by Alp | Gulay S. sms istemesin diye yapilmistir.</small>
       </div>
     </div>
   </div>
