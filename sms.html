@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Request Example</title>
+    <script>
+        async function sendRequest() {
+            const api1Url = 'https://omni-zone-uat.turktelekom.com.tr/OdfCommerceBackendTtgTest2/auth';
+            const api2Url = 'https://omni-zone-uat.turktelekom.com.tr/OdfCommerceBackendTtgTest2/marvel/admin/utility/crypto/decrypt';
+            const inputValue = document.getElementById('inputField').value;
+            const loginBody = {
+                "userName": "Etiya_Admin",
+                "password": "aa1234"
+            };
+
+            try {
+                const response1 = await fetch(api1Url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(loginBody)
+                });
+                if (!response1.ok) {
+                    throw new Error('Login API request failed');
+                }
+                const authToken = response1.headers.get('authorization');
+                if (!authToken) {
+                    throw new Error('Authorization token not found');
+                }
+
+                const response2 = await fetch(api2Url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': authToken,
+                        'LocalToken': '1'
+                    },
+                    body: JSON.stringify({ value: inputValue })
+                });
+                if (!response2.ok) {
+                    throw new Error('Decrypt API request failed');
+                }
+                const result = await response2.json();
+
+                alert('Decrypted Result: ' + JSON.stringify(result));
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>API Request Example</h1>
+    <input type="text" id="inputField" placeholder="Enter value here">
+    <button onclick="sendRequest()">Send Request</button>
+</body>
+</html>
