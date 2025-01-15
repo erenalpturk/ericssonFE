@@ -16,6 +16,9 @@ document.querySelector('#app').innerHTML = `
         <button id="submitBtn" class="btn btn-primary">İstek Gönder</button>
         <div id="resultArea" class="mt-4"></div>
       </div>
+      <div class="card-footer text-muted text-center">
+        <small>Prepared by Alp | Inspired by Kübra K.</small>
+      </div>
     </div>
   </div>
 `
