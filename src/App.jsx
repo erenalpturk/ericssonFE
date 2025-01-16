@@ -23,6 +23,7 @@ function App() {
                         <Route path="/" element={<Home />} />
                         <Route path="/sms-decrypt" element={<SmsDecrypt />} />
                         <Route path="/dk-ilerletme" element={<DkIlerletme />} />
+                        <Route path="/postpaid-activation" element={<PostpaidActivation />} />
                         <Route 
                             path="/postpaid-activation" 
                             element={
