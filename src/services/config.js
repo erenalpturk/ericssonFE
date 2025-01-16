@@ -14,5 +14,11 @@ export const API_ENDPOINTS = {
     courierNotification: '/asb-rest/shipment/digital/courier/notification',
     validateIccid: '/asb-rest/iccid/validate/order',
     documentConfirmation: '/asb-rest/document/confirmation',
-    submitQuote: '/asb-rest/quote/submit'
+    submitQuote: '/asb-rest/quote/submit',
+    auth: '/auth',
+    iccidValidate: '/odf/quote/char/validate'
+}
+
+export const EXTERNAL_ENDPOINTS = {
+    iccidSet: 'https://iccid.vercel.app/iccid/getIccid/fonkpos'
 } 

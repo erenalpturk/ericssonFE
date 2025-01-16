@@ -13,9 +13,9 @@ function Navbar() {
                         <li className="nav-item">
                             <Link className="nav-link" to="/sms-decrypt">SMS Decrypt</Link>
                         </li>
-                        <li className="nav-item">
+                        {/* <li className="nav-item">
                             <Link className="nav-link" to="/dk-ilerletme">DK İlerletme</Link>
-                        </li>
+                        </li> */}
                     </ul>
                 </div>
             </div>

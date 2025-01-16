@@ -2,6 +2,7 @@ import { useState } from 'react'
 import EsimDk from './EsimDk'
 import FizikselDk from './FizikselDk'
 import EsimKimlik from './FizikselKimlik'
+import PostpaidActivation from './PostpaidActivation'
 import ApiLogger from './ApiLogger'
 
 function DkIlerletme() {
@@ -93,11 +94,20 @@ function DkIlerletme() {
                                 Fiziksel Sim ile Kimlik Doğrulama
                             </button>
                         </li>
+                        <li className="nav-item">
+                            <button 
+                                className={`nav-link ${activeTab === 'postpaid' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('postpaid')}
+                            >
+                                Postpaid Aktivasyon
+                            </button>
+                        </li>
                     </ul>
 
                     {activeTab === 'esimDk' && <EsimDk environment={environment} onApiCall={addApiLog} />}
                     {activeTab === 'fizikselDk' && <FizikselDk environment={environment} onApiCall={addApiLog} />}
                     {activeTab === 'esimKimlik' && <EsimKimlik environment={environment} onApiCall={addApiLog} />}
+                    {activeTab === 'postpaid' && <PostpaidActivation environment={environment} onApiCall={addApiLog} />}
 
                     <ApiLogger logs={apiLogs} />
                 </div>
