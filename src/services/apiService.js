@@ -1,5 +1,13 @@
 import { API_CONFIG, API_ENDPOINTS } from './config'
 
+const commonHeaders = {
+    'Content-Type': 'application/json',
+    'Accept': '*/*',
+    'Accept-Encoding': 'gzip, deflate, br',
+    'Connection': 'keep-alive',
+    'User-Agent': 'PostmanRuntime/7.43.0'
+}
+
 const createShipmentBody = (tid, customerOrder, state, status, statusID) => ({
     reqInfo: {
         transactionId: tid
@@ -177,9 +185,7 @@ export const sendDkRequest = async (environment, tid, customerOrder, step) => {
 
     const response = await fetch(url, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
+        headers: commonHeaders,
         body: JSON.stringify(
             createShipmentBody(
                 tid, 
@@ -205,9 +211,7 @@ export const validateIccid = async (environment, tid, customerOrder, iccid) => {
 
     const response = await fetch(url, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
+        headers: commonHeaders,
         body: JSON.stringify({
             reqInfo: {
                 transactionId: tid,
@@ -235,9 +239,7 @@ export const sendDocumentConfirmation = async (environment, tid, customerOrder) 
 
     const response = await fetch(url, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
+        headers: commonHeaders,
         body: JSON.stringify({
             generalParameterList: [
                 {
@@ -304,9 +306,7 @@ export const submitQuote = async (environment, tid, customerOrder) => {
 
     const response = await fetch(url, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
+        headers: commonHeaders,
         body: JSON.stringify({
             reqInfo: {
                 transactionId: tid,
