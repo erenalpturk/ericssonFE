@@ -212,7 +212,8 @@ export const validateIccid = async (baseUrl, authToken, iccid) => {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': authToken
+            'Authorization': authToken,
+            'LocalToken':'1'
         },
         body: JSON.stringify({
             "businessFlowInitializerRequest": {},
@@ -18311,9 +18312,8 @@ export const getIccid = async () => {
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify(data)
     })
-    
+
     if (!response.ok) {
         if (response.status === 404) {
             throw new Error('ICCID kalmamış olabilir')
