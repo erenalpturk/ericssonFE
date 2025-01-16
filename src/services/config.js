@@ -4,6 +4,9 @@ export const API_CONFIG = {
     },
     fonksiyonel: {
         baseUrl: 'https://omni-oab-bau.turktelekom.com.tr'
+    },
+    hotfix: {
+        baseUrl: 'https://omni-oab-hotfix.turktelekom.com.tr'
     }
 }
 

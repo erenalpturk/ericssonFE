@@ -51,6 +51,20 @@ function DkIlerletme() {
                                     Fonksiyonel
                                 </label>
                             </div>
+                            <div className="form-check">
+                                <input
+                                    type="radio"
+                                    className="form-check-input"
+                                    id="hotfix"
+                                    name="environment"
+                                    value="hotfix"
+                                    checked={environment === 'hotfix'}
+                                    onChange={(e) => setEnvironment(e.target.value)}
+                                />
+                                <label className="form-check-label" htmlFor="hotfix">
+                                    Hotfix
+                                </label>
+                            </div>
                         </div>
                     </div>
 
