@@ -18322,7 +18322,9 @@ export const getIccid = async () => {
     }
 
     
-    const iccid = String(await response.text())
-console.log(iccid)
+    // ... existing code ...
+    const iccid = String(await response.text()).replace(/['"]+/g, '')
+    console.log(iccid)
+// ... existing code ...
     return iccid
 } 
