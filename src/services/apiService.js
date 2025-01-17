@@ -18321,6 +18321,8 @@ export const getIccid = async () => {
         throw new Error(`ICCID isteği başarısız: ${response.status}`)
     }
 
-    const iccid = await response.text()
+    
+    const iccid = String(await response.text())
+console.log(iccid)
     return iccid
 } 
