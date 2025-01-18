@@ -55,10 +55,7 @@ export const getIccid = async () => {
     throw new Error(`ICCID isteği başarısız: ${response.status}`);
   }
 
-  // ... existing code ...
   const iccid = String(await response.text()).replace(/['"]+/g, "");
-  console.log(iccid);
-  // ... existing code ...
   return iccid;
 };
 
@@ -79,7 +76,8 @@ export const getMernis = async () => {
     throw new Error(`MERNIS isteği başarısız: ${response.status}`);
   }
 
-  const mernis = String(await response.text()).replace(/['"]+/g, "");
+  const mernis = await response.json();
+
   return mernis;
 };
 
@@ -87,14 +85,14 @@ export const checkBlackGreyList = async (environment, authToken, tckn) => {
   const baseUrl = API_CONFIG[environment].baseUrl;
   const endpoint = API_ENDPOINTS.checkBlackGreyList;
   const url = `${baseUrl}${endpoint}`;
-
+console.log(tckn)
   const response = await fetch(url, {
     method: "POST",
     headers: getCommonHeaders(authToken),
     body: JSON.stringify({
-      tckn: tckn,
+      tckn: tckn.tckn,
       bsnInterSpecShortCode: "REAL_SALE",
-      isCreateCustomer: true,
+      isCreateCustomer: true
     }),
   });
 

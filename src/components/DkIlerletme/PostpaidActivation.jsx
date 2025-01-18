@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { getAuthToken, getIccid, getMernis, checkBlackGreyList, inquireMernis, inquireMernisnalId, searchCustomer, checkNatId, validateMernisInfo, createCustomerWithNatId, inquireCustomerActiveLine, validateBlacklist, validateChannel, searchCustomerOrder, getCatalog, getOffering, retrieveOfferDetails, validateChannelWithOffer, initializeBusinessFlow, saveUserActionLog, retrieveMsisdnReservation, inquireStandardMsisdn, updateQuotePlan, getOngoingQuote, getCategorizedCharacteristics, validateIccid2, updateQuote, inquireDeputy, getAddressList, deputyCheckout, getSecurityQuestions, updateQuoteSecond, checkMsisdn, getContactInfo, inquireTariffType, sendDocumentToDFM, updateQuoteFourth, submitQuoteWithHeaders, sendResumeCallback, getDocuments, setIccidSold, addActivation } from '../../services/apiService'
+import PropTypes from 'prop-types'
 
 function PostpaidActivation({ environment, authToken, onApiCall }) {
     const [loading, setLoading] = useState(false)
@@ -44,9 +45,9 @@ function PostpaidActivation({ environment, authToken, onApiCall }) {
             setAuthorization(authToken)
 
             // ICCID al
-            onApiCall('ICCID Set')
-            const iccid = await getIccid()
-            setIccidPosFonk(iccid)
+           // onApiCall('ICCID Set')
+          //  const iccid = await getIccid()
+           // setIccidPosFonk(iccid)
 
             // MERNIS bilgisi al
             onApiCall('MERNIS Set')
@@ -427,6 +428,11 @@ function PostpaidActivation({ environment, authToken, onApiCall }) {
             </div>
         </div>
     )
+}
+
+PostpaidActivation.propTypes = {
+    environment: PropTypes.string.isRequired,
+    onApiCall: PropTypes.func.isRequired
 }
 
 export default PostpaidActivation 
