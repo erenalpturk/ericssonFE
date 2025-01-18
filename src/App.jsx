@@ -2,7 +2,6 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Home from './components/Home'
 import SmsDecrypt from './components/SmsDecrypt'
-import DkIlerletme from './components/DkIlerletme/DkIlerletme'
 import PostpaidActivation from './components/DkIlerletme/PostpaidActivation'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import 'bootstrap/dist/js/bootstrap.bundle.min.js'
@@ -22,7 +21,6 @@ function App() {
                     <Routes>
                         <Route path="/" element={<Home />} />
                         <Route path="/sms-decrypt" element={<SmsDecrypt />} />
-                        <Route path="/dk-ilerletme" element={<DkIlerletme />} />
                         <Route 
                             path="/postpaid-activation" 
                             element={
