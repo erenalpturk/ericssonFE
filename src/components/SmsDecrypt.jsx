@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import 'bootstrap/dist/js/bootstrap.bundle.min.js'
+import { DECRYPT_ENDPOINTS } from '../services/config'
 
 function SmsDecrypt() {
     const [loading, setLoading] = useState(false)
@@ -19,7 +20,6 @@ function SmsDecrypt() {
         let mounted = true;
 
         const getToken = async () => {
-            const api1Url = 'https://omni-zone-uat.turktelekom.com.tr/OdfCommerceBackendTtgTest2/auth'
             const loginBody = {
                 "userName": "Etiya_Admin",
                 "password": "aa1234"
@@ -30,7 +30,7 @@ function SmsDecrypt() {
             addLog('Token alınıyor...', 'info')
 
             try {
-                const response = await fetch(api1Url, {
+                const response = await fetch(DECRYPT_ENDPOINTS.auth, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -69,10 +69,54 @@ function SmsDecrypt() {
         }
     }, [])
 
+    const refreshToken = async () => {
+        setTokenError(null)
+        setAuthToken(null)
+        addLog('Token yenileniyor...', 'info')
+        
+        try {
+            const loginBody = {
+                "userName": "Etiya_Admin",
+                "password": "aa1234"
+            }
+
+            const response = await fetch(DECRYPT_ENDPOINTS.auth, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(loginBody)
+            })
+
+            if (!response.ok) {
+                throw new Error('Token alınamadı')
+            }
+
+            const token = response.headers.get('authorization')
+            if (!token) {
+                throw new Error('Authorization token bulunamadı')
+            }
+
+            setAuthToken(token)
+            setTokenError(null)
+            addLog('Token başarıyla yenilendi', 'success')
+            addLog(`Yeni Token: ${token.substring(0, 20)}...`, 'success')
+        } catch (error) {
+            setTokenError(error.message)
+            setAuthToken(null)
+            addLog(`Token yenileme hatası: ${error.message}`, 'error')
+        }
+    }
+
     const sendRequest = async (e) => {
         e.preventDefault()
-        const api2Url = 'https://omni-zone-uat.turktelekom.com.tr/OdfCommerceBackendTtgTest2/marvel/admin/utility/crypto/decrypt'
-        const inputValue = e.target.inputField.value
+        const inputValue = e.target.inputField.value.trim()
+
+        if (!inputValue) {
+            setError('Lütfen şifrelenmiş bir değer girin')
+            addLog('Boş değer girişi', 'error')
+            return
+        }
 
         if (!authToken) {
             setError('Token bulunamadı. Lütfen sayfayı yenileyin.')
@@ -87,7 +131,7 @@ function SmsDecrypt() {
             setError(null)
             setResult(null)
 
-            const response2 = await fetch(api2Url, {
+            const response2 = await fetch(DECRYPT_ENDPOINTS.decrypt, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -114,15 +158,42 @@ function SmsDecrypt() {
     }
 
     return (
-        <div className="container">
-            <div className="card">
+        <div className="container min-vh-100 d-flex flex-column justify-content-center align-items-center">
+            <div className="card h-100 shadow-sm bg-light">
                 <div className="card-header text-center">
-                    <h3 className="mb-0">SMS Decrypt</h3>
+                    <h3 className="mb-0 text-center">SMS Decrypt</h3>
                 </div>
-                <div className="card-body">
+                <div className="card-body ">
                     {tokenError && (
                         <div className="alert alert-danger mb-3">
-                            <strong>Token Hatası:</strong> {tokenError}
+                            <div className="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>Token Hatası:</strong> {tokenError}
+                                </div>
+                                <button 
+                                    className="btn btn-outline-danger btn-sm"
+                                    onClick={refreshToken}
+                                    disabled={loading}
+                                >
+                                    <i className="bi bi-arrow-clockwise me-1"></i>
+                                    Token Yenile
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                    {!tokenError && !authToken && (
+                        <div className="alert alert-warning mb-3">
+                            <div className="d-flex justify-content-between align-items-center">
+                                <div>Token bekleniyor...</div>
+                                <button 
+                                    className="btn btn-outline-warning btn-sm"
+                                    onClick={refreshToken}
+                                    disabled={loading}
+                                >
+                                    <i className="bi bi-arrow-clockwise me-1"></i>
+                                    Yeniden Dene
+                                </button>
+                            </div>
                         </div>
                     )}
                     <form onSubmit={sendRequest}>
@@ -136,6 +207,8 @@ function SmsDecrypt() {
                                 id="inputField"
                                 name="inputField"
                                 placeholder="Şifrelenmiş değeri giriniz"
+                                required
+                                minLength="1"
                             />
                         </div>
                         <div className="d-grid gap-2 mt-3">

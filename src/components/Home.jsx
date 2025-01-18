@@ -2,16 +2,43 @@ import { Link } from 'react-router-dom'
 
 function Home() {
     return (
-        <div className="container mt-5">
-            <h2 className="text-center mb-4">Hoş Geldiniz</h2>
-            <div className="row justify-content-center">
-                <div className="col-md-8">
-                    <div className="list-group">
-                        <Link to="/sms-decrypt" className="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                            SMS Decrypt
-                            <span className="badge bg-primary rounded-pill">→</span>
-                        </Link>
-                        {/* Diğer sayfalar için linkler buraya eklenecek */}
+        <div className="container min-vh-100 d-flex flex-column justify-content-center align-items-center">
+            <div className="text-center mb-5">
+                <h1 className="display-4 mb-3">Hoş Geldiniz!</h1>
+                <p className="lead text-muted">OMNI Test Team Otomasyon Araçları</p>
+            </div>
+            
+            <div className="row g-4 justify-content-center" style={{ maxWidth: '600px' }}>
+                <div className="col-12 col-md-6">
+                    <Link to="/sms-decrypt" className="text-decoration-none">
+                        <div className="card h-100 shadow-sm hover-shadow transition">
+                            <div className="card-body text-center p-5">
+                                <i className="bi bi-shield-lock-fill display-1 mb-3 text-primary"></i>
+                                <h3 className="card-title">SMS Decrypt</h3>
+                                <p className="card-text text-muted">
+                                    SMS şifre çözme aracı
+                                </p>
+                            </div>
+                        </div>
+                    </Link>
+                </div>
+                
+                <div className="col-12 col-md-6">
+                    <div className="card h-100 shadow-sm bg-light">
+                        <div className="card-body text-center p-5 position-relative">
+                            <div className="position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" 
+                                 style={{ backgroundColor: 'rgba(0,0,0,0.1)' }}>
+                                <span className="badge bg-warning px-3 py-2">
+                                    <i className="bi bi-gear-fill me-2"></i>
+                                    Yapım Aşamasında
+                                </span>
+                            </div>
+                            <i className="bi bi-phone-fill display-1 mb-3 text-secondary"></i>
+                            <h3 className="card-title">Postpaid Activation</h3>
+                            <p className="card-text text-muted">
+                                Hat aktivasyon otomasyonu
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -19,4 +46,4 @@ function Home() {
     )
 }
 
-export default Home 
+export default Home

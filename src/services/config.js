@@ -58,4 +58,9 @@ export const EXTERNAL_ENDPOINTS = {
     mernisSet: 'https://iccid.vercel.app/mernis/getmernis/fonkmernis',
     iccidSold: 'https://iccid.vercel.app/iccid/setSold',
     addActivation: 'https://iccid.vercel.app/iccid/EnesVeAlpDataniziCikti'
+}
+
+export const DECRYPT_ENDPOINTS = {
+    auth: 'https://omni-zone-uat.turktelekom.com.tr/OdfCommerceBackendTtgTest2/auth',
+    decrypt: 'https://omni-zone-uat.turktelekom.com.tr/OdfCommerceBackendTtgTest2/marvel/admin/utility/crypto/decrypt'
 } 

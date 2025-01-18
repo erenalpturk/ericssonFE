@@ -14,9 +14,6 @@ function Navbar() {
                             <Link className="nav-link" to="/sms-decrypt">SMS Decrypt</Link>
                         </li>
                         <li className="nav-item">
-                            <Link className="nav-link" to="/dk-ilerletme">DK İlerletme</Link>
-                        </li>
-                        <li className="nav-item">
                             <Link className="nav-link" to="/postpaid-activation">Postpaid Activation</Link>
                             
                         </li>

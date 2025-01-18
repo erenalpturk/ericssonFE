@@ -1,40 +1,20 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import Navbar from './components/Navbar'
 import Home from './components/Home'
 import SmsDecrypt from './components/SmsDecrypt'
 import PostpaidActivation from './components/DkIlerletme/PostpaidActivation'
-import 'bootstrap/dist/css/bootstrap.min.css'
-import 'bootstrap/dist/js/bootstrap.bundle.min.js'
-import './style.css'
 
 function App() {
-    // API çağrılarını loglamak için
-    const handleApiCall = (apiName) => {
-        console.log(`API çağrısı yapılıyor: ${apiName}`)
-    }
-
     return (
         <Router>
-            <div>
-                <Navbar />
-                <main className="py-4">
-                    <Routes>
-                        <Route path="/" element={<Home />} />
-                        <Route path="/sms-decrypt" element={<SmsDecrypt />} />
-                        <Route 
-                            path="/postpaid-activation" 
-                            element={
-                                <PostpaidActivation 
-                                    environment="fonksiyonel"
-                                    onApiCall={handleApiCall}
-                                />
-                            } 
-                        />
-                    </Routes>
-                </main>
+            <div className="min-vh-100 bg-light">
+                <Routes>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/sms-decrypt" element={<SmsDecrypt />} />
+                    <Route path="/postpaid-activation" element={<PostpaidActivation environment="regresyon" />} />
+                </Routes>
             </div>
         </Router>
     )
 }
 
-export default App 
+export default App
