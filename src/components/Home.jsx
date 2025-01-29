@@ -8,8 +8,8 @@ function Home() {
                 <p className="lead text-muted">OMNI Test Team Otomasyon Araçları</p>
             </div>
             
-            <div className="row g-4 justify-content-center" style={{ maxWidth: '600px' }}>
-                <div className="col-12 col-md-6">
+            <div className="row g-4 justify-content-center" style={{ maxWidth: '900px' }}>
+                <div className="col-12 col-md-4">
                     <Link to="/sms-decrypt" className="text-decoration-none">
                         <div className="card h-100 shadow-sm hover-shadow transition">
                             <div className="card-body text-center p-5">
@@ -23,7 +23,7 @@ function Home() {
                     </Link>
                 </div>
                 
-                <div className="col-12 col-md-6">
+                <div className="col-12 col-md-4">
                     <div className="card h-100 shadow-sm bg-light">
                         <div className="card-body text-center p-5 position-relative">
                             <div className="position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" 
@@ -40,6 +40,20 @@ function Home() {
                             </p>
                         </div>
                     </div>
+                </div>
+
+                <div className="col-12 col-md-4">
+                    <Link to="/iccid-to-sql" className="text-decoration-none">
+                        <div className="card h-100 shadow-sm hover-shadow transition">
+                            <div className="card-body text-center p-5">
+                                <i className="bi bi-database-fill display-1 mb-3 text-success"></i>
+                                <h3 className="card-title">ICCID to SQL</h3>
+                                <p className="card-text text-muted">
+                                    ICCID listesini SQL sorgusuna dönüştürür
+                                </p>
+                            </div>
+                        </div>
+                    </Link>
                 </div>
             </div>
         </div>
