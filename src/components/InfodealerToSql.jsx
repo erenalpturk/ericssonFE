@@ -1,14 +1,12 @@
 import React, { useState } from 'react';
 
-const IccidToSql = () => {
+const InfodealerToSql = () => {
     const [input, setInput] = useState('');
     const [output, setOutput] = useState('');
     const [table, setTable] = useState('geodis');
     const [column, setColumn] = useState('mticid');
     const [schema, setSchema] = useState('dsfutil');
 
-
-    
 
     const handleConvert = () => {
         // Girdiyi satırlara böl ve boş satırları temizle
@@ -18,7 +16,7 @@ const IccidToSql = () => {
             .filter(line => line.length > 0);
 
         
-        const sqlQuery = `SELECT * FROM ${schema}.${table} WHERE ${column} IN (${
+        const sqlQuery = `INSERT INTO ${schema}.${table} (${column}) VALUES (${
             iccids
                 .map(iccid => `'${iccid}'`)
                 .join(',\n')
@@ -36,33 +34,6 @@ const IccidToSql = () => {
             <h2>ICCID to SQL Converter</h2>
             <div className="row">
                 <div className="col-md-6">
-                    <div className="form-group">
-                        <label>Schema:</label>
-                        <input
-                            type="text"
-                            className="form-control"
-                            value={schema}
-                            onChange={(e) => setSchema(e.target.value)}
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label>Table:</label>
-                        <input
-                            type="text"
-                            className="form-control"
-                            value={table}
-                            onChange={(e) => setTable(e.target.value)}
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label>Column:</label>
-                        <input
-                            type="text"
-                            className="form-control"
-                            value={column}
-                            onChange={(e) => setColumn(e.target.value)}
-                        />
-                    </div>
                     <div className="form-group">
                         <label>ICCID Listesi:</label>
                         <textarea
@@ -96,4 +67,4 @@ const IccidToSql = () => {
     );
 };
 
-export default IccidToSql; 
+export default InfodealerToSql; 
