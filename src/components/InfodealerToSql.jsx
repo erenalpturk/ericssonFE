@@ -8,21 +8,18 @@ const InfodealerToSql = () => {
     const [schema, setSchema] = useState('dsfutil');
 
 
+    function generateInsertStatements(iccidString) {
+        const mticidList = iccidString.trim().split('\n');
+            const insertValues = mticidList.map(mticid => {
+                return `INSERT INTO dsfutil.geodis (MTDTMU, C1NLIV, MTART, MTSN, MTICID, MTNTEL, REC_DATE, GE_RO, DEALER_COD, INSERT_COD) VALUES
+            ('23.03.10', '0080278379', '113864', null, '${mticid}', null, TO_DATE('24-MAR-10 00:00:00', 'DD-MON-RR HH24:MI:SS'), 'GE', '550005', '51712')`;
+            });
+            const fullInsertStatement = `${insertValues.join(';\n')};`;
+            setOutput(fullInsertStatement);
+        }
+
     const handleConvert = () => {
-        // Girdiyi satırlara böl ve boş satırları temizle
-        const iccids = input
-            .split('\n')
-            .map(line => line.trim())
-            .filter(line => line.length > 0);
-
-        
-        const sqlQuery = `INSERT INTO ${schema}.${table} (${column}) VALUES (${
-            iccids
-                .map(iccid => `'${iccid}'`)
-                .join(',\n')
-        })`;
-
-        setOutput(sqlQuery);
+      generateInsertStatements(input);
     };
 
     const handleCopy = () => {
@@ -31,7 +28,7 @@ const InfodealerToSql = () => {
 
     return (
         <div className="container mt-4">
-            <h2>ICCID to SQL Converter</h2>
+            <h2>Infodealer to Insert Converter</h2>
             <div className="row">
                 <div className="col-md-6">
                     <div className="form-group">
