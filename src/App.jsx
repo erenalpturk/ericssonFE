@@ -5,6 +5,7 @@ import SmsDecrypt from './components/SmsDecrypt'
 import PostpaidActivation from './components/DkIlerletme/PostpaidActivation'
 import IccidToSql from './components/IccidToSql'
 import InfodealerToSql from './components/InfodealerToSql'
+import InfodealerToSqlUpdate from './components/InfodealerToSqlUpdate'
 function App() {
     const [apiLogs, setApiLogs] = useState([])
 
@@ -30,6 +31,7 @@ function App() {
                     />
                     <Route path="/iccid-to-sql" element={<IccidToSql />} />
                     <Route path="/infodealer-to-sql" element={<InfodealerToSql />} />
+                    <Route path="/infodealer-to-sql-update" element={<InfodealerToSqlUpdate />} />
                 </Routes>
                 {apiLogs.length > 0 && (
                     <div className="position-fixed bottom-0 end-0 p-3" style={{maxHeight: '300px', overflowY: 'auto', width: '300px'}}>

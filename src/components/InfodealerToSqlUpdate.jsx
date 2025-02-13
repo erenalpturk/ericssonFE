@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const InfodealerToSql = () => {
+const InfodealerToSqlUpdate = () => {
     const [input, setInput] = useState('');
     const [output, setOutput] = useState('');
 
@@ -8,8 +8,7 @@ const InfodealerToSql = () => {
     function generateInsertStatements(iccidString) {
         const mticidList = iccidString.trim().split('\n');
             const insertValues = mticidList.map(mticid => {
-                return `INSERT INTO dsfutil.geodis (MTDTMU, C1NLIV, MTART, MTSN, MTICID, MTNTEL, REC_DATE, GE_RO, DEALER_COD, INSERT_COD) VALUES
-            ('23.03.10', '0080278379', '113864', null, '${mticid}', null, TO_DATE('24-MAR-10 00:00:00', 'DD-MON-RR HH24:MI:SS'), 'GE', '550005', '51712')`;
+                return `update dsfutil.geodis set dealer_cod=550005 where mticid='${mticid}'`;
             });
             const fullInsertStatement = `${insertValues.join(';\n')};`;
             setOutput(fullInsertStatement);
@@ -25,7 +24,7 @@ const InfodealerToSql = () => {
 
     return (
         <div className="container mt-4">
-            <h2>Infodealer to Insert Converter</h2>
+            <h2>Infodealer to Update Converter</h2>
             <div className="row">
                 <div className="col-md-6">
                     <div className="form-group">
@@ -61,4 +60,4 @@ const InfodealerToSql = () => {
     );
 };
 
-export default InfodealerToSql; 
+export default InfodealerToSqlUpdate; 
