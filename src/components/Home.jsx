@@ -94,6 +94,19 @@ function Home() {
                         </div>
                     </Link>
                 </div>
+                <div className="col-12 col-md-4">
+                    <Link to="/cudb-feed" className="text-decoration-none">
+                        <div className="card h-100 shadow-sm hover-shadow transition">
+                            <div className="card-body text-center p-5">
+                                <i className="bi bi-arrow-repeat display-1 mb-3 text-info"></i>
+                                <h3 className="card-title">CUDB Feed</h3>
+                                <p className="card-text text-muted">
+                                    CUDB Feed işlemi için API entegrasyonu
+                                </p>
+                            </div>
+                        </div>
+                    </Link>
+                </div>
             </div>
         </div>
     )
