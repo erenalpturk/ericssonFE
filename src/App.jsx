@@ -9,6 +9,7 @@ import SelfybestInsertSql from './components/SelfybestInsertSql'
 import InfodealerToSqlUpdate from './components/InfodealerToSqlUpdate'
 import CudbFeed from './components/CudbFeed'
 import IccidManagement from './components/IccidManagement';
+import CourierActions from './components/CourierActions';
 
 
 function App() {
@@ -40,6 +41,7 @@ function App() {
                     <Route path="/selfybest-insert-sql" element={<SelfybestInsertSql />} />
                     <Route path="/cudb-feed" element={<CudbFeed />} />
                     <Route path="/iccid-management" element={<IccidManagement />} />
+                    <Route path="/courier-actions" element={<CourierActions onApiCall={handleApiCall} />} />
                 </Routes>
                 {apiLogs.length > 0 && (
                     <div className="position-fixed bottom-0 end-0 p-3" style={{maxHeight: '300px', overflowY: 'auto', width: '300px'}}>
