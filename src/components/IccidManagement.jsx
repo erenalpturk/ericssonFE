@@ -51,8 +51,8 @@ const IccidManagement = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [selectedType, setSelectedType] = useState('fonkpos');
   const [customType, setCustomType] = useState('');
-  //const baseUrl = 'https://iccid.vercel.app';
-  const baseUrl = 'http://localhost:5432';
+  const baseUrl = 'https://iccid.vercel.app';
+  //const baseUrl = 'http://localhost:5432';
   const iccidTypes = [
     { value: 'fonkpos', label: 'Fonksiyonel Postpaid' },
     { value: 'regpos', label: 'Regresyon Postpaid' },
