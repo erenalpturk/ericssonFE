@@ -8,6 +8,8 @@ import InfodealerToSql from './components/InfodealerToSql'
 import SelfybestInsertSql from './components/SelfybestInsertSql'
 import InfodealerToSqlUpdate from './components/InfodealerToSqlUpdate'
 import CudbFeed from './components/CudbFeed'
+import IccidManagement from './components/IccidManagement';
+
 
 function App() {
     const [apiLogs, setApiLogs] = useState([])
@@ -37,6 +39,7 @@ function App() {
                     <Route path="/infodealer-to-sql-update" element={<InfodealerToSqlUpdate />} />
                     <Route path="/selfybest-insert-sql" element={<SelfybestInsertSql />} />
                     <Route path="/cudb-feed" element={<CudbFeed />} />
+                    <Route path="/iccid-management" element={<IccidManagement />} />
                 </Routes>
                 {apiLogs.length > 0 && (
                     <div className="position-fixed bottom-0 end-0 p-3" style={{maxHeight: '300px', overflowY: 'auto', width: '300px'}}>
