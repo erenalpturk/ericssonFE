@@ -30,6 +30,8 @@ import {
 } from '@mui/material';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import SearchIcon from '@mui/icons-material/Search';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const IccidManagement = () => {
   const [iccidText, setIccidText] = useState('');
@@ -38,7 +40,6 @@ const IccidManagement = () => {
   const [selectedIccids, setSelectedIccids] = useState([]);
   const [selectedActivations, setSelectedActivations] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState({ type: '', text: '' });
   const [activeTab, setActiveTab] = useState(0);
   const [orderBy, setOrderBy] = useState('');
   const [order, setOrder] = useState('asc');
@@ -50,7 +51,8 @@ const IccidManagement = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [selectedType, setSelectedType] = useState('fonkpos');
   const [customType, setCustomType] = useState('');
-
+  //const baseUrl = 'https://iccid.vercel.app';
+  const baseUrl = 'http://localhost:5432';
   const iccidTypes = [
     { value: 'fonkpos', label: 'Fonksiyonel Postpaid' },
     { value: 'regpos', label: 'Regresyon Postpaid' },
@@ -58,6 +60,7 @@ const IccidManagement = () => {
     { value: 'regpre', label: 'Regresyon Prepaid' },
     { value: 'custom', label: 'Diğer' }
   ];
+  const statusOptions = ['available', 'reserved', 'sold'];
 
   useEffect(() => {
     fetchActivations();
@@ -67,12 +70,12 @@ const IccidManagement = () => {
   const fetchIccids = async () => {
     try {
       setLoading(true);
-      const response = await fetch('https://iccid.vercel.app/iccid/getAll', {
+      const response = await fetch(`${baseUrl}/iccid/getAll`, {
         method: 'POST'});
       const data = await response.json();
       setIccids(data);
     } catch (error) {
-      setMessage({ type: 'error', text: 'ICCID\'ler yüklenirken bir hata oluştu' });
+      toast.error('ICCID\'ler yüklenirken bir hata oluştu.', { position: 'top-right', autoClose: 3000 });
     } finally {
       setLoading(false);
     }
@@ -81,12 +84,12 @@ const IccidManagement = () => {
   const fetchActivations = async () => {
     try {
       setLoading(true);
-      const response = await fetch('https://iccid.vercel.app/iccid/enesvealpdatalarinizigetiriyoru', {
+      const response = await fetch(`${baseUrl}/iccid/enesvealpdatalarinizigetiriyoru`, {
         method: 'POST'});
       const data = await response.json();
       setActivations(data);
     } catch (error) {
-      setMessage({ type: 'error', text: 'Veriler yüklenirken bir hata oluştu' });
+      toast.error('Veriler yüklenirken bir hata oluştu.', { position: 'top-right', autoClose: 3000 });
     } finally {
       setLoading(false);
     }
@@ -96,7 +99,7 @@ const IccidManagement = () => {
     try {
       setLoading(true);
       const type = selectedType === 'custom' ? customType : selectedType;
-      const response = await fetch(`https://iccid.vercel.app/iccid/formatAndInsertIccids/${type}`, {
+      const response = await fetch(`${baseUrl}/iccid/formatAndInsertIccids/${type}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'text/plain',
@@ -104,13 +107,13 @@ const IccidManagement = () => {
         body: iccidText,
       });
       const data = await response.json();
-      setMessage({ type: 'success', text: data.message });
+      toast.success(data.message, { position: 'top-right', autoClose: 1000 });
       setIccidText('');
       setCustomType('');
       setSelectedType('fonkpos');
       fetchIccids();
     } catch (error) {
-      setMessage({ type: 'error', text: 'ICCID\'ler eklenirken bir hata oluştu' });
+      toast.error('ICCID\'ler eklenirken bir hata oluştu.', { position: 'top-right', autoClose: 3000 });
     } finally {
       setLoading(false);
     }
@@ -118,13 +121,13 @@ const IccidManagement = () => {
 
   const handleBulkDelete = async () => {
     if (selectedIccids.length === 0) {
-      setMessage({ type: 'error', text: 'Lütfen silinecek ICCID\'leri seçin' });
+      toast.error('Lütfen silinecek ICCID\'leri seçin', { position: 'top-right', autoClose: 3000 });
       return;
     }
 
     try {
       setLoading(true);
-      const response = await fetch('https://iccid.vercel.app/iccid/bulk-delete', {
+      const response = await fetch(`${baseUrl}/iccid/bulk-delete`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -132,11 +135,11 @@ const IccidManagement = () => {
         body: JSON.stringify({ iccids: selectedIccids }),
       });
       const data = await response.json();
-      setMessage({ type: 'success', text: data.message });
+      toast.success(data.message, { position: 'top-right', autoClose: 1000 });
       setSelectedIccids([]);
       fetchIccids();
     } catch (error) {
-      setMessage({ type: 'error', text: 'ICCID\'ler silinirken bir hata oluştu' });
+      toast.error('ICCID\'ler silinirken bir hata oluştu.', { position: 'top-right', autoClose: 3000 });
     } finally {
       setLoading(false);
     }
@@ -382,6 +385,32 @@ const IccidManagement = () => {
     setPage(0);
   };
 
+  const handleStatusChange = async (iccid, newStatus) => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${baseUrl}/iccid/setstatus`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ iccid, status: newStatus }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        toast.success('Statü başarıyla güncellendi.', { position: 'top-right', autoClose: 1000 });
+        setOrderBy('iccid');
+        setOrder('asc');
+        fetchIccids();
+      } else {
+        toast.error(data.message || 'Statü güncellenemedi.', { position: 'top-right', autoClose: 3000 });
+      }
+    } catch (error) {
+      toast.error('Statü güncellenirken bir hata oluştu.', { position: 'top-right', autoClose: 3000 });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const renderTable = (data, columns, selectedItems, onSelect) => {
     const sortedAndFilteredData = filterData(sortData(data));
     const paginatedData = sortedAndFilteredData.slice(
@@ -405,7 +434,21 @@ const IccidManagement = () => {
                   </TableCell>
                   {columns.map((column) => (
                     <TableCell key={column.field}>
-                      {column.valueFormatter ? column.valueFormatter(row[column.field]) : row[column.field]}
+                      {activeTab === 0 && column.field === 'stock' ? (
+                        <FormControl size="small" fullWidth>
+                          <Select
+                            value={row.stock}
+                            onChange={e => handleStatusChange(row.iccid, e.target.value)}
+                            disabled={loading}
+                          >
+                            {statusOptions.map(option => (
+                              <MenuItem key={option} value={option}>{option}</MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                      ) : (
+                        column.valueFormatter ? column.valueFormatter(row[column.field]) : row[column.field]
+                      )}
                     </TableCell>
                   ))}
                 </TableRow>
@@ -436,6 +479,11 @@ const IccidManagement = () => {
       field: 'cdate', 
       headerName: 'Oluşturulma Tarihi',
       valueFormatter: (value) => new Date(value).toLocaleString('tr-TR')
+    },
+    { 
+      field: 'updated_at', 
+      headerName: 'Güncellenme Tarihi',
+      valueFormatter: (value) => new Date(value).toLocaleString('tr-TR')
     }
   ];
 
@@ -449,20 +497,20 @@ const IccidManagement = () => {
       field: 'created_at', 
       headerName: 'Oluşturulma Tarihi',
       valueFormatter: (value) => new Date(value).toLocaleString('tr-TR')
+    },
+    { 
+      field: 'updated_at', 
+      headerName: 'Güncellenme Tarihi',
+      valueFormatter: (value) => new Date(value).toLocaleString('tr-TR')
     }
   ];
 
   return (
     <Box sx={{ p: 3 }}>
+      <ToastContainer />
       <Typography variant="h4" gutterBottom>
         ICCID Yönetimi
       </Typography>
-
-      {message.text && (
-        <Alert severity={message.type} sx={{ mb: 2 }}>
-          {message.text}
-        </Alert>
-      )}
 
       <Paper sx={{ p: 2, mb: 3 }}>
         <Typography variant="h6" gutterBottom>
