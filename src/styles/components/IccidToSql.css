@@ -1,0 +1,61 @@
+.template-section {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background-color: var(--bg-secondary);
+    border-radius: 0.5rem;
+}
+
+.template-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+}
+
+.template-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    background: linear-gradient(90deg, #f0f4ff 0%, #e0e7ff 100%);
+    border: none;
+    border-radius: 1.5rem;
+    color: #2d3748;
+    font-size: 1rem;
+    font-weight: 600;
+    box-shadow: 0 2px 12px 0 rgba(80, 112, 255, 0.10);
+    transition: all 0.18s cubic-bezier(.4,0,.2,1);
+    cursor: pointer;
+    outline: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.template-btn i {
+    font-size: 1.35rem;
+    color: #6366f1;
+    transition: color 0.18s cubic-bezier(.4,0,.2,1);
+}
+
+.template-btn:hover, .template-btn:focus {
+    background: linear-gradient(90deg, #6366f1 0%, #60a5fa 100%);
+    color: #fff;
+    transform: scale(1.045);
+    box-shadow: 0 4px 24px 0 rgba(80, 112, 255, 0.18);
+}
+
+.template-btn:hover i, .template-btn:focus i {
+    color: #fff;
+}
+
+.template-btn.active {
+    background: linear-gradient(90deg, #7c3aed 0%, #6366f1 100%);
+    color: #fff;
+    box-shadow: 0 6px 32px 0 rgba(124, 58, 237, 0.18);
+    transform: scale(1.07);
+}
+
+.template-btn.active i {
+    color: #fff;
+} 

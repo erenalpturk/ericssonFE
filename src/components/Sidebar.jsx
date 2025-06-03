@@ -30,30 +30,30 @@ function Sidebar({ isCollapsed, onToggle }) {
             label: 'ICCID to SQL',
             color: 'text-emerald-500'
         },
-        { 
-            path: '/infodealer-to-sql', 
-            icon: 'bi-database-add', 
-            label: 'Infodealer Insert',
-            color: 'text-emerald-600'
-        },
-        { 
-            path: '/infodealer-to-sql-update', 
-            icon: 'bi-database-up', 
-            label: 'Infodealer Update',
-            color: 'text-emerald-600'
-        },
-        { 
-            path: '/selfybest-insert-sql', 
-            icon: 'bi-database-gear', 
-            label: 'Selfybest Insert',
-            color: 'text-emerald-600'
-        },
-        { 
-            path: '/cudb-feed', 
-            icon: 'bi-arrow-repeat', 
-            label: 'CUDB Feed',
-            color: 'text-cyan-500'
-        },
+        // { 
+        //     path: '/infodealer-to-sql', 
+        //     icon: 'bi-database-add', 
+        //     label: 'Infodealer Insert',
+        //     color: 'text-emerald-600'
+        // },
+        // { 
+        //     path: '/infodealer-to-sql-update', 
+        //     icon: 'bi-database-up', 
+        //     label: 'Infodealer Update',
+        //     color: 'text-emerald-600'
+        // },
+        // { 
+        //     path: '/selfybest-insert-sql', 
+        //     icon: 'bi-database-gear', 
+        //     label: 'Selfybest Insert',
+        //     color: 'text-emerald-600'
+        // },
+        // { 
+        //     path: '/cudb-feed', 
+        //     icon: 'bi-arrow-repeat', 
+        //     label: 'CUDB Feed',
+        //     color: 'text-cyan-500'
+        // },
         { 
             path: '/iccid-management', 
             icon: 'bi-gear-wide-connected', 
