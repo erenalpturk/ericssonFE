@@ -85,7 +85,7 @@ export const checkBlackGreyList = async (environment, authToken, tckn) => {
   const baseUrl = API_CONFIG[environment].baseUrl;
   const endpoint = API_ENDPOINTS.checkBlackGreyList;
   const url = `${baseUrl}${endpoint}`;
-console.log(tckn)
+
   const response = await fetch(url, {
     method: "POST",
     headers: getCommonHeaders(authToken),
