@@ -10,6 +10,7 @@ function SmsDecrypt() {
     const [authToken, setAuthToken] = useState(null)
     const [tokenError, setTokenError] = useState(null)
     const [apiLogs, setApiLogs] = useState([])
+    const [inputValue, setInputValue] = useState('')
 
     const addLog = (message, type = 'info') => {
         const timestamp = new Date().toLocaleTimeString()
@@ -110,9 +111,9 @@ function SmsDecrypt() {
 
     const sendRequest = async (e) => {
         e.preventDefault()
-        const inputValue = e.target.inputField.value.trim()
+        const trimmedValue = inputValue.trim()
 
-        if (!inputValue) {
+        if (!trimmedValue) {
             setError('Lütfen şifrelenmiş bir değer girin')
             addLog('Boş değer girişi', 'error')
             return
@@ -124,7 +125,7 @@ function SmsDecrypt() {
             return
         }
 
-        addLog(`Şifrelenmiş değer gönderiliyor: ${inputValue}`, 'info')
+        addLog(`Şifrelenmiş değer gönderiliyor: ${trimmedValue}`, 'info')
 
         try {
             setLoading(true)
@@ -138,7 +139,7 @@ function SmsDecrypt() {
                     'Authorization': authToken,
                     'LocalToken': '1'
                 },
-                body: JSON.stringify({ value: inputValue })
+                body: JSON.stringify({ value: trimmedValue })
             })
 
             if (!response2.ok) {
@@ -157,144 +158,269 @@ function SmsDecrypt() {
         }
     }
 
+    const clearAll = () => {
+        setInputValue('')
+        setResult(null)
+        setError(null)
+        setApiLogs([])
+    }
+
+    const copyResult = async () => {
+        if (result) {
+            try {
+                await navigator.clipboard.writeText(JSON.stringify(result, null, 2))
+                addLog('Sonuç panoya kopyalandı', 'success')
+            } catch (err) {
+                addLog('Kopyalama başarısız', 'error')
+            }
+        }
+    }
+
+    const getTokenStatus = () => {
+        if (tokenError) return { status: 'error', text: 'Token Hatası', color: 'text-red-500' }
+        if (!authToken) return { status: 'loading', text: 'Token Yükleniyor', color: 'text-yellow-500' }
+        return { status: 'success', text: 'Token Aktif', color: 'text-green-500' }
+    }
+
+    const tokenStatus = getTokenStatus()
+
     return (
-        <div className="container min-vh-100 d-flex flex-column justify-content-center align-items-center">
-            <div className="card h-100 shadow-sm bg-light">
-                <div className="card-header text-center">
-                    <h3 className="mb-0 text-center">SMS Decrypt</h3>
+        <div className="modern-page">
+            {/* Header Section */}
+            <div className="page-header">
+                <div className="header-content">
+                    <div className="header-icon">
+                        <i className="bi bi-shield-lock-fill text-purple-500"></i>
+                    </div>
+                    <div className="header-text">
+                        <h1>SMS Decrypt Tool</h1>
+                        <p>Şifrelenmiş SMS değerlerini güvenli şekilde çözün</p>
+                    </div>
                 </div>
-                <div className="card-body ">
-                    {tokenError && (
-                        <div className="alert alert-danger mb-3">
-                            <div className="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <strong>Token Hatası:</strong> {tokenError}
+                <div className="stats-badge">
+                    <i className={`bi ${tokenStatus.status === 'success' ? 'bi-shield-check' : tokenStatus.status === 'error' ? 'bi-shield-x' : 'bi-shield'}`}></i>
+                    <span className={tokenStatus.color}>{tokenStatus.text}</span>
+                </div>
+            </div>
+
+            {/* Main Content */}
+            <div className="content-grid">
+                {/* Input Section */}
+                <div className="input-card">
+                    <div className="card-header">
+                        <div className="card-title">
+                            <i className="bi bi-key-fill text-blue-500"></i>
+                            <span>Şifrelenmiş Değer</span>
+                        </div>
+                        <div className="card-actions">
+                            <button 
+                                className="action-btn secondary"
+                                onClick={clearAll}
+                                disabled={!inputValue && !result && apiLogs.length === 0}
+                            >
+                                <i className="bi bi-trash"></i>
+                                Temizle
+                            </button>
+                        </div>
+                    </div>
+                    <div className="card-body">
+                        {/* Token Status Alert */}
+                        {tokenError && (
+                            <div className="status-alert error">
+                                <div className="alert-content">
+                                    <i className="bi bi-exclamation-triangle-fill"></i>
+                                    <div>
+                                        <strong>Token Hatası:</strong>
+                                        <p>{tokenError}</p>
+                                    </div>
                                 </div>
                                 <button 
-                                    className="btn btn-outline-danger btn-sm"
+                                    className="action-btn danger small"
                                     onClick={refreshToken}
                                     disabled={loading}
                                 >
-                                    <i className="bi bi-arrow-clockwise me-1"></i>
-                                    Token Yenile
+                                    <i className="bi bi-arrow-clockwise"></i>
+                                    Yenile
                                 </button>
                             </div>
-                        </div>
-                    )}
-                    {!tokenError && !authToken && (
-                        <div className="alert alert-warning mb-3">
-                            <div className="d-flex justify-content-between align-items-center">
-                                <div>Token bekleniyor...</div>
+                        )}
+                        
+                        {!tokenError && !authToken && (
+                            <div className="status-alert warning">
+                                <div className="alert-content">
+                                    <i className="bi bi-hourglass-split"></i>
+                                    <div>
+                                        <strong>Token Bekleniyor...</strong>
+                                        <p>Lütfen bekleyin</p>
+                                    </div>
+                                </div>
                                 <button 
-                                    className="btn btn-outline-warning btn-sm"
+                                    className="action-btn warning small"
                                     onClick={refreshToken}
                                     disabled={loading}
                                 >
-                                    <i className="bi bi-arrow-clockwise me-1"></i>
+                                    <i className="bi bi-arrow-clockwise"></i>
                                     Yeniden Dene
                                 </button>
                             </div>
-                        </div>
-                    )}
-                    <form onSubmit={sendRequest}>
-                        <div className="form-group">
-                            <label htmlFor="inputField" className="form-label">
-                                Şifrelenmiş Değer:
-                            </label>
-                            <input
-                                type="text"
-                                className="form-control"
-                                id="inputField"
-                                name="inputField"
-                                placeholder="Şifrelenmiş değeri giriniz"
-                                required
-                                minLength="1"
-                            />
-                        </div>
-                        <div className="d-grid gap-2 mt-3">
-                            <button
+                        )}
+
+                        <form onSubmit={sendRequest}>
+                            <div className="form-group">
+                                <input
+                                    type="text"
+                                    className="modern-input"
+                                    value={inputValue}
+                                    onChange={(e) => setInputValue(e.target.value)}
+                                    placeholder="Şifrelenmiş değeri buraya yapıştırın..."
+                                    disabled={!authToken}
+                                />
+                            </div>
+                            <button 
                                 type="submit"
-                                className={`btn ${tokenError ? 'btn-danger' : !authToken ? 'btn-warning' : loading ? 'btn-secondary' : 'btn-primary'}`}
-                                disabled={loading || !authToken}
-                                data-bs-toggle="tooltip"
-                                title={tokenError ? 'Token alınamadı. Lütfen sayfayı yenileyip tekrar deneyin.' : !authToken ? 'Token bekleniyor... Lütfen bekleyin.' : 'Şifrelenmiş değeri çözmek için tıklayın'}
+                                className={`decrypt-btn ${loading ? 'loading' : ''} ${!authToken ? 'disabled' : ''}`}
+                                disabled={loading || !authToken || !inputValue.trim()}
                             >
-                                {tokenError ? (
+                                {loading ? (
                                     <>
-                                        <i className="bi bi-exclamation-triangle-fill me-2"></i>
-                                        Token Alınamadı! Ortamı Kontrol Edin
-                                    </>
-                                ) : !authToken ? (
-                                    <>
-                                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" />
-                                        Token Bekleniyor...
-                                    </>
-                                ) : loading ? (
-                                    <>
-                                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" />
-                                        İşleniyor...
+                                        <i className="bi bi-arrow-repeat spin"></i>
+                                        Şifre Çözülüyor...
                                     </>
                                 ) : (
                                     <>
-                                        <i className="bi bi-unlock-fill me-2"></i>
+                                        <i className="bi bi-unlock-fill"></i>
                                         Şifreyi Çöz
                                     </>
                                 )}
                             </button>
-                            <small className="text-muted text-center">
-                                {tokenError ? (
-                                    'Lütfen ortam erişimini kontrol edip sayfayı yenileyin'
-                                ) : !authToken ? (
-                                    'Token alınıyor, lütfen bekleyin...'
-                                ) : loading ? (
-                                    'İşlem devam ediyor, lütfen bekleyin...'
-                                ) : (
-                                    'Şifrelenmiş değeri girin ve butona tıklayın'
-                                )}
-                            </small>
-                        </div>
-                    </form>
-
-                    <div className="mt-4">
-                        {error && (
-                            <div className="alert alert-danger">
-                                <strong>Hata:</strong> {error}
-                            </div>
-                        )}
-                        {result && (
-                            <div className="alert alert-success">
-                                <h5>Şifre Çözüldü:</h5>
-                                <pre className="mb-0">{JSON.stringify(result, null, 2)}</pre>
-                            </div>
-                        )}
+                        </form>
                     </div>
+                </div>
 
-                    <div className="mt-4">
-                        <h5 className="mb-3">İşlem Detayları:</h5>
-                        <div className="border rounded p-3" style={{ maxHeight: '200px', overflowY: 'auto' }}>
-                            {apiLogs.map((log, index) => (
-                                <div 
-                                    key={index} 
-                                    className={`mb-2 p-2 rounded ${
-                                        log.type === 'error' ? 'bg-danger bg-opacity-10 text-danger' :
-                                        log.type === 'success' ? 'bg-success bg-opacity-10 text-success' :
-                                        'bg-info bg-opacity-10 text-info'
-                                    }`}
+                {/* Results Section */}
+                <div className="output-card">
+                    <div className="card-header">
+                        <div className="card-title">
+                            <i className="bi bi-file-earmark-text text-green-500"></i>
+                            <span>Sonuçlar</span>
+                        </div>
+                        <div className="card-actions">
+                            {result && (
+                                <button 
+                                    className="action-btn success"
+                                    onClick={copyResult}
                                 >
-                                    <small className="text-muted">{log.timestamp}</small>
-                                    <span className="ms-2">{log.message}</span>
-                                </div>
-                            ))}
-                            {apiLogs.length === 0 && (
-                                <div className="text-muted text-center">
-                                    Henüz işlem yapılmadı
-                                </div>
+                                    <i className="bi bi-clipboard"></i>
+                                    Kopyala
+                                </button>
                             )}
                         </div>
                     </div>
+                    <div className="card-body">
+                        {error && (
+                            <div className="result-alert error">
+                                <div className="alert-icon">
+                                    <i className="bi bi-x-circle-fill"></i>
+                                </div>
+                                <div className="alert-content">
+                                    <strong>Hata Oluştu</strong>
+                                    <p>{error}</p>
+                                </div>
+                            </div>
+                        )}
+                        
+                        {result && (
+                            <div className="result-alert success">
+                                <div className="alert-icon">
+                                    <i className="bi bi-check-circle-fill"></i>
+                                </div>
+                                <div className="alert-content">
+                                    <strong>Şifre Çözüldü!</strong>
+                                    <div className="result-box">
+                                        <pre>{JSON.stringify(result, null, 2)}</pre>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {!error && !result && (
+                            <div className="empty-state">
+                                <i className="bi bi-file-text"></i>
+                                <p>Şifre çözme sonuçları burada görünecek</p>
+                            </div>
+                        )}
+                    </div>
                 </div>
-                <div className="card-footer text-muted text-center">
-                    <small>Prepared by Alp | Gulay S. sms istemesin diye yapilmistir.</small>
+            </div>
+
+            {/* Activity Logs */}
+            <div className="logs-card">
+                <div className="card-header">
+                    <div className="card-title">
+                        <i className="bi bi-list-ul text-cyan-500"></i>
+                        <span>İşlem Detayları</span>
+                    </div>
+                    <div className="logs-count">
+                        {apiLogs.length} işlem
+                    </div>
+                </div>
+                <div className="card-body">
+                    <div className="logs-container">
+                        {apiLogs.map((log, index) => (
+                            <div 
+                                key={index} 
+                                className={`log-item ${log.type}`}
+                            >
+                                <div className="log-time">
+                                    {log.timestamp}
+                                </div>
+                                <div className="log-content">
+                                    <div className="log-icon">
+                                        <i className={`bi ${
+                                            log.type === 'error' ? 'bi-x-circle' :
+                                            log.type === 'success' ? 'bi-check-circle' :
+                                            'bi-info-circle'
+                                        }`}></i>
+                                    </div>
+                                    <span>{log.message}</span>
+                                </div>
+                            </div>
+                        ))}
+                        {apiLogs.length === 0 && (
+                            <div className="empty-logs">
+                                <i className="bi bi-journal-text"></i>
+                                <p>Henüz işlem yapılmadı</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {/* Help Section */}
+            <div className="help-card">
+                <div className="help-header">
+                    <i className="bi bi-question-circle text-orange-500"></i>
+                    <span>Nasıl Kullanılır?</span>
+                </div>
+                <div className="help-content">
+                    <div className="help-steps">
+                        <div className="help-step">
+                            <span className="step-number">1</span>
+                            <span>Token'in aktif olduğundan emin olun</span>
+                        </div>
+                        <div className="help-step">
+                            <span className="step-number">2</span>
+                            <span>Şifrelenmiş değeri sol tarafa yapıştırın</span>
+                        </div>
+                        <div className="help-step">
+                            <span className="step-number">3</span>
+                            <span>"Şifreyi Çöz" butonuna tıklayın</span>
+                        </div>
+                        <div className="help-step">
+                            <span className="step-number">4</span>
+                            <span>Çözülen değeri sağ taraftan kopyalayın</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

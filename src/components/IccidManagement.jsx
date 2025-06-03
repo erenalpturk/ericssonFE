@@ -51,6 +51,9 @@ const IccidManagement = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [selectedType, setSelectedType] = useState('fonkpos');
   const [customType, setCustomType] = useState('');
+  const [copySuccess, setCopySuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
   const baseUrl = 'https://iccid.vercel.app';
   //const baseUrl = 'http://localhost:5432';
   const iccidTypes = [
@@ -67,15 +70,26 @@ const IccidManagement = () => {
     fetchIccids();
   }, []);
 
+  const showSuccess = (message) => {
+    setSuccessMessage(message);
+    setTimeout(() => setSuccessMessage(''), 3000);
+  };
+
+  const showError = (message) => {
+    setErrorMessage(message);
+    setTimeout(() => setErrorMessage(''), 3000);
+  };
+
   const fetchIccids = async () => {
     try {
       setLoading(true);
       const response = await fetch(`${baseUrl}/iccid/getAll`, {
-        method: 'POST'});
+        method: 'POST'
+      });
       const data = await response.json();
       setIccids(data);
     } catch (error) {
-      toast.error('ICCID\'ler yüklenirken bir hata oluştu.', { position: 'top-right', autoClose: 3000 });
+      showError('ICCID\'ler yüklenirken bir hata oluştu.');
     } finally {
       setLoading(false);
     }
@@ -85,11 +99,12 @@ const IccidManagement = () => {
     try {
       setLoading(true);
       const response = await fetch(`${baseUrl}/iccid/enesvealpdatalarinizigetiriyoru`, {
-        method: 'POST'});
+        method: 'POST'
+      });
       const data = await response.json();
       setActivations(data);
     } catch (error) {
-      toast.error('Veriler yüklenirken bir hata oluştu.', { position: 'top-right', autoClose: 3000 });
+      showError('Veriler yüklenirken bir hata oluştu.');
     } finally {
       setLoading(false);
     }
@@ -107,13 +122,13 @@ const IccidManagement = () => {
         body: iccidText,
       });
       const data = await response.json();
-      toast.success(data.message, { position: 'top-right', autoClose: 1000 });
+      showSuccess(data.message);
       setIccidText('');
       setCustomType('');
       setSelectedType('fonkpos');
       fetchIccids();
     } catch (error) {
-      toast.error('ICCID\'ler eklenirken bir hata oluştu.', { position: 'top-right', autoClose: 3000 });
+      showError('ICCID\'ler eklenirken bir hata oluştu.');
     } finally {
       setLoading(false);
     }
@@ -121,7 +136,7 @@ const IccidManagement = () => {
 
   const handleBulkDelete = async () => {
     if (selectedIccids.length === 0) {
-      toast.error('Lütfen silinecek ICCID\'leri seçin', { position: 'top-right', autoClose: 3000 });
+      showError('Lütfen silinecek ICCID\'leri seçin');
       return;
     }
 
@@ -135,11 +150,11 @@ const IccidManagement = () => {
         body: JSON.stringify({ iccids: selectedIccids }),
       });
       const data = await response.json();
-      toast.success(data.message, { position: 'top-right', autoClose: 1000 });
+      showSuccess(data.message);
       setSelectedIccids([]);
       fetchIccids();
     } catch (error) {
-      toast.error('ICCID\'ler silinirken bir hata oluştu.', { position: 'top-right', autoClose: 3000 });
+      showError('ICCID\'ler silinirken bir hata oluştu.');
     } finally {
       setLoading(false);
     }
@@ -388,24 +403,23 @@ const IccidManagement = () => {
   const handleStatusChange = async (iccid, newStatus) => {
     try {
       setLoading(true);
-      const response = await fetch(`${baseUrl}/iccid/setstatus`, {
-        method: 'POST',
+      const response = await fetch(`${baseUrl}/iccid/updateStatus`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ iccid, status: newStatus }),
       });
       const data = await response.json();
+      
       if (response.ok) {
-        toast.success('Statü başarıyla güncellendi.', { position: 'top-right', autoClose: 1000 });
-        setOrderBy('iccid');
-        setOrder('asc');
+        showSuccess('Statü başarıyla güncellendi.');
         fetchIccids();
       } else {
-        toast.error(data.message || 'Statü güncellenemedi.', { position: 'top-right', autoClose: 3000 });
+        showError(data.message || 'Statü güncellenemedi.');
       }
     } catch (error) {
-      toast.error('Statü güncellenirken bir hata oluştu.', { position: 'top-right', autoClose: 3000 });
+      showError('Statü güncellenirken bir hata oluştu.');
     } finally {
       setLoading(false);
     }
@@ -505,145 +519,418 @@ const IccidManagement = () => {
     }
   ];
 
+  const getFilteredData = () => {
+    const data = activeTab === 0 ? iccids : activations;
+    if (!searchText) return data;
+    
+    return data.filter(item => {
+      const searchString = searchText.toLowerCase();
+      if (activeTab === 0) {
+        return item.iccid?.toLowerCase().includes(searchString) ||
+               item.type?.toLowerCase().includes(searchString) ||
+               item.stock?.toLowerCase().includes(searchString);
+      } else {
+        return item.msisdn?.toLowerCase().includes(searchString) ||
+               item.tckn?.toLowerCase().includes(searchString) ||
+               item.user?.toLowerCase().includes(searchString);
+      }
+    });
+  };
+
+  const getPaginatedData = () => {
+    const filtered = getFilteredData();
+    const start = page * rowsPerPage;
+    return filtered.slice(start, start + rowsPerPage);
+  };
+
+  const handleClearAll = () => {
+    setIccidText('');
+    setCustomType('');
+    setSelectedType('fonkpos');
+    setSearchText('');
+    setSelectedIccids([]);
+    setSelectedActivations([]);
+    setPage(0);
+  };
+
+  const handleCopyData = async () => {
+    try {
+      const data = activeTab === 0 ? iccids : activations;
+      await navigator.clipboard.writeText(JSON.stringify(data, null, 2));
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    } catch (err) {
+      showError('Kopyalama başarısız');
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch(status) {
+      case 'available': return 'text-green-500';
+      case 'reserved': return 'text-yellow-500';
+      case 'sold': return 'text-red-500';
+      default: return 'text-gray-500';
+    }
+  };
+
+  const inputCount = iccidText.trim() ? iccidText.trim().split('\n').filter(line => line.trim()).length : 0;
+
   return (
-    <Box sx={{ p: 3 }}>
-      <ToastContainer />
-      <Typography variant="h4" gutterBottom>
-        ICCID Yönetimi
-      </Typography>
+    <div className="modern-page">
+      {/* Success/Error Messages */}
+      {successMessage && (
+        <div className="fixed top-4 right-4 z-50">
+          <div className="result-alert success">
+            <div className="alert-icon">
+              <i className="bi bi-check-circle-fill"></i>
+            </div>
+            <div className="alert-content">
+              <strong>Başarılı!</strong>
+              <p>{successMessage}</p>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {errorMessage && (
+        <div className="fixed top-4 right-4 z-50">
+          <div className="result-alert error">
+            <div className="alert-icon">
+              <i className="bi bi-x-circle-fill"></i>
+            </div>
+            <div className="alert-content">
+              <strong>Hata!</strong>
+              <p>{errorMessage}</p>
+            </div>
+          </div>
+        </div>
+      )}
 
-      <Paper sx={{ p: 2, mb: 3 }}>
-        <Typography variant="h6" gutterBottom>
-          Yeni ICCID Ekle
-        </Typography>
-        <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-          <FormControl fullWidth size="small">
-            <InputLabel>ICCID Tipi</InputLabel>
-            <Select
-              value={selectedType}
-              label="ICCID Tipi"
-              onChange={(e) => setSelectedType(e.target.value)}
+      {/* Header Section */}
+      <div className="page-header">
+        <div className="header-content">
+          <div className="header-icon">
+            <i className="bi bi-credit-card-2-front text-emerald-600"></i>
+          </div>
+          <div className="header-text">
+            <h1>ICCID Management</h1>
+            <p>ICCID ve aktivasyon verilerini yönetin</p>
+          </div>
+        </div>
+        <div className="stats-badge">
+          <i className="bi bi-list-ol"></i>
+          <span>{activeTab === 0 ? `${iccids.length} ICCID` : `${activations.length} Aktivasyon`}</span>
+        </div>
+      </div>
+
+      {/* Add ICCID Section */}
+      <div className="input-card">
+        <div className="card-header">
+          <div className="card-title">
+            <i className="bi bi-plus-circle text-blue-500"></i>
+            <span>Yeni ICCID Ekle</span>
+          </div>
+          <div className="card-actions">
+            <span className="stats-badge small">
+              <i className="bi bi-hash"></i>
+              {inputCount} ICCID
+            </span>
+            <button 
+              className="action-btn secondary"
+              onClick={handleClearAll}
+              disabled={!iccidText && !searchText && selectedIccids.length === 0}
             >
-              {iccidTypes.map((type) => (
-                <MenuItem key={type.value} value={type.value}>
-                  {type.label}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          {selectedType === 'custom' && (
-            <TextField
-              size="small"
-              label="Özel Tip"
-              value={customType}
-              onChange={(e) => setCustomType(e.target.value)}
-              sx={{ minWidth: 200 }}
-            />
-          )}
-        </Box>
-        <TextField
-          fullWidth
-          multiline
-          rows={4}
-          value={iccidText}
-          onChange={(e) => setIccidText(e.target.value)}
-          placeholder="ICCID'leri her satıra bir tane olacak şekilde girin"
-          sx={{ mb: 2 }}
-        />
-        <Button
-          variant="contained"
-          onClick={handleIccidSubmit}
-          disabled={loading || !iccidText.trim() || (selectedType === 'custom' && !customType.trim())}
-        >
-          {loading ? <CircularProgress size={24} /> : 'ICCID\'leri Ekle'}
-        </Button>
-      </Paper>
-
-      <Paper sx={{ p: 2 }}>
-        <Tabs value={activeTab} onChange={handleTabChange} sx={{ mb: 2 }}>
-          <Tab label="ICCID Listesi" />
-          <Tab label="Aktivasyonlar" />
-        </Tabs>
-
-        <Box sx={{ display: 'flex', gap: 2, mb: 2, alignItems: 'center' }}>
-          <TextField
-            size="small"
-            placeholder="Ara..."
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-            }}
-          />
-          <Tooltip title="Filtrele">
-            <IconButton onClick={handleFilterClick}>
-              <FilterListIcon />
-            </IconButton>
-          </Tooltip>
-          <Button
-            size="small"
-            onClick={clearFilters}
-            disabled={Object.keys(activeFilters).length === 0 && !searchText}
-          >
-            Filtreleri Temizle
-          </Button>
-          <Typography variant="body2" color="text.secondary">
-            {activeTab === 0 
-              ? `Toplam ${iccids.length} ICCID`
-              : `Toplam ${activations.length} Aktivasyon`}
-          </Typography>
-        </Box>
-
-        {renderFilterMenu(activeTab === 0 ? iccids : activations)}
-        {renderFilterDialog()}
-
-        {activeTab === 0 && (
-          <>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-              <Typography variant="h6">
-                ICCID Listesi
-              </Typography>
-              <Button
-                variant="contained"
-                color="error"
-                onClick={handleBulkDelete}
-                disabled={loading || selectedIccids.length === 0}
+              <i className="bi bi-trash"></i>
+              Temizle
+            </button>
+          </div>
+        </div>
+        <div className="card-body">
+          <div className="config-grid">
+            <div className="config-item">
+              <label className="config-label">
+                <i className="bi bi-tags text-purple-500"></i>
+                ICCID Tipi
+              </label>
+              <select
+                className="config-input"
+                value={selectedType}
+                onChange={(e) => setSelectedType(e.target.value)}
               >
+                {iccidTypes.map((type) => (
+                  <option key={type.value} value={type.value}>
+                    {type.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {selectedType === 'custom' && (
+              <div className="config-item">
+                <label className="config-label">
+                  <i className="bi bi-pencil text-orange-500"></i>
+                  Özel Tip
+                </label>
+                <input
+                  type="text"
+                  className="config-input"
+                  value={customType}
+                  onChange={(e) => setCustomType(e.target.value)}
+                  placeholder="Özel tip adını girin"
+                />
+              </div>
+            )}
+          </div>
+          <div className="form-group">
+            <textarea
+              className="modern-textarea"
+              rows="6"
+              value={iccidText}
+              onChange={(e) => setIccidText(e.target.value)}
+              placeholder="ICCID'leri her satıra bir tane olacak şekilde girin...&#10;&#10;Örnek:&#10;8990011234567890123&#10;8990011234567890124&#10;8990011234567890125"
+            />
+          </div>
+          <button
+            className={`convert-btn ${loading ? 'loading' : ''}`}
+            onClick={handleIccidSubmit}
+            disabled={loading || !iccidText.trim() || (selectedType === 'custom' && !customType.trim())}
+          >
+            {loading ? (
+              <>
+                <i className="bi bi-arrow-repeat spin"></i>
+                ICCID'ler Ekleniyor...
+              </>
+            ) : (
+              <>
+                <i className="bi bi-plus-circle"></i>
+                ICCID'leri Ekle
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Tabs and Table Section */}
+      <div className="output-card">
+        <div className="card-header">
+          <div className="tabs-container">
+            <button
+              className={`tab-btn ${activeTab === 0 ? 'active' : ''}`}
+              onClick={() => setActiveTab(0)}
+            >
+              <i className="bi bi-credit-card text-blue-500"></i>
+              ICCID Listesi
+            </button>
+            <button
+              className={`tab-btn ${activeTab === 1 ? 'active' : ''}`}
+              onClick={() => setActiveTab(1)}
+            >
+              <i className="bi bi-check-circle text-green-500"></i>
+              Aktivasyonlar
+            </button>
+          </div>
+          <div className="card-actions">
+            <button 
+              className={`action-btn ${copySuccess ? 'success' : 'primary'}`}
+              onClick={handleCopyData}
+            >
+              {copySuccess ? (
+                <>
+                  <i className="bi bi-check-circle"></i>
+                  Kopyalandı!
+                </>
+              ) : (
+                <>
+                  <i className="bi bi-clipboard"></i>
+                  Verileri Kopyala
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+        <div className="card-body">
+          {/* Search and Controls */}
+          <div className="table-controls">
+            <div className="search-box">
+              <i className="bi bi-search"></i>
+              <input
+                type="text"
+                placeholder="Ara..."
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+              />
+            </div>
+            {activeTab === 0 && selectedIccids.length > 0 && (
+              <button
+                className="action-btn danger"
+                onClick={handleBulkDelete}
+                disabled={loading}
+              >
+                <i className="bi bi-trash"></i>
                 Seçilenleri Sil ({selectedIccids.length})
-              </Button>
-            </Box>
-
-            {renderTable(
-              iccids,
-              iccidColumns,
-              selectedIccids,
-              handleSelectIccid
+              </button>
             )}
-          </>
-        )}
+          </div>
 
-        {activeTab === 1 && (
-          <>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-              <Typography variant="h6">
-                Aktivasyonlar
-              </Typography>
-            </Box>
-
-            {renderTable(
-              activations,
-              activationColumns,
-              selectedActivations,
-              handleSelectActivation
+          {/* Table */}
+          <div className="table-container">
+            {activeTab === 0 ? (
+              <table className="modern-table">
+                <thead>
+                  <tr>
+                    <th>
+                      <input
+                        type="checkbox"
+                        checked={selectedIccids.length === getFilteredData().length && getFilteredData().length > 0}
+                        onChange={handleSelectAllIccids}
+                      />
+                    </th>
+                    <th>ICCID</th>
+                    <th>Durum</th>
+                    <th>Tip</th>
+                    <th>Oluşturulma</th>
+                    <th>Güncellenme</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {getPaginatedData().map((row) => (
+                    <tr key={row.iccidid}>
+                      <td>
+                        <input
+                          type="checkbox"
+                          checked={selectedIccids.includes(row.iccid)}
+                          onChange={() => handleSelectIccid(row.iccid)}
+                        />
+                      </td>
+                      <td className="font-mono text-sm">{row.iccid}</td>
+                      <td>
+                        <select
+                          className={`status-select ${getStatusColor(row.stock)}`}
+                          value={row.stock}
+                          onChange={(e) => handleStatusChange(row.iccid, e.target.value)}
+                          disabled={loading}
+                        >
+                          {statusOptions.map(option => (
+                            <option key={option} value={option}>{option}</option>
+                          ))}
+                        </select>
+                      </td>
+                      <td>
+                        <span className="type-badge">{row.type}</span>
+                      </td>
+                      <td className="text-gray-600">
+                        {new Date(row.cdate).toLocaleString('tr-TR')}
+                      </td>
+                      <td className="text-gray-600">
+                        {new Date(row.updated_at).toLocaleString('tr-TR')}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <table className="modern-table">
+                <thead>
+                  <tr>
+                    <th>MSISDN</th>
+                    <th>TCKN</th>
+                    <th>Doğum Tarihi</th>
+                    <th>Kullanıcı</th>
+                    <th>Aktivasyon Tipi</th>
+                    <th>Oluşturulma</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {getPaginatedData().map((row) => (
+                    <tr key={row.activationid}>
+                      <td className="font-mono text-sm">{row.msisdn}</td>
+                      <td className="font-mono text-sm">{row.tckn}</td>
+                      <td>{row.birth_date}</td>
+                      <td>
+                        <span className="user-badge">{row.user}</span>
+                      </td>
+                      <td>
+                        <span className="type-badge">{row.activationtype}</span>
+                      </td>
+                      <td className="text-gray-600">
+                        {new Date(row.created_at).toLocaleString('tr-TR')}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             )}
-          </>
-        )}
-      </Paper>
-    </Box>
+          </div>
+
+          {/* Pagination */}
+          <div className="pagination">
+            <div className="pagination-info">
+              Toplam {getFilteredData().length} kayıt
+            </div>
+            <div className="pagination-controls">
+              <select
+                value={rowsPerPage}
+                onChange={(e) => setRowsPerPage(Number(e.target.value))}
+              >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+              </select>
+              <button
+                onClick={() => setPage(Math.max(0, page - 1))}
+                disabled={page === 0}
+              >
+                <i className="bi bi-chevron-left"></i>
+              </button>
+              <span>
+                Sayfa {page + 1} / {Math.ceil(getFilteredData().length / rowsPerPage)}
+              </span>
+              <button
+                onClick={() => setPage(Math.min(Math.ceil(getFilteredData().length / rowsPerPage) - 1, page + 1))}
+                disabled={page >= Math.ceil(getFilteredData().length / rowsPerPage) - 1}
+              >
+                <i className="bi bi-chevron-right"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Help Section */}
+      <div className="help-card">
+        <div className="help-header">
+          <i className="bi bi-question-circle text-orange-500"></i>
+          <span>Nasıl Kullanılır?</span>
+        </div>
+        <div className="help-content">
+          <div className="help-steps">
+            <div className="help-step">
+              <span className="step-number">1</span>
+              <span>ICCID tipini seçin veya özel tip tanımlayın</span>
+            </div>
+            <div className="help-step">
+              <span className="step-number">2</span>
+              <span>ICCID'leri metin alanına yapıştırın (her satıra bir ICCID)</span>
+            </div>
+            <div className="help-step">
+              <span className="step-number">3</span>
+              <span>"ICCID'leri Ekle" butonuna tıklayın</span>
+            </div>
+            <div className="help-step">
+              <span className="step-number">4</span>
+              <span>Tabloda ICCID'leri yönetin, durum güncelleyin veya toplu silme yapın</span>
+            </div>
+          </div>
+          <div className="help-note">
+            <div className="note-header">
+              <i className="bi bi-lightbulb text-yellow-500"></i>
+              <span>İpucu</span>
+            </div>
+            <p>Durum renkleri: Yeşil (Müsait), Sarı (Rezerve), Kırmızı (Satıldı). Arama ile tabloda filtreleme yapabilirsiniz.</p>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 

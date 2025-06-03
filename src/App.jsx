@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { useState } from 'react'
+import Layout from './components/Layout'
 import Home from './components/Home'
 import SmsDecrypt from './components/SmsDecrypt'
 import PostpaidActivation from './components/DkIlerletme/PostpaidActivation'
@@ -22,7 +23,7 @@ function App() {
 
     return (
         <Router>
-            <div className="min-vh-100 bg-light">
+            <Layout>
                 <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/sms-decrypt" element={<SmsDecrypt />} />
@@ -44,7 +45,7 @@ function App() {
                     <Route path="/courier-actions" element={<CourierActions onApiCall={handleApiCall} />} />
                 </Routes>
                 {apiLogs.length > 0 && (
-                    <div className="position-fixed bottom-0 end-0 p-3" style={{maxHeight: '300px', overflowY: 'auto', width: '300px'}}>
+                    <div className="position-fixed bottom-0 end-0 p-3" style={{maxHeight: '300px', overflowY: 'auto', width: '300px', zIndex: 1050}}>
                         <div className="card">
                             <div className="card-header d-flex justify-content-between align-items-center">
                                 <h6 className="mb-0">API Çağrıları</h6>
@@ -67,7 +68,7 @@ function App() {
                         </div>
                     </div>
                 )}
-            </div>
+            </Layout>
         </Router>
     )
 }

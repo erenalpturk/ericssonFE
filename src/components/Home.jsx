@@ -1,137 +1,200 @@
 import { Link } from 'react-router-dom'
 
 function Home() {
+    const tools = [
+        {
+            path: '/sms-decrypt',
+            icon: 'bi-shield-lock-fill',
+            title: 'SMS Decrypt',
+            description: 'SMS şifre çözme ve token doğrulama aracı',
+            color: 'text-purple-500',
+            bgGradient: 'from-purple-500 to-indigo-600',
+            category: 'Güvenlik'
+        },
+        {
+            path: '/postpaid-activation',
+            icon: 'bi-phone-fill',
+            title: 'Postpaid Activation',
+            description: 'Hat aktivasyon otomasyonu',
+            color: 'text-orange-500',
+            bgGradient: 'from-orange-500 to-red-600',
+            category: 'Aktivasyon',
+            disabled: true
+        },
+        {
+            path: '/iccid-to-sql',
+            icon: 'bi-database-fill',
+            title: 'ICCID to SQL',
+            description: 'ICCID listesini SQL SELECT sorgusuna dönüştürür',
+            color: 'text-emerald-500',
+            bgGradient: 'from-emerald-500 to-teal-600',
+            category: 'SQL Araçları'
+        },
+        {
+            path: '/infodealer-to-sql',
+            icon: 'bi-database-add',
+            title: 'Infodealer Insert',
+            description: 'Infodealer için toplu INSERT sorgusu oluşturur',
+            color: 'text-emerald-600',
+            bgGradient: 'from-emerald-600 to-green-600',
+            category: 'SQL Araçları'
+        },
+        {
+            path: '/infodealer-to-sql-update',
+            icon: 'bi-database-up',
+            title: 'Infodealer Update',
+            description: 'Dealer kodu güncelleme sorguları oluşturur',
+            color: 'text-emerald-600',
+            bgGradient: 'from-emerald-600 to-green-600',
+            category: 'SQL Araçları'
+        },
+        {
+            path: '/selfybest-insert-sql',
+            icon: 'bi-database-gear',
+            title: 'Selfybest Insert',
+            description: 'Youth tariff konfigürasyonu için INSERT sorgusu',
+            color: 'text-emerald-600',
+            bgGradient: 'from-emerald-600 to-green-600',
+            category: 'SQL Araçları'
+        },
+        {
+            path: '/cudb-feed',
+            icon: 'bi-arrow-repeat',
+            title: 'CUDB Feed',
+            description: 'CUDB API servisi ve transaction yönetimi',
+            color: 'text-cyan-500',
+            bgGradient: 'from-cyan-500 to-blue-600',
+            category: 'API Araçları'
+        },
+        {
+            path: '/iccid-management',
+            icon: 'bi-credit-card-2-front',
+            title: 'ICCID Management',
+            description: 'ICCID ve aktivasyon verilerini yönetin',
+            color: 'text-emerald-500',
+            bgGradient: 'from-emerald-500 to-teal-600',
+            category: 'Yönetim'
+        },
+        {
+            path: '/courier-actions',
+            icon: 'bi-truck',
+            title: 'DK Kurye Tetikleme',
+            description: 'Kurye işlemlerini tetikleyin ve yönetin',
+            color: 'text-cyan-500',
+            bgGradient: 'from-cyan-500 to-blue-600',
+            category: 'Otomasyon'
+        }
+    ];
+
+    const categories = [...new Set(tools.map(tool => tool.category))];
+
     return (
-        <div className="container min-vh-100 d-flex flex-column justify-content-center align-items-center">
-            <div className="text-center mb-5">
-                <h1 className="display-4 mb-3">Hoş Geldiniz!</h1>
-                <p className="lead text-muted">OMNI Test Team Otomasyon Araçları</p>
-            </div>
-            
-            <div className="row g-4 justify-content-center" style={{ maxWidth: '900px' }}>
-                <div className="col-12 col-md-4">
-                    <Link to="/sms-decrypt" className="text-decoration-none">
-                        <div className="card h-100 shadow-sm hover-shadow transition">
-                            <div className="card-body text-center p-5">
-                                <i className="bi bi-shield-lock-fill display-1 mb-3 text-primary"></i>
-                                <h3 className="card-title">SMS Decrypt</h3>
-                                <p className="card-text text-muted">
-                                    SMS şifre çözme aracı
-                                </p>
-                            </div>
+        <div className="modern-page">
+            {/* Hero Section */}
+            <div className="hero-section">
+                <div className="hero-content">
+                    <div className="hero-icon">
+                        <i className="bi bi-gear-wide-connected"></i>
+                    </div>
+                    <h1 className="hero-title">OMNI Tools</h1>
+                    <p className="hero-subtitle">Test Team Otomasyon Araçları Koleksiyonu</p>
+                    <div className="hero-stats">
+                        <div className="stat-item">
+                            <span className="stat-number">{tools.filter(t => !t.disabled).length}</span>
+                            <span className="stat-label">Aktif Araç</span>
                         </div>
-                    </Link>
-                </div>
-                
-                <div className="col-12 col-md-4">
-                    <div className="card h-100 shadow-sm bg-light">
-                        <div className="card-body text-center p-5 position-relative">
-                            <div className="position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" 
-                                 style={{ backgroundColor: 'rgba(0,0,0,0.1)' }}>
-                                <span className="badge bg-warning px-3 py-2">
-                                    <i className="bi bi-gear-fill me-2"></i>
-                                    Yapım Aşamasında
-                                </span>
-                            </div>
-                            <i className="bi bi-phone-fill display-1 mb-3 text-secondary"></i>
-                            <h3 className="card-title">Postpaid Activation</h3>
-                            <p className="card-text text-muted">
-                                Hat aktivasyon otomasyonu
-                            </p>
+                        <div className="stat-item">
+                            <span className="stat-number">{categories.length}</span>
+                            <span className="stat-label">Kategori</span>
+                        </div>
+                        <div className="stat-item">
+                            <span className="stat-number">{tools.filter(t => t.disabled).length}</span>
+                            <span className="stat-label">Geliştiriliyor</span>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <div className="col-12 col-md-4">
-                    <Link to="/iccid-to-sql" className="text-decoration-none">
-                        <div className="card h-100 shadow-sm hover-shadow transition">
-                            <div className="card-body text-center p-5">
-                                <i className="bi bi-database-fill display-1 mb-3 text-success"></i>
-                                <h3 className="card-title">ICCID to SQL</h3>
-                                <p className="card-text text-muted">
-                                    ICCID listesini SQL sorgusuna dönüştürür
-                                </p>
-                            </div>
-                        </div>
-                    </Link>
+            {/* Tools Grid */}
+            <div className="tools-section">
+                <div className="section-header">
+                    <h2>Araçlar</h2>
+                    <p>İhtiyacınıza uygun aracı seçin</p>
                 </div>
-                <div className="col-12 col-md-4">
-                    <Link to="/infodealer-to-sql" className="text-decoration-none">
-                        <div className="card h-100 shadow-sm hover-shadow transition">
-                            <div className="card-body text-center p-5">
-                                <i className="bi bi-database-fill display-1 mb-3 text-success"></i>
-                                <h3 className="card-title">Infodealer Insert</h3>
-                                <p className="card-text text-muted">
-                                    Infodealer için toplu INSERT sorgusu oluşturur
-                                </p>
-                            </div>
+                
+                <div className="tools-grid">
+                    {tools.map((tool) => (
+                        <div key={tool.path} className="tool-card-wrapper">
+                            {tool.disabled ? (
+                                <div className="tool-card disabled">
+                                    <div className="tool-card-header">
+                                        <div className={`tool-icon ${tool.color}`}>
+                                            <i className={tool.icon}></i>
+                                        </div>
+                                        <div className="construction-badge">
+                                            <i className="bi bi-hammer"></i>
+                                            <span>Yapım Aşamasında</span>
+                                        </div>
+                                    </div>
+                                    <div className="tool-card-body">
+                                        <div className="tool-category">{tool.category}</div>
+                                        <h3 className="tool-title">{tool.title}</h3>
+                                        <p className="tool-description">{tool.description}</p>
+                                    </div>
+                                    <div className="tool-card-footer">
+                                        <div className="coming-soon-badge">
+                                            <i className="bi bi-clock"></i>
+                                            Yakında
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <Link to={tool.path} className="tool-card">
+                                    <div className="tool-card-header">
+                                        <div className={`tool-icon ${tool.color}`}>
+                                            <i className={tool.icon}></i>
+                                        </div>
+                                        <div className="tool-glow"></div>
+                                    </div>
+                                    <div className="tool-card-body">
+                                        <div className="tool-category">{tool.category}</div>
+                                        <h3 className="tool-title">{tool.title}</h3>
+                                        <p className="tool-description">{tool.description}</p>
+                                    </div>
+                                    <div className="tool-card-footer">
+                                        <div className="launch-btn">
+                                            <span>Başlat</span>
+                                            <i className="bi bi-arrow-right"></i>
+                                        </div>
+                                    </div>
+                                </Link>
+                            )}
                         </div>
-                    </Link>
+                    ))}
                 </div>
-                <div className="col-12 col-md-4">
-                    <Link to="/infodealer-to-sql-update" className="text-decoration-none">
-                        <div className="card h-100 shadow-sm hover-shadow transition">
-                            <div className="card-body text-center p-5">
-                                <i className="bi bi-database-fill display-1 mb-3 text-success"></i>
-                                <h3 className="card-title">Infodealer Update</h3>
-                                <p className="card-text text-muted">
-                                    Infodealer için toplu UPDATE sorgusu oluşturur
-                                </p>
-                            </div>
+            </div>
+
+            {/* Quick Stats */}
+            <div className="quick-stats">
+                <div className="stats-card">
+                    <div className="stats-header">
+                        <i className="bi bi-speedometer2 text-blue-500"></i>
+                        <span>Sistem Durumu</span>
+                    </div>
+                    <div className="stats-body">
+                        <div className="status-item">
+                            <div className="status-indicator active"></div>
+                            <span>Tüm servisler aktif</span>
                         </div>
-                    </Link>
-                </div>
-                <div className="col-12 col-md-4">
-                    <Link to="/selfybest-insert-sql" className="text-decoration-none">
-                        <div className="card h-100 shadow-sm hover-shadow transition">
-                            <div className="card-body text-center p-5">
-                                <i className="bi bi-database-fill display-1 mb-3 text-success"></i>
-                                <h3 className="card-title">Selfybest Insert</h3>
-                                <p className="card-text text-muted">
-                                    Selfybest için toplu INSERT sorgusu oluşturur
-                                </p>
-                            </div>
+                        <div className="status-item">
+                            <div className="status-indicator active"></div>
+                            <span>API bağlantıları stabil</span>
                         </div>
-                    </Link>
-                </div>
-                <div className="col-12 col-md-4">
-                    <Link to="/cudb-feed" className="text-decoration-none">
-                        <div className="card h-100 shadow-sm hover-shadow transition">
-                            <div className="card-body text-center p-5">
-                                <i className="bi bi-arrow-repeat display-1 mb-3 text-info"></i>
-                                <h3 className="card-title">CUDB Feed</h3>
-                                <p className="card-text text-muted">
-                                    CUDB Feed işlemi için API entegrasyonu
-                                </p>
-                            </div>
+                        <div className="status-item">
+                            <div className="status-indicator active"></div>
+                            <span>Veritabanı erişilebilir</span>
                         </div>
-                    </Link>
-                </div>
-                <div className="col-12 col-md-4">
-                    <Link to="/iccid-management" className="text-decoration-none">
-                        <div className="card h-100 shadow-sm hover-shadow transition">
-                            <div className="card-body text-center p-5">
-                                <i className="bi bi-database-fill display-1 mb-3 text-success"></i>
-                                <h3 className="card-title">ICCID Management</h3>
-                                <p className="card-text text-muted">
-                                    ICCID Management işlemi için API entegrasyonu
-                                    </p>
-                            </div>
-                        </div>
-                    </Link>
-                </div>
-                <div className="col-12 col-md-4">
-                    <Link to="/courier-actions" className="text-decoration-none">
-                        <div className="card h-100 shadow-sm hover-shadow transition">
-                            <div className="card-body text-center p-5">
-                                <i className="bi bi-arrow-repeat display-1 mb-3 text-info"></i>
-                                <h3 className="card-title">DK Kurye Tetikleme</h3>
-                                <p className="card-text text-muted">
-                                    DK Kurye Tetikleme işlemi
-                                </p>
-                            </div>
-                        </div>
-                    </Link>
+                    </div>
                 </div>
             </div>
         </div>
