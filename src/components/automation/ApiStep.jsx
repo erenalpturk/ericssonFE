@@ -354,24 +354,6 @@ export default function ApiStep({
                     </button>
                   </div>
                   
-                  <div className="info-box">
-                    <div className="info-header">
-                      <i className="bi bi-lightbulb"></i>
-                      <span>Örnek Kullanım</span>
-                    </div>
-                    <div className="info-content">
-                      <div className="example-item">
-                        <code>response.id</code> → API response'unun id alanı
-                      </div>
-                      <div className="example-item">
-                        <code>response.data.token</code> → Nested obje erişimi
-                      </div>
-                      <div className="example-item">
-                        <code>response.items[0].name</code> → Array içindeki obje
-                      </div>
-                    </div>
-                  </div>
-                  
                   {Object.keys(step.variables).length === 0 ? (
                     <div className="empty-state small">
                       <div className="empty-icon">
@@ -437,45 +419,13 @@ export default function ApiStep({
                           </p>
                         </div>
                       </div>
-                      
-                      <div className="info-box" style={{ marginBottom: '1rem' }}>
-                        <div className="info-header">
-                          <i className="bi bi-lightbulb"></i>
-                          <span>Kullanılabilir Objeler</span>
-                        </div>
-                        <div className="info-content">
-                          <div className="example-item">
-                            <code>variables</code> → Global değişkenler objesi
-                          </div>
-                          <div className="example-item">
-                            <code>request</code> → API request objesi (url, headers, body)
-                          </div>
-                          <div className="example-item">
-                            <code>console.log()</code> → Debug için log yazma
-                          </div>
-                        </div>
-                      </div>
 
                       <textarea
                         className="form-textarea code"
                         rows="8"
                         value={step.preRequestScript || ''}
                         onChange={(e) => handleInputChange('preRequestScript', e.target.value)}
-                        placeholder={`// Örnek: URL'yi dinamik olarak değiştir
-// request.url = request.url.replace('{{env}}', 'production');
-
-// Örnek: Authorization header ekle
-// request.headers['Authorization'] = 'Bearer ' + variables.token;
-
-// Örnek: Timestamp ekle
-// variables.timestamp = Date.now().toString();
-
-// Örnek: Request body'yi değiştir
-// if (request.body) {
-//   let body = JSON.parse(request.body);
-//   body.timestamp = new Date().toISOString();
-//   request.body = JSON.stringify(body);
-// }`}
+                        placeholder="// Pre-request script'inizi buraya yazın..."
                         disabled={isRunning}
                       />
                     </div>
@@ -490,55 +440,13 @@ export default function ApiStep({
                           </p>
                         </div>
                       </div>
-                      
-                      <div className="info-box" style={{ marginBottom: '1rem' }}>
-                        <div className="info-header">
-                          <i className="bi bi-lightbulb"></i>
-                          <span>Kullanılabilir Objeler</span>
-                        </div>
-                        <div className="info-content">
-                          <div className="example-item">
-                            <code>response</code> → API response objesi (data, headers, status)
-                          </div>
-                          <div className="example-item">
-                            <code>variables</code> → Global değişkenler objesi
-                          </div>
-                          <div className="example-item">
-                            <code>console.log()</code> → Debug için log yazma
-                          </div>
-                        </div>
-                      </div>
 
                       <textarea
                         className="form-textarea code"
                         rows="10"
                         value={step.postResponseScript || ''}
                         onChange={(e) => handleInputChange('postResponseScript', e.target.value)}
-                        placeholder={`// Örnek: Response'dan token çıkar
-// if (response.data && response.data.token) {
-//   variables.auth_token = response.data.token;
-// }
-
-// Örnek: Header'dan token çıkar ve temizle
-// if (response.headers.authorization) {
-//   variables.clean_token = response.headers.authorization.replace('Bearer ', '');
-// }
-
-// Örnek: Test - Status code kontrolü
-// if (response.status !== 200) {
-//   throw new Error('API call failed with status: ' + response.status);
-// }
-
-// Örnek: Response validation
-// if (!response.data || !response.data.success) {
-//   throw new Error('API response indicates failure');
-// }
-
-// Örnek: Complex data processing
-// if (response.data && response.data.items) {
-//   variables.item_count = response.data.items.length.toString();
-//   variables.first_item_id = response.data.items[0]?.id || '';
-// }`}
+                        placeholder="// Post-response script'inizi buraya yazın..."
                         disabled={isRunning}
                       />
                     </div>

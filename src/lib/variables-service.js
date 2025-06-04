@@ -80,7 +80,20 @@ export class VariablesService {
   static getRuntimeVariables() {
     try {
       const stored = localStorage.getItem('omni_runtime_variables')
-      return stored ? JSON.parse(stored) : {}
+      let variables = stored ? JSON.parse(stored) : {}
+      
+      // Otomatik olarak currentUsername'i user variable'ı olarak ekle
+      const currentUsername = localStorage.getItem('currentUsername')
+      if (currentUsername) {
+        variables['user'] = {
+          key: 'user',
+          value: currentUsername,
+          source: 'auth',
+          timestamp: Date.now()
+        }
+      }
+      
+      return variables
     } catch (error) {
       console.error('Error reading runtime variables from localStorage:', error)
       return {}
@@ -104,6 +117,12 @@ export class VariablesService {
 
   static deleteRuntimeVariable(key) {
     try {
+      // User variable'ını silme - otomatik olarak yönetiliyor
+      if (key === 'user') {
+        console.warn('User variable cannot be deleted manually - it is managed by auth system')
+        return
+      }
+      
       const variables = this.getRuntimeVariables()
       delete variables[key]
       localStorage.setItem('omni_runtime_variables', JSON.stringify(variables))
@@ -151,6 +170,9 @@ export class VariablesService {
       const cutoffTime = Date.now() - (maxAgeHours * 60 * 60 * 1000)
       
       Object.keys(variables).forEach(key => {
+        // User variable'ını temizleme - otomatik olarak yönetiliyor
+        if (key === 'user') return
+        
         if (variables[key].timestamp < cutoffTime) {
           delete variables[key]
         }

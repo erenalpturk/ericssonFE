@@ -22,6 +22,13 @@ export default function WorkflowBuilder() {
   const [saveDialogOpen, setSaveDialogOpen] = useState(false)
   const [workflowName, setWorkflowName] = useState('')
   const [workflowDescription, setWorkflowDescription] = useState('')
+  
+  // Dropdown state'leri
+  const [showToolsDropdown, setShowToolsDropdown] = useState(false)
+  const [showSaveDropdown, setShowSaveDropdown] = useState(false)
+
+  // AbortController for cancelling workflow
+  const [abortController, setAbortController] = useState(null)
 
   // Variables'ları yükle
   useEffect(() => {
@@ -43,13 +50,23 @@ export default function WorkflowBuilder() {
         loadVariables()
       }
     }
+    
+    // Dropdown'ları kapatmak için global click listener
+    const handleClickOutside = (event) => {
+      if (!event.target.closest('.dropdown')) {
+        setShowToolsDropdown(false)
+        setShowSaveDropdown(false)
+      }
+    }
 
     window.addEventListener('focus', handleFocus)
     document.addEventListener('visibilitychange', handleVisibilityChange)
+    document.addEventListener('click', handleClickOutside)
 
     return () => {
       window.removeEventListener('focus', handleFocus)
       document.removeEventListener('visibilitychange', handleVisibilityChange)
+      document.removeEventListener('click', handleClickOutside)
     }
   }, [])
 
@@ -113,10 +130,10 @@ export default function WorkflowBuilder() {
     const newSteps = [...steps, newStep]
     setSteps(newSteps)
     
-    // Mevcut workflow varsa otomatik kaydet
-    if (currentWorkflow) {
-      autoSaveWorkflow(newSteps)
-    }
+    // Otomatik kaydetme kapatıldı
+    // if (currentWorkflow) {
+    //   autoSaveWorkflow(newSteps)
+    // }
   }
 
   const updateStep = (id, updatedStep) => {
@@ -125,10 +142,10 @@ export default function WorkflowBuilder() {
     )
     setSteps(newSteps)
     
-    // Mevcut workflow varsa otomatik kaydet (debounced)
-    if (currentWorkflow) {
-      debouncedAutoSave(newSteps)
-    }
+    // Otomatik kaydetme kapatıldı
+    // if (currentWorkflow) {
+    //   debouncedAutoSave(newSteps)
+    // }
   }
 
   const deleteStep = async (id) => {
@@ -140,10 +157,13 @@ export default function WorkflowBuilder() {
       const newSteps = steps.filter(step => step.id !== id)
       setSteps(newSteps)
       
-      if (currentWorkflow) {
-        await autoSaveWorkflow(newSteps)
-        toast.success('API adımı silindi')
-      }
+      // Otomatik kaydetme kapatıldı
+      // if (currentWorkflow) {
+      //   await autoSaveWorkflow(newSteps)
+      //   toast.success('API adımı silindi')
+      // }
+      
+      toast.success('API adımı silindi')
     } catch (error) {
       console.error('Error deleting step:', error)
       toast.error('API adımı silinirken hata oluştu')
@@ -239,6 +259,10 @@ export default function WorkflowBuilder() {
       return
     }
 
+    // Create new AbortController for this workflow run
+    const controller = new AbortController()
+    setAbortController(controller)
+    
     setIsRunning(true)
     setResults([])
     
@@ -254,6 +278,12 @@ export default function WorkflowBuilder() {
       for (let i = 0; i < steps.length; i++) {
         const step = steps[i]
         
+        // Check if workflow was cancelled
+        if (controller.signal.aborted) {
+          console.log('[WorkflowBuilder] Workflow cancelled by user')
+          break
+        }
+        
         if (!step.enabled) {
           workflowResults.push({
             stepId: step.id,
@@ -265,12 +295,16 @@ export default function WorkflowBuilder() {
         }
 
         console.log(`[WorkflowBuilder] Step ${i + 1}: Using variables:`, workflowVariables)
-        const result = await runSingleStep(step, workflowVariables)
+        const result = await runSingleStep(step, workflowVariables, controller.signal)
         workflowResults.push(result)
         setResults([...workflowResults])
 
         if (result.status === 'error') {
-          toast.error(`Workflow durdu: ${result.error}`)
+          if (result.error?.includes('aborted')) {
+            toast.success('Workflow durduruldu')
+          } else {
+            toast.error(`Workflow durdu: ${result.error}`)
+          }
           break
         }
 
@@ -281,16 +315,23 @@ export default function WorkflowBuilder() {
         }
       }
 
-      toast.success('Workflow tamamlandı')
+      if (!controller.signal.aborted) {
+        toast.success('Workflow tamamlandı')
+      }
     } catch (error) {
       console.error('Workflow error:', error)
-      toast.error('Workflow çalıştırılırken hata oluştu')
+      if (error.name === 'AbortError') {
+        toast.success('Workflow durduruldu')
+      } else {
+        toast.error('Workflow çalıştırılırken hata oluştu')
+      }
     } finally {
       setIsRunning(false)
+      setAbortController(null)
     }
   }
 
-  const runSingleStep = async (step, variables = {}) => {
+  const runSingleStep = async (step, variables = {}, signal) => {
     const startTime = Date.now()
     
     console.log(`[WorkflowBuilder] === Running Step: ${step.name} ===`)
@@ -344,6 +385,7 @@ export default function WorkflowBuilder() {
         method: step.method,
         headers: finalRequest.headers,
         body: step.method !== 'GET' ? finalRequest.body : undefined,
+        signal
       })
 
       const responseData = await response.text()
@@ -426,6 +468,17 @@ export default function WorkflowBuilder() {
 
     } catch (error) {
       const duration = Date.now() - startTime
+      
+      // Handle AbortError specially
+      if (error.name === 'AbortError') {
+        return {
+          stepId: step.id,
+          stepName: step.name,
+          status: 'error',
+          error: 'Request aborted by user',
+          duration
+        }
+      }
       
       return {
         stepId: step.id,
@@ -556,7 +609,12 @@ export default function WorkflowBuilder() {
   }
 
   const stopWorkflow = () => {
+    if (abortController) {
+      console.log('[WorkflowBuilder] Aborting workflow...')
+      abortController.abort()
+    }
     setIsRunning(false)
+    setAbortController(null)
     toast.success('Workflow durduruldu')
   }
 
@@ -709,84 +767,302 @@ export default function WorkflowBuilder() {
     }
   }
 
+  // Postman Collection Import
+  const handlePostmanImport = (event) => {
+    const file = event.target.files[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = async (e) => {
+      try {
+        const jsonData = JSON.parse(e.target.result)
+        const importResult = parsePostmanCollection(jsonData)
+        
+        if (importResult.steps.length > 0) {
+          setSteps([...steps, ...importResult.steps])
+          
+          let message = `${importResult.steps.length} API adımı Postman'den import edildi!`
+          if (importResult.scriptsCount > 0) {
+            message += ` (${importResult.scriptsCount} script dahil)`
+          }
+          
+          toast.success(message)
+          console.log('[PostmanImport] Import completed:', {
+            steps: importResult.steps.length,
+            scripts: importResult.scriptsCount,
+            details: importResult
+          })
+        } else {
+          toast.error('Postman collection\'da geçerli request bulunamadı')
+        }
+      } catch (error) {
+        console.error('Postman import error:', error)
+        toast.error('Postman collection parse edilemedi. Geçerli bir JSON dosyası seçin.')
+      }
+    }
+    reader.readAsText(file)
+    // Input'u temizle
+    event.target.value = ''
+  }
+
+  const parsePostmanCollection = (collection) => {
+    const steps = []
+    let scriptsCount = 0
+    
+    const parseItems = (items, parentName = '') => {
+      items.forEach((item, index) => {
+        if (item.item) {
+          // Folder ise, içindeki item'ları parse et
+          parseItems(item.item, item.name)
+        } else if (item.request) {
+          // Request ise, step'e çevir
+          const request = item.request
+          
+          // URL parse et
+          let url = ''
+          if (typeof request.url === 'string') {
+            url = request.url
+          } else if (request.url && request.url.raw) {
+            url = request.url.raw
+          } else if (request.url && request.url.host) {
+            const protocol = request.url.protocol || 'https'
+            const host = Array.isArray(request.url.host) ? request.url.host.join('.') : request.url.host
+            const path = request.url.path ? '/' + (Array.isArray(request.url.path) ? request.url.path.join('/') : request.url.path) : ''
+            const query = request.url.query ? '?' + request.url.query.map(q => `${q.key}=${q.value || ''}`).join('&') : ''
+            url = `${protocol}://${host}${path}${query}`
+          }
+
+          // Headers parse et
+          const headers = {}
+          if (request.header && Array.isArray(request.header)) {
+            request.header.forEach(h => {
+              if (h.key && !h.disabled) {
+                headers[h.key] = h.value || ''
+              }
+            })
+          }
+
+          // Body parse et
+          let body = ''
+          if (request.body) {
+            if (request.body.mode === 'raw') {
+              body = request.body.raw || ''
+            } else if (request.body.mode === 'formdata') {
+              // Form data'yı JSON'a çevir (basit yaklaşım)
+              const formData = {}
+              if (request.body.formdata) {
+                request.body.formdata.forEach(item => {
+                  if (item.key && !item.disabled) {
+                    formData[item.key] = item.value || ''
+                  }
+                })
+              }
+              body = JSON.stringify(formData, null, 2)
+            } else if (request.body.mode === 'urlencoded') {
+              // URL encoded'ı JSON'a çevir
+              const formData = {}
+              if (request.body.urlencoded) {
+                request.body.urlencoded.forEach(item => {
+                  if (item.key && !item.disabled) {
+                    formData[item.key] = item.value || ''
+                  }
+                })
+              }
+              body = JSON.stringify(formData, null, 2)
+            }
+          }
+
+          // Script'leri parse et
+          let preRequestScript = ''
+          let postResponseScript = ''
+          
+          if (item.event && Array.isArray(item.event)) {
+            item.event.forEach(event => {
+              if (event.listen === 'prerequest' && event.script && event.script.exec) {
+                // Pre-request script'i birleştir
+                preRequestScript = Array.isArray(event.script.exec) 
+                  ? event.script.exec.join('\n') 
+                  : event.script.exec || ''
+                if (preRequestScript.trim()) scriptsCount++
+              } else if (event.listen === 'test' && event.script && event.script.exec) {
+                // Test script'i post-response script olarak kullan
+                postResponseScript = Array.isArray(event.script.exec)
+                  ? event.script.exec.join('\n')
+                  : event.script.exec || ''
+                if (postResponseScript.trim()) scriptsCount++
+              }
+            })
+          }
+
+          const stepName = parentName ? `${parentName} - ${item.name}` : item.name
+          
+          const step = {
+            id: `imported-${Date.now()}-${Math.random()}-${index}`, // Daha unique ID
+            name: stepName || `İmport Edilen Adım ${steps.length + 1}`,
+            method: (request.method || 'GET').toUpperCase(),
+            url: url,
+            headers: headers,
+            body: body,
+            variables: {},
+            preRequestScript: preRequestScript,
+            postResponseScript: postResponseScript,
+            enabled: true
+          }
+          
+          steps.push(step)
+          
+          // Debug log
+          console.log('[PostmanImport] Parsed step:', {
+            name: step.name,
+            method: step.method,
+            url: step.url,
+            hasPreScript: !!preRequestScript.trim(),
+            hasPostScript: !!postResponseScript.trim(),
+            headersCount: Object.keys(headers).length
+          })
+        }
+      })
+    }
+
+    if (collection.item) {
+      parseItems(collection.item)
+    } else if (collection.collection && collection.collection.item) {
+      // Bazı export formatlarında collection nested olabilir
+      parseItems(collection.collection.item)
+    }
+
+    console.log('[PostmanImport] Parse completed:', {
+      totalSteps: steps.length,
+      totalScripts: scriptsCount,
+      collectionName: collection.info?.name || collection.collection?.info?.name || 'Unknown'
+    })
+
+    return { steps, scriptsCount }
+  }
+
   return (
     <div className="modern-page">
   
 
       {/* Action Bar */}
-      <div className="action-bar">
-        <div className="action-group">
+      <div className="action-bar-minimal">
+        {/* Sol grup - Ana işlemler */}
+        <div className="action-group-left">
           <button 
             className="action-btn primary"
             onClick={addStep}
             disabled={isRunning}
+            title="Yeni API adımı ekle"
           >
             <i className="bi bi-plus-lg"></i>
             <span>API Adımı Ekle</span>
           </button>
           
+          <label className="action-btn secondary" style={{ cursor: 'pointer', margin: 0 }} title="Postman collection import et">
+            <i className="bi bi-upload"></i>
+            <span>Import</span>
+            <input
+              type="file"
+              accept=".json"
+              onChange={handlePostmanImport}
+              style={{ display: 'none' }}
+              disabled={isRunning}
+            />
+          </label>
+          
           {steps.length > 0 && (
             <button 
               className={`action-btn ${isRunning ? 'danger' : 'success'}`}
               onClick={isRunning ? stopWorkflow : runWorkflow}
+              title={isRunning ? 'Workflow\'u durdur' : 'Workflow\'u çalıştır'}
             >
               <i className={`bi ${isRunning ? 'bi-stop-fill' : 'bi-play-fill'}`}></i>
-              <span>{isRunning ? 'Durdur' : 'Workflow Çalıştır'}</span>
+              <span>{isRunning ? 'Durdur' : 'Çalıştır'}</span>
             </button>
           )}
         </div>
 
-        <div className="action-group">
-          <button 
-            className="action-btn secondary"
-            onClick={() => setShowVariablesManager(true)}
-          >
-            <i className="bi bi-gear-fill"></i>
-            <span>Değişkenler</span>
-          </button>
-
-          <button 
-            className="action-btn secondary"
-            onClick={loadVariables}
-            title="Değişkenleri yenile"
-          >
-            <i className="bi bi-arrow-clockwise"></i>
-            <span>Yenile</span>
-          </button>
+        {/* Sağ grup - Yönetim */}
+        <div className="action-group-right">
+          <div className="dropdown">
+            <button 
+              className="action-btn secondary dropdown-toggle" 
+              type="button" 
+              title="Araçlar ve ayarlar"
+              onClick={(e) => {
+                e.stopPropagation()
+                setShowToolsDropdown(!showToolsDropdown)
+                setShowSaveDropdown(false)
+              }}
+            >
+              <i className="bi bi-three-dots"></i>
+              <span>Araçlar</span>
+            </button>
+            <div className={`dropdown-menu ${showToolsDropdown ? 'show' : ''}`}>
+              <button className="dropdown-item" onClick={() => {
+                setShowVariablesManager(true)
+                setShowToolsDropdown(false)
+              }}>
+                <i className="bi bi-gear-fill"></i>
+                <span>Değişkenler</span>
+              </button>
+              <button className="dropdown-item" onClick={() => {
+                loadVariables()
+                setShowToolsDropdown(false)
+              }} title="Değişkenleri yenile">
+                <i className="bi bi-arrow-clockwise"></i>
+                <span>Yenile</span>
+              </button>
+              <button className="dropdown-item" onClick={() => {
+                setShowWorkflowManager(true)
+                setShowToolsDropdown(false)
+              }}>
+                <i className="bi bi-folder-fill"></i>
+                <span>Workflow Yönetimi</span>
+              </button>
+            </div>
+          </div>
           
-          <button 
-            className="action-btn secondary"
-            onClick={() => setShowWorkflowManager(true)}
-          >
-            <i className="bi bi-folder-fill"></i>
-            <span>Workflow Yönetimi</span>
-          </button>
-          
-          <button 
-            className="action-btn outline"
-            onClick={quickSave}
-            disabled={steps.length === 0}
-          >
-            <i className="bi bi-save-fill"></i>
-            <span>{currentWorkflow ? 'Hızlı Kaydet' : 'Kaydet'}</span>
-          </button>
-          
-          <button 
-            className="action-btn outline"
-            onClick={() => setSaveDialogOpen(true)}
-            disabled={steps.length === 0}
-          >
-            <i className="bi bi-save2-fill"></i>
-            <span>{currentWorkflow ? 'Farklı Kaydet' : 'Kaydet'}</span>
-          </button>
-          
-          <button 
-            className="action-btn outline"
-            onClick={handleCreateNewWorkflow}
-          >
-            <i className="bi bi-plus-square-fill"></i>
-            <span>Yeni</span>
-          </button>
+          <div className="dropdown">
+            <button 
+              className="action-btn outline dropdown-toggle" 
+              type="button" 
+              disabled={steps.length === 0}
+              title="Kaydetme seçenekleri"
+              onClick={(e) => {
+                e.stopPropagation()
+                setShowSaveDropdown(!showSaveDropdown)
+                setShowToolsDropdown(false)
+              }}
+            >
+              <i className="bi bi-save-fill"></i>
+              <span>Kaydet</span>
+            </button>
+            <div className={`dropdown-menu ${showSaveDropdown ? 'show' : ''}`}>
+              <button className="dropdown-item" onClick={() => {
+                quickSave()
+                setShowSaveDropdown(false)
+              }} disabled={steps.length === 0}>
+                <i className="bi bi-save-fill"></i>
+                <span>{currentWorkflow ? 'Hızlı Kaydet' : 'Kaydet'}</span>
+              </button>
+              <button className="dropdown-item" onClick={() => {
+                setSaveDialogOpen(true)
+                setShowSaveDropdown(false)
+              }} disabled={steps.length === 0}>
+                <i className="bi bi-save2-fill"></i>
+                <span>Farklı Kaydet</span>
+              </button>
+              <div className="dropdown-divider"></div>
+              <button className="dropdown-item" onClick={() => {
+                handleCreateNewWorkflow()
+                setShowSaveDropdown(false)
+              }}>
+                <i className="bi bi-plus-square-fill"></i>
+                <span>Yeni Workflow</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -813,14 +1089,27 @@ export default function WorkflowBuilder() {
               <i className="bi bi-plus-circle"></i>
             </div>
             <h3>Henüz API adımı eklenmedi</h3>
-            <p>Workflow'unuzu oluşturmaya başlamak için yukarıdan "API Adımı Ekle" butonuna tıklayın</p>
-            <button 
-              className="action-btn primary"
-              onClick={addStep}
-            >
-              <i className="bi bi-plus-lg"></i>
-              <span>İlk Adımı Ekle</span>
-            </button>
+            <p>Workflow'unuzu oluşturmaya başlamak için yukarıdan "API Adımı Ekle" butonuna tıklayın veya Postman collection'ınızı import edin</p>
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button 
+                className="action-btn primary"
+                onClick={addStep}
+              >
+                <i className="bi bi-plus-lg"></i>
+                <span>İlk Adımı Ekle</span>
+              </button>
+              
+              <label className="action-btn outline" style={{ cursor: 'pointer', margin: 0 }}>
+                <i className="bi bi-file-earmark-code"></i>
+                <span>Postman Import</span>
+                <input
+                  type="file"
+                  accept=".json"
+                  onChange={handlePostmanImport}
+                  style={{ display: 'none' }}
+                />
+              </label>
+            </div>
           </div>
         ) : (
           <div className="workflow-container">

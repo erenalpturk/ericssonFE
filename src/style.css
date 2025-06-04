@@ -2229,12 +2229,12 @@ body {
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-  transition: left 0.5s ease;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent) !important;
+  transition: left 0.6s ease !important;
 }
 
 .action-btn:hover::before {
-  left: 100%;
+  left: 100% !important;
 }
 
 .action-btn.primary {
@@ -3623,4 +3623,271 @@ body {
 .workflow-action-btn.delete:hover {
   background: rgba(252, 165, 165, 0.9);
   color: #b91c1c;
+}
+
+/* Minimal Action Bar */
+.action-bar-minimal {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding: 1rem 1.5rem !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  border-radius: 1rem !important;
+  margin-bottom: 1.5rem !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
+  position: sticky !important;
+  top: 1rem !important;
+  z-index: 50 !important;
+  transition: all 0.3s ease !important;
+}
+
+.action-bar-minimal:hover {
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15) !important;
+  transform: translateY(-1px) !important;
+}
+
+.action-group-left, .action-group-right {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
+}
+
+/* Dropdown Component */
+.dropdown {
+  position: relative !important;
+  display: inline-block !important;
+}
+
+.dropdown-toggle {
+  background: none !important;
+  border: none !important;
+  cursor: pointer !important;
+  position: relative !important;
+}
+
+.dropdown-toggle::after {
+  content: '▼' !important;
+  font-size: 0.7rem !important;
+  margin-left: 0.5rem !important;
+  opacity: 0.6 !important;
+  transition: transform 0.2s ease !important;
+}
+
+.dropdown:hover .dropdown-toggle::after {
+  transform: scale(1.1) !important;
+}
+
+.dropdown-menu {
+  position: absolute !important;
+  top: 100% !important;
+  right: 0 !important;
+  margin-top: 0.5rem !important;
+  background: rgba(255, 255, 255, 0.98) !important;
+  backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  border-radius: 0.75rem !important;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15) !important;
+  min-width: 200px !important;
+  padding: 0.5rem !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  transform: translateY(-10px) scale(0.95) !important;
+  transition: all 0.2s ease !important;
+  z-index: 1100 !important;
+}
+
+.dropdown:hover .dropdown-menu {
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: translateY(0) scale(1) !important;
+}
+
+.dropdown-item {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
+  padding: 0.75rem 1rem !important;
+  border: none !important;
+  background: none !important;
+  color: #374151 !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  border-radius: 0.5rem !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  width: 100% !important;
+  text-align: left !important;
+}
+
+.dropdown-item:hover:not(:disabled) {
+  background: rgba(59, 130, 246, 0.1) !important;
+  color: #2563eb !important;
+  transform: translateX(2px) !important;
+}
+
+.dropdown-item:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+}
+
+.dropdown-item i {
+  width: 1rem !important;
+  text-align: center !important;
+  font-size: 0.875rem !important;
+}
+
+.dropdown-divider {
+  height: 1px !important;
+  background: rgba(156, 163, 175, 0.2) !important;
+  margin: 0.5rem 0 !important;
+}
+
+/* Action Button Updates for Minimal Bar */
+.action-bar-minimal .action-btn {
+  padding: 0.75rem 1.25rem !important;
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+  border-radius: 0.75rem !important;
+  border: 1px solid transparent !important;
+  transition: all 0.2s ease !important;
+  backdrop-filter: blur(10px) !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.action-bar-minimal .action-btn::before {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: -100% !important;
+  width: 100% !important;
+  height: 100% !important;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent) !important;
+  transition: left 0.6s ease !important;
+}
+
+.action-bar-minimal .action-btn:hover::before {
+  left: 100% !important;
+}
+
+.action-bar-minimal .action-btn i {
+  margin-right: 0.5rem !important;
+  font-size: 0.875rem !important;
+}
+
+.action-bar-minimal .action-btn:hover:not(:disabled) {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Responsive Design for Minimal Bar */
+@media (max-width: 1024px) {
+  .action-bar-minimal {
+    flex-direction: column !important;
+    gap: 1rem !important;
+    padding: 1rem !important;
+  }
+  
+  .action-group-left, .action-group-right {
+    width: 100% !important;
+    justify-content: center !important;
+    flex-wrap: wrap !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .action-bar-minimal .action-btn span {
+    display: none !important;
+  }
+  
+  .action-bar-minimal .action-btn {
+    padding: 0.75rem !important;
+    min-width: 2.75rem !important;
+  }
+  
+  .action-bar-minimal .action-btn i {
+    margin-right: 0 !important;
+  }
+  
+  .dropdown-menu {
+    min-width: 160px !important;
+  }
+}
+
+/* Action Button Updates for Minimal Bar */
+.action-bar-minimal .action-btn {
+  padding: 0.75rem 1.25rem !important;
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+  border-radius: 0.75rem !important;
+  border: 1px solid transparent !important;
+  transition: all 0.2s ease !important;
+  backdrop-filter: blur(10px) !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.action-bar-minimal .action-btn.primary {
+  background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+  color: white !important;
+  box-shadow: 0 4px 14px 0 rgba(59, 130, 246, 0.3) !important;
+}
+
+.action-bar-minimal .action-btn.secondary {
+  background: linear-gradient(135deg, #6b7280, #4b5563) !important;
+  color: white !important;
+  box-shadow: 0 4px 14px 0 rgba(107, 114, 128, 0.2) !important;
+}
+
+.action-bar-minimal .action-btn.success {
+  background: linear-gradient(135deg, #10b981, #059669) !important;
+  color: white !important;
+  box-shadow: 0 4px 14px 0 rgba(16, 185, 129, 0.3) !important;
+}
+
+.action-bar-minimal .action-btn.danger {
+  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+  color: white !important;
+  box-shadow: 0 4px 14px 0 rgba(239, 68, 68, 0.3) !important;
+}
+
+.action-bar-minimal .action-btn.outline {
+  background: rgba(255, 255, 255, 0.9) !important;
+  color: #374151 !important;
+  border: 2px solid rgba(229, 231, 235, 0.6) !important;
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.05) !important;
+}
+
+.action-bar-minimal .action-btn.primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+  box-shadow: 0 8px 25px 0 rgba(59, 130, 246, 0.4) !important;
+  transform: translateY(-2px) !important;
+}
+
+.action-bar-minimal .action-btn.secondary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #4b5563, #374151) !important;
+  box-shadow: 0 8px 25px 0 rgba(107, 114, 128, 0.3) !important;
+  transform: translateY(-2px) !important;
+}
+
+.action-bar-minimal .action-btn.outline:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 1) !important;
+  border-color: #3b82f6 !important;
+  color: #3b82f6 !important;
+  box-shadow: 0 4px 12px 0 rgba(59, 130, 246, 0.15) !important;
+  transform: translateY(-1px) !important;
+}
+
+.dropdown:hover .dropdown-menu {
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: translateY(0) scale(1) !important;
+}
+
+.dropdown-menu.show {
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: translateY(0) scale(1) !important;
 }
