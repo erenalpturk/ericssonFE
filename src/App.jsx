@@ -11,6 +11,7 @@ import SelfybestInsertSql from './components/SelfybestInsertSql'
 import InfodealerToSqlUpdate from './components/InfodealerToSqlUpdate'
 import IccidManagement from './components/IccidManagement'
 import CourierActions from './components/CourierActions'
+import WorkflowBuilder from './components/automation/WorkflowBuilder'
 
 import ChangePassword from './components/ChangePassword'
 
@@ -134,6 +135,16 @@ function AppRoutes() {
                         <PrivateRoute>
                             <Layout>
                                 <CourierActions onApiCall={handleApiCall} />
+                            </Layout>
+                        </PrivateRoute>
+                    }
+                />
+                <Route
+                    path="/api-automation"
+                    element={
+                        <PrivateRoute>
+                            <Layout>
+                                <WorkflowBuilder />
                             </Layout>
                         </PrivateRoute>
                     }

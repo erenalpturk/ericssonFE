@@ -75,6 +75,12 @@ function Sidebar({ isCollapsed, onToggle }) {
             icon: 'bi-truck', 
             label: 'Kurye Tetikleme',
             color: 'text-cyan-500'
+        },
+        { 
+            path: '/api-automation', 
+            icon: 'bi-cpu-fill', 
+            label: 'API Otomasyon',
+            color: 'text-orange-500'
         }
     ]
 
