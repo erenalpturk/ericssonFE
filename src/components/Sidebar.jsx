@@ -1,7 +1,17 @@
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
 
 function Sidebar({ isCollapsed, onToggle }) {
     const location = useLocation()
+    const navigate = useNavigate()
+    const { logout, user } = useAuth()
+
+    const handleLogout = async () => {
+        const result = await logout()
+        if (result.success) {
+            navigate('/login')
+        }
+    }
 
     const menuItems = [
         { 
@@ -16,18 +26,18 @@ function Sidebar({ isCollapsed, onToggle }) {
             label: 'SMS Decrypt',
             color: 'text-purple-500'
         },
+        // { 
+        //     path: '/postpaid-activation', 
+        //     icon: 'bi-phone-fill', 
+        //     label: 'Postpaid Activation',
+        //     color: 'text-orange-500',
+        //     disabled: true,
+        //     badge: 'Yapım Aşamasında'
+        // },
         { 
-            path: '/postpaid-activation', 
-            icon: 'bi-phone-fill', 
-            label: 'Postpaid Activation',
-            color: 'text-orange-500',
-            disabled: true,
-            badge: 'Yapım Aşamasında'
-        },
-        { 
-            path: '/iccid-to-sql', 
+            path: '/sql-create', 
             icon: 'bi-database-fill', 
-            label: 'ICCID to SQL',
+            label: 'SQL Create',
             color: 'text-emerald-500'
         },
         // { 
@@ -144,6 +154,17 @@ function Sidebar({ isCollapsed, onToggle }) {
                             <span>OMNI Test Team</span>
                         </div>
                         <div className="version">v1.0.0</div>
+                        <div className="user-info">
+                            <i className="bi bi-person-fill"></i>
+                            <span>{user.full_name}</span>
+                        </div>
+                        <button 
+                            className="logout-btn"
+                            onClick={handleLogout}
+                        >
+                            <i className="bi bi-box-arrow-right"></i>
+                            <span>Çıkış Yap</span>
+                        </button>
                     </div>
                 </div>
             )}

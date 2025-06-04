@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
   Box,
-  Button,
-  TextField,
-  Paper,
   Typography,
   Table,
   TableBody,
@@ -12,26 +9,16 @@ import {
   TableHead,
   TableRow,
   Checkbox,
-  Alert,
-  CircularProgress,
-  Tabs,
-  Tab,
   TableSortLabel,
-  IconButton,
   Menu,
   MenuItem,
-  InputAdornment,
-  Tooltip,
   Chip,
   TablePagination,
   Select,
   FormControl,
-  InputLabel
 } from '@mui/material';
-import FilterListIcon from '@mui/icons-material/FilterList';
-import SearchIcon from '@mui/icons-material/Search';
-import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { useAuth } from '../contexts/AuthContext';
 
 const IccidManagement = () => {
   const [iccidText, setIccidText] = useState('');
@@ -54,8 +41,6 @@ const IccidManagement = () => {
   const [copySuccess, setCopySuccess] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
-  const baseUrl = 'https://iccid.vercel.app';
-  //const baseUrl = 'http://localhost:5432';
   const iccidTypes = [
     { value: 'fonkpos', label: 'Fonksiyonel Postpaid' },
     { value: 'regpos', label: 'Regresyon Postpaid' },
@@ -64,6 +49,7 @@ const IccidManagement = () => {
     { value: 'custom', label: 'Diğer' }
   ];
   const statusOptions = ['available', 'reserved', 'sold'];
+  const { baseUrl, user } = useAuth();
 
   useEffect(() => {
     fetchActivations();
@@ -114,7 +100,7 @@ const IccidManagement = () => {
     try {
       setLoading(true);
       const type = selectedType === 'custom' ? customType : selectedType;
-      const response = await fetch(`${baseUrl}/iccid/formatAndInsertIccids/${type}`, {
+      const response = await fetch(`${baseUrl}/iccid/formatAndInsertIccids/${type}/${user.sicil_no}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'text/plain',

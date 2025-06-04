@@ -11,61 +11,53 @@ function Home() {
             bgGradient: 'from-purple-500 to-indigo-600',
             category: 'Güvenlik'
         },
+        // {
+        //     path: '/postpaid-activation',
+        //     icon: 'bi-phone-fill',
+        //     title: 'Postpaid Activation',
+        //     description: 'Hat aktivasyon otomasyonu',
+        //     color: 'text-orange-500',
+        //     bgGradient: 'from-orange-500 to-red-600',
+        //     category: 'Aktivasyon',
+        //     disabled: true
+        // },
         {
-            path: '/postpaid-activation',
-            icon: 'bi-phone-fill',
-            title: 'Postpaid Activation',
-            description: 'Hat aktivasyon otomasyonu',
-            color: 'text-orange-500',
-            bgGradient: 'from-orange-500 to-red-600',
-            category: 'Aktivasyon',
-            disabled: true
-        },
-        {
-            path: '/iccid-to-sql',
+            path: '/sql-create',
             icon: 'bi-database-fill',
-            title: 'ICCID to SQL',
-            description: 'ICCID listesini SQL SELECT sorgusuna dönüştürür',
+            title: 'SQL Create',
+            description: 'SQL sorgusu oluşturur',
             color: 'text-emerald-500',
             bgGradient: 'from-emerald-500 to-teal-600',
             category: 'SQL Araçları'
         },
-        {
-            path: '/infodealer-to-sql',
-            icon: 'bi-database-add',
-            title: 'Infodealer Insert',
-            description: 'Infodealer için toplu INSERT sorgusu oluşturur',
-            color: 'text-emerald-600',
-            bgGradient: 'from-emerald-600 to-green-600',
-            category: 'SQL Araçları'
-        },
-        {
-            path: '/infodealer-to-sql-update',
-            icon: 'bi-database-up',
-            title: 'Infodealer Update',
-            description: 'Dealer kodu güncelleme sorguları oluşturur',
-            color: 'text-emerald-600',
-            bgGradient: 'from-emerald-600 to-green-600',
-            category: 'SQL Araçları'
-        },
-        {
-            path: '/selfybest-insert-sql',
-            icon: 'bi-database-gear',
-            title: 'Selfybest Insert',
-            description: 'Youth tariff konfigürasyonu için INSERT sorgusu',
-            color: 'text-emerald-600',
-            bgGradient: 'from-emerald-600 to-green-600',
-            category: 'SQL Araçları'
-        },
-        {
-            path: '/cudb-feed',
-            icon: 'bi-arrow-repeat',
-            title: 'CUDB Feed',
-            description: 'CUDB API servisi ve transaction yönetimi',
-            color: 'text-cyan-500',
-            bgGradient: 'from-cyan-500 to-blue-600',
-            category: 'API Araçları'
-        },
+        // {
+        //     path: '/infodealer-to-sql',
+        //     icon: 'bi-database-add',
+        //     title: 'Infodealer Insert',
+        //     description: 'Infodealer için toplu INSERT sorgusu oluşturur',
+        //     color: 'text-emerald-600',
+        //     bgGradient: 'from-emerald-600 to-green-600',
+        //     category: 'SQL Araçları'
+        // },
+        // {
+        //     path: '/infodealer-to-sql-update',
+        //     icon: 'bi-database-up',
+        //     title: 'Infodealer Update',
+        //     description: 'Dealer kodu güncelleme sorguları oluşturur',
+        //     color: 'text-emerald-600',
+        //     bgGradient: 'from-emerald-600 to-green-600',
+        //     category: 'SQL Araçları'
+        // },
+        // {
+        //     path: '/selfybest-insert-sql',
+        //     icon: 'bi-database-gear',
+        //     title: 'Selfybest Insert',
+        //     description: 'Youth tariff konfigürasyonu için INSERT sorgusu',
+        //     color: 'text-emerald-600',
+        //     bgGradient: 'from-emerald-600 to-green-600',
+        //     category: 'SQL Araçları'
+        // },
+        
         {
             path: '/iccid-management',
             icon: 'bi-credit-card-2-front',

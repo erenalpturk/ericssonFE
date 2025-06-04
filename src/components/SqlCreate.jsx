@@ -190,7 +190,7 @@ const IccidToSql = () => {
                             onClick={() => handlePreset('geodis')}
                             title="dsfutil.geodis.mticid"
                         >
-                            Geodis
+                            {table}
                         </button>
                     </div>
                 </div>
