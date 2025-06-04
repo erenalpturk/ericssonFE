@@ -20,6 +20,11 @@ const ChangePassword = () => {
         e.preventDefault();
         setError('');
 
+        if (newPassword === user.password) {
+            setError('Yeni şifre eski şifre ile aynı olamaz');
+            return;
+        }
+
         if (newPassword !== confirmPassword) {
             setError('Şifreler eşleşmiyor');
             return;
