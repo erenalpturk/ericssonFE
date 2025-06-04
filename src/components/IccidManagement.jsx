@@ -404,7 +404,7 @@ const IccidManagement = () => {
     try {
       setLoading(true);
       const response = await fetch(`${baseUrl}/iccid/updateStatus`, {
-        method: 'PUT',
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
