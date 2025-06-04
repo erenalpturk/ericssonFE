@@ -25,8 +25,11 @@ export default function WorkflowManager({ onClose, onLoadWorkflow }) {
 
   const handleLoadWorkflow = async (workflow) => {
     try {
+      console.log('[WorkflowManager] Loading workflow:', workflow.name)
       const { workflow: workflowData, steps } = await WorkflowService.loadWorkflow(workflow.id)
-      onLoadWorkflow(workflowData, steps)
+      console.log('[WorkflowManager] Workflow loaded, calling onLoadWorkflow callback...')
+      await onLoadWorkflow(workflowData, steps)
+      console.log('[WorkflowManager] Workflow loading completed')
     } catch (error) {
       console.error('Error loading workflow:', error)
       toast.error('Workflow yüklenirken hata oluştu')
@@ -64,79 +67,108 @@ export default function WorkflowManager({ onClose, onLoadWorkflow }) {
   }
 
   return (
-    <div className="modal show d-block" style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
-      <div className="modal-dialog modal-lg">
-        <div className="modal-content">
-          <div className="modal-header">
-            <h5 className="modal-title">
-              <i className="bi bi-folder me-2"></i>
-              Workflow Yönetimi
-            </h5>
-            <button 
-              type="button" 
-              className="btn-close"
-              onClick={onClose}
-            ></button>
-          </div>
-          <div className="modal-body">
-            {loading ? (
-              <div className="text-center py-4">
-                <div className="spinner-border" role="status">
-                  <span className="visually-hidden">Yükleniyor...</span>
+    <div className="modal-overlay workflow-manager-modal">
+      <div className="modal-content">
+        <div className="modal-header">
+          <h3>
+            <i className="bi bi-folder-fill"></i>
+            Workflow Yönetimi
+          </h3>
+          <button 
+            className="modal-close"
+            onClick={onClose}
+          >
+            <i className="bi bi-x-lg"></i>
+          </button>
+        </div>
+        
+        <div className="modal-body">
+          {loading ? (
+            <div className="empty-state small">
+              <div className="empty-icon">
+                <i className="bi bi-hourglass-split"></i>
+              </div>
+              <h3>Yükleniyor...</h3>
+              <p>Workflow'lar yükleniyor</p>
+            </div>
+          ) : workflows.length === 0 ? (
+            <div className="empty-state small">
+              <div className="empty-icon">
+                <i className="bi bi-folder-x"></i>
+              </div>
+              <h3>Henüz workflow bulunamadı</h3>
+              <p>İlk workflow'unuzu oluşturun</p>
+            </div>
+          ) : (
+            <div>
+              <div className="section-header">
+                <div>
+                  <h4>Kayıtlı Workflow'lar</h4>
+                  <p>Workflow'larınızı yükleyin, kopyalayın veya silin</p>
                 </div>
-                <div className="mt-2">Workflow'lar yükleniyor...</div>
+                <div className="stats-badge">
+                  <i className="bi bi-folder"></i>
+                  {workflows.length} Workflow
+                </div>
               </div>
-            ) : workflows.length === 0 ? (
-              <div className="text-center py-4">
-                <i className="bi bi-folder-x text-muted" style={{fontSize: '3rem'}}></i>
-                <h6 className="text-muted mt-3">Henüz workflow bulunamadı</h6>
-                <p className="text-muted">İlk workflow'unuzu oluşturun</p>
-              </div>
-            ) : (
-              <div className="table-responsive">
-                <table className="table table-hover">
+
+              <div className="table-container">
+                <table className="modern-table">
                   <thead>
                     <tr>
                       <th>Workflow Adı</th>
-                      <th>Açıklama</th>
-                      <th>Son Güncelleme</th>
-                      <th>İşlemler</th>
+                      <th style={{ width: '300px' }}>Açıklama</th>
+                      <th style={{ width: '180px' }}>Son Güncelleme</th>
+                      <th style={{ width: '150px' }}>İşlemler</th>
                     </tr>
                   </thead>
                   <tbody>
                     {workflows.map(workflow => (
                       <tr key={workflow.id}>
                         <td>
-                          <div className="fw-medium">{workflow.name}</div>
-                        </td>
-                        <td>
-                          <div className="text-muted small">
-                            {workflow.description || 'Açıklama yok'}
+                          <div style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: '0.75rem' 
+                          }}>
+                            <div className="workflow-icon">
+                              <i className="bi bi-gear-wide-connected"></i>
+                            </div>
+                            <div>
+                              <div className="workflow-name">
+                                {workflow.name}
+                              </div>
+                            </div>
                           </div>
                         </td>
                         <td>
-                          <small className="text-muted">
-                            {formatDate(workflow.updated_at)}
-                          </small>
+                          <span className={workflow.description ? 'workflow-description' : 'workflow-description'}>
+                            {workflow.description || 'Açıklama yok'}
+                          </span>
                         </td>
                         <td>
-                          <div className="btn-group btn-group-sm">
+                          <span className="workflow-date">
+                            {formatDate(workflow.updated_at)}
+                          </span>
+                        </td>
+                        <td>
+                          <div className="workflow-actions">
                             <button
-                              className="btn btn-outline-primary"
+                              className="workflow-action-btn load"
                               onClick={() => handleLoadWorkflow(workflow)}
                               title="Yükle"
                             >
                               <i className="bi bi-upload"></i>
                             </button>
                             <button
-                              className="btn btn-outline-secondary"
+                              className="workflow-action-btn copy"
                               onClick={() => handleDuplicateWorkflow(workflow.id)}
                               title="Kopyala"
                             >
                               <i className="bi bi-copy"></i>
                             </button>
                             <button
-                              className="btn btn-outline-danger"
+                              className="workflow-action-btn delete"
                               onClick={() => handleDeleteWorkflow(workflow.id)}
                               title="Sil"
                             >
@@ -149,17 +181,18 @@ export default function WorkflowManager({ onClose, onLoadWorkflow }) {
                   </tbody>
                 </table>
               </div>
-            )}
-          </div>
-          <div className="modal-footer">
-            <button 
-              type="button" 
-              className="btn btn-secondary"
-              onClick={onClose}
-            >
-              Kapat
-            </button>
-          </div>
+            </div>
+          )}
+        </div>
+        
+        <div className="modal-footer">
+          <button 
+            className="action-btn outline"
+            onClick={onClose}
+          >
+            <i className="bi bi-x-circle"></i>
+            Kapat
+          </button>
         </div>
       </div>
     </div>

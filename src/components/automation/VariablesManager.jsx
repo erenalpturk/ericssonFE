@@ -106,254 +106,276 @@ export default function VariablesManager({ onClose, onVariablesChanged }) {
 
   const getSourceBadge = (source) => {
     const badges = {
-      api: 'bg-success',
-      script: 'bg-warning', 
-      manual: 'bg-info'
+      api: 'success',
+      script: 'warning', 
+      manual: 'primary'
     }
-    return badges[source] || 'bg-secondary'
+    return badges[source] || 'secondary'
   }
 
   return (
-    <div className="modal show d-block" style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
-      <div className="modal-dialog modal-xl">
-        <div className="modal-content">
-          <div className="modal-header">
-            <h5 className="modal-title">
-              <i className="bi bi-gear me-2"></i>
-              Değişken Yönetimi
-            </h5>
-            <button 
-              type="button" 
-              className="btn-close"
-              onClick={onClose}
-            ></button>
-          </div>
-          <div className="modal-body">
-            {loading ? (
-              <div className="text-center py-4">
-                <div className="spinner-border" role="status">
-                  <span className="visually-hidden">Yükleniyor...</span>
-                </div>
-                <div className="mt-2">Değişkenler yükleniyor...</div>
+    <div className="modal-overlay">
+      <div className="modal-content" style={{ maxWidth: '900px', width: '90vw' }}>
+        <div className="modal-header">
+          <h3>
+            <i className="bi bi-gear-fill"></i>
+            Değişken Yönetimi
+          </h3>
+          <button 
+            className="modal-close"
+            onClick={onClose}
+          >
+            <i className="bi bi-x-lg"></i>
+          </button>
+        </div>
+        
+        <div className="modal-body">
+          {loading ? (
+            <div className="empty-state">
+              <div className="empty-icon">
+                <i className="bi bi-hourglass-split"></i>
               </div>
-            ) : (
-              <div>
-                {/* Tabs */}
-                <ul className="nav nav-tabs mb-3">
-                  <li className="nav-item">
-                    <button 
-                      className={`nav-link ${activeTab === 'static' ? 'active' : ''}`}
-                      onClick={() => setActiveTab('static')}
-                    >
-                      Static Değişkenler ({staticVariables.length})
-                    </button>
-                  </li>
-                  <li className="nav-item">
-                    <button 
-                      className={`nav-link ${activeTab === 'runtime' ? 'active' : ''}`}
-                      onClick={() => setActiveTab('runtime')}
-                    >
-                      Runtime Değişkenler ({Object.keys(runtimeVariables).length})
-                    </button>
-                  </li>
-                </ul>
+              <h4>Yükleniyor...</h4>
+              <p>Değişkenler yükleniyor</p>
+            </div>
+          ) : (
+            <div>
+              {/* Tabs */}
+              <div className="step-tabs">
+                <div className="tab-list">
+                  <button 
+                    className={`tab-button ${activeTab === 'static' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('static')}
+                  >
+                    <i className="bi bi-code-square"></i>
+                    Static Değişkenler ({staticVariables.length})
+                  </button>
+                  <button 
+                    className={`tab-button ${activeTab === 'runtime' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('runtime')}
+                  >
+                    <i className="bi bi-clock"></i>
+                    Runtime Değişkenler ({Object.keys(runtimeVariables).length})
+                  </button>
+                </div>
 
-                {/* Static Variables Tab */}
-                {activeTab === 'static' && (
-                  <div>
-                    <div className="row mb-3">
-                      <div className="col-12">
-                        <div className="card">
-                          <div className="card-header">
-                            <h6 className="mb-0">Yeni Static Değişken Ekle</h6>
+                <div className="tab-content">
+                  {/* Static Variables Tab */}
+                  {activeTab === 'static' && (
+                    <div className="tab-panel">
+                      {/* Add New Variable Form */}
+                      <div className="api-step-card" style={{ marginBottom: '2rem' }}>
+                        <div className="step-header">
+                          <div className="step-info">
+                            <div className="step-number">
+                              <i className="bi bi-plus"></i>
+                            </div>
+                            <h4 style={{ margin: 0, color: '#374151' }}>Yeni Static Değişken Ekle</h4>
                           </div>
-                          <div className="card-body">
-                            <div className="row">
-                              <div className="col-md-3">
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  placeholder="Anahtar"
-                                  value={newVarKey}
-                                  onChange={(e) => setNewVarKey(e.target.value)}
-                                />
-                              </div>
-                              <div className="col-md-4">
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  placeholder="Değer"
-                                  value={newVarValue}
-                                  onChange={(e) => setNewVarValue(e.target.value)}
-                                />
-                              </div>
-                              <div className="col-md-3">
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  placeholder="Açıklama (opsiyonel)"
-                                  value={newVarDescription}
-                                  onChange={(e) => setNewVarDescription(e.target.value)}
-                                />
-                              </div>
-                              <div className="col-md-2">
-                                <button
-                                  className="btn btn-primary w-100"
-                                  onClick={handleAddStaticVariable}
-                                >
-                                  Ekle
-                                </button>
-                              </div>
+                        </div>
+                        <div className="step-body">
+                          <div className="url-section">
+                            <div style={{ flex: '0 0 200px' }}>
+                              <input
+                                type="text"
+                                className="form-input"
+                                placeholder="Anahtar"
+                                value={newVarKey}
+                                onChange={(e) => setNewVarKey(e.target.value)}
+                              />
+                            </div>
+                            <div style={{ flex: '1' }}>
+                              <input
+                                type="text"
+                                className="form-input"
+                                placeholder="Değer"
+                                value={newVarValue}
+                                onChange={(e) => setNewVarValue(e.target.value)}
+                              />
+                            </div>
+                            <div style={{ flex: '1' }}>
+                              <input
+                                type="text"
+                                className="form-input"
+                                placeholder="Açıklama (opsiyonel)"
+                                value={newVarDescription}
+                                onChange={(e) => setNewVarDescription(e.target.value)}
+                              />
+                            </div>
+                            <div style={{ flex: '0 0 120px' }}>
+                              <button
+                                className="action-btn primary"
+                                onClick={handleAddStaticVariable}
+                                style={{ width: '100%' }}
+                              >
+                                <i className="bi bi-plus-lg"></i>
+                                Ekle
+                              </button>
                             </div>
                           </div>
                         </div>
                       </div>
-                    </div>
 
-                    {staticVariables.length === 0 ? (
-                      <div className="text-center py-4">
-                        <i className="bi bi-code-square text-muted" style={{fontSize: '3rem'}}></i>
-                        <h6 className="text-muted mt-3">Henüz static değişken bulunamadı</h6>
-                        <p className="text-muted">İlk static değişkeninizi yukarıdan ekleyin</p>
-                      </div>
-                    ) : (
-                      <div className="table-responsive">
-                        <table className="table table-hover">
-                          <thead>
-                            <tr>
-                              <th>Anahtar</th>
-                              <th>Değer</th>
-                              <th>Açıklama</th>
-                              <th>Son Güncelleme</th>
-                              <th>İşlemler</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {staticVariables.map(variable => (
-                              <tr key={variable.id}>
-                                <td>
-                                  <code className="text-primary">{variable.key}</code>
-                                </td>
-                                <td>
-                                  <span className="text-muted">{variable.value}</span>
-                                </td>
-                                <td>
-                                  <small className="text-muted">
-                                    {variable.description || '-'}
-                                  </small>
-                                </td>
-                                <td>
-                                  <small className="text-muted">
-                                    {formatTimestamp(variable.updated_at)}
-                                  </small>
-                                </td>
-                                <td>
-                                  <button
-                                    className="btn btn-sm btn-outline-danger"
-                                    onClick={() => handleDeleteStaticVariable(variable.key)}
-                                    title="Sil"
-                                  >
-                                    <i className="bi bi-trash"></i>
-                                  </button>
-                                </td>
+                      {/* Variables List */}
+                      {staticVariables.length === 0 ? (
+                        <div className="empty-state">
+                          <div className="empty-icon">
+                            <i className="bi bi-code-square"></i>
+                          </div>
+                          <h4>Henüz static değişken bulunamadı</h4>
+                          <p>İlk static değişkeninizi yukarıdan ekleyin</p>
+                        </div>
+                      ) : (
+                        <div className="table-container">
+                          <table className="modern-table">
+                            <thead>
+                              <tr>
+                                <th style={{ width: '200px' }}>Anahtar</th>
+                                <th>Değer</th>
+                                <th style={{ width: '200px' }}>Açıklama</th>
+                                <th style={{ width: '180px' }}>Son Güncelleme</th>
+                                <th style={{ width: '80px' }}>İşlemler</th>
                               </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Runtime Variables Tab */}
-                {activeTab === 'runtime' && (
-                  <div>
-                    <div className="d-flex justify-content-between align-items-center mb-3">
-                      <div>
-                        <h6>Runtime Değişkenler</h6>
-                        <small className="text-muted">
-                          Bu değişkenler API çağrıları sırasında otomatik olarak oluşturulur
-                        </small>
-                      </div>
-                      {Object.keys(runtimeVariables).length > 0 && (
-                        <button
-                          className="btn btn-outline-danger btn-sm"
-                          onClick={handleClearRuntimeVariables}
-                        >
-                          <i className="bi bi-trash me-1"></i>
-                          Tümünü Temizle
-                        </button>
+                            </thead>
+                            <tbody>
+                              {staticVariables.map(variable => (
+                                <tr key={variable.id}>
+                                  <td>
+                                    <code style={{ 
+                                      background: '#e0f2fe', 
+                                      color: '#0277bd', 
+                                      padding: '0.25rem 0.5rem', 
+                                      borderRadius: '0.25rem',
+                                      fontFamily: 'Monaco, Menlo, Ubuntu Mono, monospace'
+                                    }}>
+                                      {variable.key}
+                                    </code>
+                                  </td>
+                                  <td style={{ color: '#374151', fontWeight: '500' }}>
+                                    {variable.value}
+                                  </td>
+                                  <td style={{ color: '#6b7280' }}>
+                                    {variable.description || '-'}
+                                  </td>
+                                  <td style={{ color: '#6b7280', fontSize: '0.8rem' }}>
+                                    {formatTimestamp(variable.updated_at)}
+                                  </td>
+                                  <td>
+                                    <button
+                                      className="control-btn danger"
+                                      onClick={() => handleDeleteStaticVariable(variable.key)}
+                                      title="Sil"
+                                    >
+                                      <i className="bi bi-trash"></i>
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
                       )}
                     </div>
+                  )}
 
-                    {Object.keys(runtimeVariables).length === 0 ? (
-                      <div className="text-center py-4">
-                        <i className="bi bi-clock text-muted" style={{fontSize: '3rem'}}></i>
-                        <h6 className="text-muted mt-3">Henüz runtime değişken bulunamadı</h6>
-                        <p className="text-muted">
-                          API workflow'ları çalıştırıldığında runtime değişkenler burada görünecek
-                        </p>
+                  {/* Runtime Variables Tab */}
+                  {activeTab === 'runtime' && (
+                    <div className="tab-panel">
+                      <div className="section-header" style={{ marginBottom: '2rem' }}>
+                        <div>
+                          <h4 style={{ margin: '0 0 0.5rem 0', color: '#374151' }}>Runtime Değişkenler</h4>
+                          <p style={{ margin: 0, color: '#6b7280', fontSize: '0.875rem' }}>
+                            Bu değişkenler API çağrıları sırasında otomatik olarak oluşturulur
+                          </p>
+                        </div>
+                        {Object.keys(runtimeVariables).length > 0 && (
+                          <button
+                            className="action-btn danger"
+                            onClick={handleClearRuntimeVariables}
+                          >
+                            <i className="bi bi-trash"></i>
+                            Tümünü Temizle
+                          </button>
+                        )}
                       </div>
-                    ) : (
-                      <div className="table-responsive">
-                        <table className="table table-hover">
-                          <thead>
-                            <tr>
-                              <th>Anahtar</th>
-                              <th>Değer</th>
-                              <th>Kaynak</th>
-                              <th>Oluşturulma</th>
-                              <th>İşlemler</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {Object.entries(runtimeVariables).map(([key, variable]) => (
-                              <tr key={key}>
-                                <td>
-                                  <code className="text-success">{variable.key}</code>
-                                </td>
-                                <td>
-                                  <span className="text-muted">{variable.value}</span>
-                                </td>
-                                <td>
-                                  <span className={`badge ${getSourceBadge(variable.source)}`}>
-                                    {variable.source}
-                                  </span>
-                                </td>
-                                <td>
-                                  <small className="text-muted">
-                                    {formatTimestamp(variable.timestamp)}
-                                  </small>
-                                </td>
-                                <td>
-                                  <button
-                                    className="btn btn-sm btn-outline-danger"
-                                    onClick={() => handleDeleteRuntimeVariable(key)}
-                                    title="Sil"
-                                  >
-                                    <i className="bi bi-trash"></i>
-                                  </button>
-                                </td>
+
+                      {Object.keys(runtimeVariables).length === 0 ? (
+                        <div className="empty-state">
+                          <div className="empty-icon">
+                            <i className="bi bi-clock"></i>
+                          </div>
+                          <h4>Henüz runtime değişken bulunamadı</h4>
+                          <p>
+                            API workflow'ları çalıştırıldığında runtime değişkenler burada görünecek
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="table-container">
+                          <table className="modern-table">
+                            <thead>
+                              <tr>
+                                <th style={{ width: '200px' }}>Anahtar</th>
+                                <th>Değer</th>
+                                <th style={{ width: '120px' }}>Kaynak</th>
+                                <th style={{ width: '180px' }}>Oluşturulma</th>
+                                <th style={{ width: '80px' }}>İşlemler</th>
                               </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                  </div>
-                )}
+                            </thead>
+                            <tbody>
+                              {Object.entries(runtimeVariables).map(([key, variable]) => (
+                                <tr key={key}>
+                                  <td>
+                                    <code style={{ 
+                                      background: '#dcfce7', 
+                                      color: '#166534', 
+                                      padding: '0.25rem 0.5rem', 
+                                      borderRadius: '0.25rem',
+                                      fontFamily: 'Monaco, Menlo, Ubuntu Mono, monospace'
+                                    }}>
+                                      {variable.key}
+                                    </code>
+                                  </td>
+                                  <td style={{ color: '#374151', fontWeight: '500' }}>
+                                    {variable.value}
+                                  </td>
+                                  <td>
+                                    <span className={`status-badge ${getSourceBadge(variable.source)}`}>
+                                      {variable.source}
+                                    </span>
+                                  </td>
+                                  <td style={{ color: '#6b7280', fontSize: '0.8rem' }}>
+                                    {formatTimestamp(variable.timestamp)}
+                                  </td>
+                                  <td>
+                                    <button
+                                      className="control-btn danger"
+                                      onClick={() => handleDeleteRuntimeVariable(key)}
+                                      title="Sil"
+                                    >
+                                      <i className="bi bi-trash"></i>
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
-            )}
-          </div>
-          <div className="modal-footer">
-            <button 
-              type="button" 
-              className="btn btn-secondary"
-              onClick={onClose}
-            >
-              Kapat
-            </button>
-          </div>
+            </div>
+          )}
+        </div>
+        
+        <div className="modal-footer">
+          <button 
+            className="action-btn outline"
+            onClick={onClose}
+          >
+            Kapat
+          </button>
         </div>
       </div>
     </div>

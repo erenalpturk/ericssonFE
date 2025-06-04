@@ -26,26 +26,27 @@ export default function ApiStep({
       delete newHeaders[oldKey]
     }
     
-    if (value === '') {
-      delete newHeaders[key]
-    } else {
-      newHeaders[key] = value
+    if (key && key.trim()) {
+      newHeaders[key] = value || ''
     }
     
     handleInputChange('headers', newHeaders)
   }
 
   const addHeader = () => {
+    const headers = step.headers || {}
     const newKey = 'New-Header'
     let counter = 1
     let finalKey = newKey
     
-    while (step.headers[finalKey]) {
+    while (headers[finalKey]) {
       finalKey = `${newKey}-${counter}`
       counter++
     }
     
-    handleHeaderChange(finalKey, '')
+    // Direkt yeni header'ı ekle
+    const newHeaders = { ...headers, [finalKey]: '' }
+    handleInputChange('headers', newHeaders)
   }
 
   const removeHeader = (key) => {
@@ -61,10 +62,13 @@ export default function ApiStep({
       delete newVariables[oldVarName]
     }
     
-    if (path === '') {
-      delete newVariables[varName]
+    if (!varName || !varName.trim()) {
+      // Eğer variable name boşsa, eski variable'ı sil
+      if (oldVarName) {
+        delete newVariables[oldVarName]
+      }
     } else {
-      newVariables[varName] = path
+      newVariables[varName] = path || ''
     }
     
     handleInputChange('variables', newVariables)
@@ -213,6 +217,12 @@ export default function ApiStep({
                 placeholder="API URL'i girin (örn: https://api.example.com/users)"
                 disabled={isRunning}
               />
+              {Object.keys(variables).length > 0 && (
+                <div className="form-help">
+                  <i className="bi bi-info-circle"></i>
+                  Kullanılabilir değişkenler: {Object.keys(variables).map(key => `{{${key}}}`).join(', ')}
+                </div>
+              )}
             </div>
           </div>
 
@@ -231,7 +241,7 @@ export default function ApiStep({
                 onClick={() => setActiveTab('headers')}
               >
                 <i className="bi bi-list-ul"></i>
-                Headers ({Object.keys(step.headers).length})
+                Headers ({Object.keys(step.headers || {}).length})
               </button>
               <button 
                 className={`tab-button ${activeTab === 'variables' ? 'active' : ''}`}
@@ -239,6 +249,13 @@ export default function ApiStep({
               >
                 <i className="bi bi-code-square"></i>
                 Değişkenler ({Object.keys(step.variables).length})
+              </button>
+              <button 
+                className={`tab-button ${activeTab === 'scripts' ? 'active' : ''}`}
+                onClick={() => setActiveTab('scripts')}
+              >
+                <i className="bi bi-file-code"></i>
+                Scripts
               </button>
             </div>
 
@@ -278,23 +295,16 @@ export default function ApiStep({
                     </button>
                   </div>
                   
-                  {Object.keys(step.headers).length === 0 ? (
+                  {(!step.headers || Object.keys(step.headers).length === 0) ? (
                     <div className="empty-state small">
                       <div className="empty-icon">
                         <i className="bi bi-list-ul"></i>
                       </div>
                       <p>Henüz header eklenmedi</p>
-                      <button 
-                        className="action-btn primary small"
-                        onClick={addHeader}
-                        disabled={isRunning}
-                      >
-                        İlk Header'ı Ekle
-                      </button>
                     </div>
                   ) : (
                     <div className="headers-list">
-                      {Object.entries(step.headers).map(([key, value]) => (
+                      {Object.entries(step.headers || {}).map(([key, value]) => (
                         <div key={key} className="header-item">
                           <div className="header-key">
                             <input
@@ -310,7 +320,7 @@ export default function ApiStep({
                             <input
                               type="text"
                               className="form-input small"
-                              value={value}
+                              value={value || ''}
                               onChange={(e) => handleHeaderChange(key, e.target.value)}
                               placeholder="Header değeri"
                               disabled={isRunning}
@@ -411,6 +421,128 @@ export default function ApiStep({
                       ))}
                     </div>
                   )}
+                </div>
+              )}
+
+              {activeTab === 'scripts' && (
+                <div className="tab-panel">
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                    {/* Pre-request Script */}
+                    <div>
+                      <div className="section-header" style={{ marginBottom: '1rem' }}>
+                        <div>
+                          <h4 style={{ margin: '0 0 0.5rem 0', color: '#374151', fontSize: '1rem' }}>Pre-request Script</h4>
+                          <p style={{ margin: 0, color: '#6b7280', fontSize: '0.8rem' }}>
+                            API çağrısından önce çalışır. Request'i değiştirebilir ve değişken ekleyebilir.
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="info-box" style={{ marginBottom: '1rem' }}>
+                        <div className="info-header">
+                          <i className="bi bi-lightbulb"></i>
+                          <span>Kullanılabilir Objeler</span>
+                        </div>
+                        <div className="info-content">
+                          <div className="example-item">
+                            <code>variables</code> → Global değişkenler objesi
+                          </div>
+                          <div className="example-item">
+                            <code>request</code> → API request objesi (url, headers, body)
+                          </div>
+                          <div className="example-item">
+                            <code>console.log()</code> → Debug için log yazma
+                          </div>
+                        </div>
+                      </div>
+
+                      <textarea
+                        className="form-textarea code"
+                        rows="8"
+                        value={step.preRequestScript || ''}
+                        onChange={(e) => handleInputChange('preRequestScript', e.target.value)}
+                        placeholder={`// Örnek: URL'yi dinamik olarak değiştir
+// request.url = request.url.replace('{{env}}', 'production');
+
+// Örnek: Authorization header ekle
+// request.headers['Authorization'] = 'Bearer ' + variables.token;
+
+// Örnek: Timestamp ekle
+// variables.timestamp = Date.now().toString();
+
+// Örnek: Request body'yi değiştir
+// if (request.body) {
+//   let body = JSON.parse(request.body);
+//   body.timestamp = new Date().toISOString();
+//   request.body = JSON.stringify(body);
+// }`}
+                        disabled={isRunning}
+                      />
+                    </div>
+
+                    {/* Post-response Script */}
+                    <div>
+                      <div className="section-header" style={{ marginBottom: '1rem' }}>
+                        <div>
+                          <h4 style={{ margin: '0 0 0.5rem 0', color: '#374151', fontSize: '1rem' }}>Post-response Script (Tests)</h4>
+                          <p style={{ margin: 0, color: '#6b7280', fontSize: '0.8rem' }}>
+                            API response'undan sonra çalışır. Response'u test edebilir ve değişken çıkarabilir.
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="info-box" style={{ marginBottom: '1rem' }}>
+                        <div className="info-header">
+                          <i className="bi bi-lightbulb"></i>
+                          <span>Kullanılabilir Objeler</span>
+                        </div>
+                        <div className="info-content">
+                          <div className="example-item">
+                            <code>response</code> → API response objesi (data, headers, status)
+                          </div>
+                          <div className="example-item">
+                            <code>variables</code> → Global değişkenler objesi
+                          </div>
+                          <div className="example-item">
+                            <code>console.log()</code> → Debug için log yazma
+                          </div>
+                        </div>
+                      </div>
+
+                      <textarea
+                        className="form-textarea code"
+                        rows="10"
+                        value={step.postResponseScript || ''}
+                        onChange={(e) => handleInputChange('postResponseScript', e.target.value)}
+                        placeholder={`// Örnek: Response'dan token çıkar
+// if (response.data && response.data.token) {
+//   variables.auth_token = response.data.token;
+// }
+
+// Örnek: Header'dan token çıkar ve temizle
+// if (response.headers.authorization) {
+//   variables.clean_token = response.headers.authorization.replace('Bearer ', '');
+// }
+
+// Örnek: Test - Status code kontrolü
+// if (response.status !== 200) {
+//   throw new Error('API call failed with status: ' + response.status);
+// }
+
+// Örnek: Response validation
+// if (!response.data || !response.data.success) {
+//   throw new Error('API response indicates failure');
+// }
+
+// Örnek: Complex data processing
+// if (response.data && response.data.items) {
+//   variables.item_count = response.data.items.length.toString();
+//   variables.first_item_id = response.data.items[0]?.id || '';
+// }`}
+                        disabled={isRunning}
+                      />
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
