@@ -403,7 +403,7 @@ const IccidManagement = () => {
   const handleStatusChange = async (iccid, newStatus) => {
     try {
       setLoading(true);
-      const response = await fetch(`${baseUrl}/iccid/updateStatus`, {
+      const response = await fetch(`${baseUrl}/iccid/setStatus`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -416,7 +416,7 @@ const IccidManagement = () => {
         showSuccess('Statü başarıyla güncellendi.');
         fetchIccids();
       } else {
-        showError(data.message || 'Statü güncellenemedi.');
+        showError(data.error || 'Statü güncellenemedi.');
       }
     } catch (error) {
       showError('Statü güncellenirken bir hata oluştu.');
