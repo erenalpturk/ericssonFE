@@ -10,7 +10,9 @@ export default function ApiStep({
   canMoveUp, 
   canMoveDown, 
   variables = {}, 
-  isRunning = false 
+  isRunning = false,
+  onRunSingle = null,
+  onSaveSingle = null
 }) {
   const [isExpanded, setIsExpanded] = useState(true)
   const [activeTab, setActiveTab] = useState('request')
@@ -116,87 +118,123 @@ export default function ApiStep({
   }
 
   return (
-    <div className="api-step-card">
-      <div className="step-header">
-        <div className="step-info">
-          <button
-            className="expand-btn"
-            onClick={() => setIsExpanded(!isExpanded)}
-            disabled={isRunning}
-          >
-            <i className={`bi bi-chevron-${isExpanded ? 'up' : 'down'}`}></i>
-          </button>
-          
-          <div className="step-number">
+    <div className={`api-step-card-modern ${!step.enabled ? 'disabled' : ''} ${isRunning ? 'running' : ''}`}>
+      {/* Compact Header */}
+      <div className="step-header-modern">
+        <div className="step-info-modern">
+          <div className="step-number-modern">
             {index + 1}
           </div>
           
-          <div className={getMethodBadgeClass()}>
+          <div className={`method-badge-modern ${step.method.toLowerCase()}`}>
             {step.method}
           </div>
           
-          <input
-            type="text"
-            className="step-name-input"
-            value={step.name}
-            onChange={(e) => handleInputChange('name', e.target.value)}
-            placeholder="API Adım Adı"
-            disabled={isRunning}
-          />
+          <div className="step-details-modern">
+            <input
+              type="text"
+              className="step-name-modern"
+              value={step.name}
+              onChange={(e) => handleInputChange('name', e.target.value)}
+              placeholder="API Adım Adı"
+              disabled={isRunning}
+            />
+            <div className="step-url-preview">
+              {step.url || 'URL henüz girilmedi'}
+            </div>
+          </div>
         </div>
         
-        <div className="step-controls">
-          <div className="status-toggle">
+        <div className="step-actions-modern">
+          {/* Single API Actions */}
+          {(onRunSingle || onSaveSingle) && (
+            <div className="single-api-actions">
+              {onRunSingle && (
+                <button
+                  className="single-action-btn run"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    console.log('[ApiStep] Run button clicked for step:', step.name)
+                    onRunSingle(step)
+                  }}
+                  disabled={isRunning || !step.url.trim() || !step.enabled}
+                  title="Bu API'yi çalıştır"
+                >
+                  <i className={`bi ${isRunning ? 'bi-arrow-clockwise spin' : 'bi-play-fill'}`}></i>
+                </button>
+              )}
+              
+              {onSaveSingle && (
+                <button
+                  className="single-action-btn save"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    console.log('[ApiStep] Save button clicked for step:', step.name)
+                    onSaveSingle(step)
+                  }}
+                  disabled={!step.url.trim()}
+                  title="Bu API'yi kaydet"
+                >
+                  <i className="bi bi-bookmark-fill"></i>
+                </button>
+              )}
+            </div>
+          )}
+          
+          <div className="step-toggle-modern">
             <input 
               type="checkbox" 
               id={`enabled-${step.id}`}
               checked={step.enabled}
               onChange={(e) => handleInputChange('enabled', e.target.checked)}
               disabled={isRunning}
+              className="modern-checkbox"
             />
-            <label htmlFor={`enabled-${step.id}`} className="toggle-label">
-              <span className="toggle-text">Aktif</span>
+            <label htmlFor={`enabled-${step.id}`} className="checkbox-label">
+              <span className="checkmark"></span>
             </label>
           </div>
           
-          <div className="control-buttons">
-            <button
-              className="control-btn"
-              onClick={onMoveUp}
-              disabled={!canMoveUp || isRunning}
-              title="Yukarı Taşı"
-            >
-              <i className="bi bi-arrow-up"></i>
+          <button
+            className="expand-btn-modern"
+            onClick={() => setIsExpanded(!isExpanded)}
+            disabled={isRunning}
+          >
+            <i className={`bi bi-chevron-${isExpanded ? 'up' : 'down'}`}></i>
+          </button>
+          
+          <div className="dropdown step-menu">
+            <button className="menu-btn-modern">
+              <i className="bi bi-three-dots-vertical"></i>
             </button>
-            
-            <button
-              className="control-btn"
-              onClick={onMoveDown}
-              disabled={!canMoveDown || isRunning}
-              title="Aşağı Taşı"
-            >
-              <i className="bi bi-arrow-down"></i>
-            </button>
-            
-            <button
-              className="control-btn danger"
-              onClick={onDelete}
-              disabled={isRunning}
-              title="Sil"
-            >
-              <i className="bi bi-trash"></i>
-            </button>
+            <div className="dropdown-menu step-dropdown-menu">
+              <button className="dropdown-item" onClick={onMoveUp} disabled={!canMoveUp || isRunning}>
+                <i className="bi bi-arrow-up"></i>
+                <span>Yukarı Taşı</span>
+              </button>
+              <button className="dropdown-item" onClick={onMoveDown} disabled={!canMoveDown || isRunning}>
+                <i className="bi bi-arrow-down"></i>
+                <span>Aşağı Taşı</span>
+              </button>
+              <div className="dropdown-divider"></div>
+              <button className="dropdown-item danger" onClick={onDelete} disabled={isRunning}>
+                <i className="bi bi-trash"></i>
+                <span>Sil</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
       
       {isExpanded && (
-        <div className="step-body">
-          {/* Method and URL */}
-          <div className="url-section">
-            <div className="method-select">
+        <div className="step-body-modern">
+          {/* Quick URL Edit */}
+          <div className="url-section-modern">
+            <div className="method-select-modern">
               <select
-                className="form-select"
+                className="form-select-modern"
                 value={step.method}
                 onChange={(e) => handleInputChange('method', e.target.value)}
                 disabled={isRunning}
@@ -208,130 +246,118 @@ export default function ApiStep({
                 <option value="PATCH">PATCH</option>
               </select>
             </div>
-            <div className="url-input">
+            <div className="url-input-modern">
               <input
                 type="text"
-                className="form-input"
+                className="form-input-modern"
                 value={step.url}
                 onChange={(e) => handleInputChange('url', e.target.value)}
-                placeholder="API URL'i girin (örn: https://api.example.com/users)"
+                placeholder="https://api.example.com/endpoint"
                 disabled={isRunning}
               />
-              {Object.keys(variables).length > 0 && (
-                <div className="form-help">
-                  <i className="bi bi-info-circle"></i>
-                  Kullanılabilir değişkenler: {Object.keys(variables).map(key => `{{${key}}}`).join(', ')}
-                </div>
-              )}
             </div>
           </div>
 
-          {/* Tabs */}
-          <div className="step-tabs">
-            <div className="tab-list">
+          {/* Modern Tabs */}
+          <div className="tabs-modern">
+            <div className="tab-list-modern">
               <button 
-                className={`tab-button ${activeTab === 'request' ? 'active' : ''}`}
+                className={`tab-btn-modern ${activeTab === 'request' ? 'active' : ''}`}
                 onClick={() => setActiveTab('request')}
               >
                 <i className="bi bi-file-text"></i>
-                İstek
+                <span>Body</span>
               </button>
               <button 
-                className={`tab-button ${activeTab === 'headers' ? 'active' : ''}`}
+                className={`tab-btn-modern ${activeTab === 'headers' ? 'active' : ''}`}
                 onClick={() => setActiveTab('headers')}
               >
                 <i className="bi bi-list-ul"></i>
-                Headers ({Object.keys(step.headers || {}).length})
+                <span>Headers</span>
+                {Object.keys(step.headers || {}).length > 0 && (
+                  <span className="tab-badge">{Object.keys(step.headers || {}).length}</span>
+                )}
               </button>
               <button 
-                className={`tab-button ${activeTab === 'variables' ? 'active' : ''}`}
+                className={`tab-btn-modern ${activeTab === 'variables' ? 'active' : ''}`}
                 onClick={() => setActiveTab('variables')}
               >
                 <i className="bi bi-code-square"></i>
-                Değişkenler ({Object.keys(step.variables).length})
+                <span>Variables</span>
+                {Object.keys(step.variables).length > 0 && (
+                  <span className="tab-badge">{Object.keys(step.variables).length}</span>
+                )}
               </button>
               <button 
-                className={`tab-button ${activeTab === 'scripts' ? 'active' : ''}`}
+                className={`tab-btn-modern ${activeTab === 'scripts' ? 'active' : ''}`}
                 onClick={() => setActiveTab('scripts')}
               >
                 <i className="bi bi-file-code"></i>
-                Scripts
+                <span>Scripts</span>
+                {(step.preRequestScript?.trim() || step.postResponseScript?.trim()) && (
+                  <span className="tab-badge">!</span>
+                )}
               </button>
             </div>
 
-            <div className="tab-content">
+            <div className="tab-content-modern">
               {activeTab === 'request' && (
-                <div className="tab-panel">
-                  <div className="form-group">
-                    <label className="form-label">Request Body (JSON)</label>
-                    <textarea
-                      className="form-textarea code"
-                      rows="8"
-                      value={step.body}
-                      onChange={(e) => handleInputChange('body', e.target.value)}
-                      placeholder="JSON request body'sini girin..."
-                      disabled={isRunning}
-                    />
-                    <div className="form-help">
-                      <i className="bi bi-info-circle"></i>
-                      Değişkenler için {`{{variableName}}`} formatını kullanın. 
-                      Mevcut değişkenler: {Object.keys(variables).join(', ') || 'Henüz tanımlanmamış'}
-                    </div>
-                  </div>
+                <div className="tab-panel-modern">
+                  <textarea
+                    className="form-textarea-modern"
+                    rows="8"
+                    value={step.body}
+                    onChange={(e) => handleInputChange('body', e.target.value)}
+                    placeholder="JSON request body..."
+                    disabled={isRunning}
+                  />
                 </div>
               )}
 
               {activeTab === 'headers' && (
-                <div className="tab-panel">
-                  <div className="section-header">
-                    <h4>Request Headers</h4>
+                <div className="tab-panel-modern">
+                  <div className="panel-header-modern">
                     <button 
-                      className="action-btn secondary small"
+                      className="add-btn-modern"
                       onClick={addHeader}
                       disabled={isRunning}
                     >
                       <i className="bi bi-plus"></i>
-                      Header Ekle
+                      <span>Header Ekle</span>
                     </button>
                   </div>
                   
                   {(!step.headers || Object.keys(step.headers).length === 0) ? (
-                    <div className="empty-state small">
-                      <div className="empty-icon">
-                        <i className="bi bi-list-ul"></i>
-                      </div>
-                      <p>Henüz header eklenmedi</p>
+                    <div className="empty-state-modern">
+                      <i className="bi bi-list-ul"></i>
+                      <p>Header eklenmedi</p>
                     </div>
                   ) : (
-                    <div className="headers-list">
+                    <div className="items-list-modern">
                       {Object.entries(step.headers || {}).map(([key, value]) => (
-                        <div key={key} className="header-item">
-                          <div className="header-key">
-                            <input
-                              type="text"
-                              className="form-input small"
-                              value={key}
-                              onChange={(e) => handleHeaderChange(e.target.value, value, key)}
-                              placeholder="Header adı"
-                              disabled={isRunning}
-                            />
-                          </div>
-                          <div className="header-value">
-                            <input
-                              type="text"
-                              className="form-input small"
-                              value={value || ''}
-                              onChange={(e) => handleHeaderChange(key, e.target.value)}
-                              placeholder="Header değeri"
-                              disabled={isRunning}
-                            />
-                          </div>
+                        <div key={key} className="item-row-modern">
+                          <input
+                            type="text"
+                            className="item-input-modern key"
+                            value={key}
+                            onChange={(e) => handleHeaderChange(e.target.value, value, key)}
+                            placeholder="Header adı"
+                            disabled={isRunning}
+                          />
+                          <input
+                            type="text"
+                            className="item-input-modern value"
+                            value={value || ''}
+                            onChange={(e) => handleHeaderChange(key, e.target.value)}
+                            placeholder="Header değeri"
+                            disabled={isRunning}
+                          />
                           <button
-                            className="control-btn danger small"
+                            className="remove-btn-modern"
                             onClick={() => removeHeader(key)}
                             disabled={isRunning}
                           >
-                            <i className="bi bi-trash"></i>
+                            <i className="bi bi-x"></i>
                           </button>
                         </div>
                       ))}
@@ -341,63 +367,49 @@ export default function ApiStep({
               )}
 
               {activeTab === 'variables' && (
-                <div className="tab-panel">
-                  <div className="section-header">
-                    <h4>Response'dan Değişken Çıkarımı</h4>
+                <div className="tab-panel-modern">
+                  <div className="panel-header-modern">
                     <button 
-                      className="action-btn secondary small"
+                      className="add-btn-modern"
                       onClick={addVariable}
                       disabled={isRunning}
                     >
                       <i className="bi bi-plus"></i>
-                      Değişken Ekle
+                      <span>Değişken Ekle</span>
                     </button>
                   </div>
                   
                   {Object.keys(step.variables).length === 0 ? (
-                    <div className="empty-state small">
-                      <div className="empty-icon">
-                        <i className="bi bi-code-square"></i>
-                      </div>
-                      <p>Henüz değişken tanımlanmadı</p>
-                      <button 
-                        className="action-btn primary small"
-                        onClick={addVariable}
-                        disabled={isRunning}
-                      >
-                        İlk Değişkeni Ekle
-                      </button>
+                    <div className="empty-state-modern">
+                      <i className="bi bi-code-square"></i>
+                      <p>Değişken tanımlanmadı</p>
                     </div>
                   ) : (
-                    <div className="variables-list">
+                    <div className="items-list-modern">
                       {Object.entries(step.variables).map(([varName, path]) => (
-                        <div key={varName} className="variable-item">
-                          <div className="variable-name">
-                            <input
-                              type="text"
-                              className="form-input small"
-                              value={varName}
-                              onChange={(e) => handleVariableChange(e.target.value, path, varName)}
-                              placeholder="Değişken adı"
-                              disabled={isRunning}
-                            />
-                          </div>
-                          <div className="variable-path">
-                            <input
-                              type="text"
-                              className="form-input small"
-                              value={path}
-                              onChange={(e) => handleVariableChange(varName, e.target.value)}
-                              placeholder="response.fieldName"
-                              disabled={isRunning}
-                            />
-                          </div>
+                        <div key={varName} className="item-row-modern">
+                          <input
+                            type="text"
+                            className="item-input-modern key"
+                            value={varName}
+                            onChange={(e) => handleVariableChange(e.target.value, path, varName)}
+                            placeholder="Değişken adı"
+                            disabled={isRunning}
+                          />
+                          <input
+                            type="text"
+                            className="item-input-modern value"
+                            value={path}
+                            onChange={(e) => handleVariableChange(varName, e.target.value)}
+                            placeholder="response.field"
+                            disabled={isRunning}
+                          />
                           <button
-                            className="control-btn danger small"
+                            className="remove-btn-modern"
                             onClick={() => removeVariable(varName)}
                             disabled={isRunning}
                           >
-                            <i className="bi bi-trash"></i>
+                            <i className="bi bi-x"></i>
                           </button>
                         </div>
                       ))}
@@ -407,46 +419,28 @@ export default function ApiStep({
               )}
 
               {activeTab === 'scripts' && (
-                <div className="tab-panel">
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                    {/* Pre-request Script */}
-                    <div>
-                      <div className="section-header" style={{ marginBottom: '1rem' }}>
-                        <div>
-                          <h4 style={{ margin: '0 0 0.5rem 0', color: '#374151', fontSize: '1rem' }}>Pre-request Script</h4>
-                          <p style={{ margin: 0, color: '#6b7280', fontSize: '0.8rem' }}>
-                            API çağrısından önce çalışır. Request'i değiştirebilir ve değişken ekleyebilir.
-                          </p>
-                        </div>
-                      </div>
-
+                <div className="tab-panel-modern">
+                  <div className="scripts-container-modern">
+                    <div className="script-section-modern">
+                      <label className="script-label-modern">Pre-request Script</label>
                       <textarea
-                        className="form-textarea code"
-                        rows="8"
+                        className="form-textarea-modern script"
+                        rows="6"
                         value={step.preRequestScript || ''}
                         onChange={(e) => handleInputChange('preRequestScript', e.target.value)}
-                        placeholder="// Pre-request script'inizi buraya yazın..."
+                        placeholder="// Pre-request script..."
                         disabled={isRunning}
                       />
                     </div>
 
-                    {/* Post-response Script */}
-                    <div>
-                      <div className="section-header" style={{ marginBottom: '1rem' }}>
-                        <div>
-                          <h4 style={{ margin: '0 0 0.5rem 0', color: '#374151', fontSize: '1rem' }}>Post-response Script (Tests)</h4>
-                          <p style={{ margin: 0, color: '#6b7280', fontSize: '0.8rem' }}>
-                            API response'undan sonra çalışır. Response'u test edebilir ve değişken çıkarabilir.
-                          </p>
-                        </div>
-                      </div>
-
+                    <div className="script-section-modern">
+                      <label className="script-label-modern">Post-response Script</label>
                       <textarea
-                        className="form-textarea code"
-                        rows="10"
+                        className="form-textarea-modern script"
+                        rows="6"
                         value={step.postResponseScript || ''}
                         onChange={(e) => handleInputChange('postResponseScript', e.target.value)}
-                        placeholder="// Post-response script'inizi buraya yazın..."
+                        placeholder="// Post-response script..."
                         disabled={isRunning}
                       />
                     </div>

@@ -75,6 +75,24 @@ function Home() {
             color: 'text-cyan-500',
             bgGradient: 'from-cyan-500 to-blue-600',
             category: 'Otomasyon'
+        },
+        {
+            path: '/api-automation',
+            icon: 'bi-cpu-fill',
+            title: 'API Otomasyon',
+            description: 'Çoklu API workflow\'larını otomatikleştirin',
+            color: 'text-orange-500',
+            bgGradient: 'from-orange-500 to-red-600',
+            category: 'Otomasyon'
+        },
+        {
+            path: '/api-tester',
+            icon: 'bi-lightning-fill',
+            title: 'API Tester',
+            description: 'Tek API isteklerini test edin ve kaydedin',
+            color: 'text-yellow-500',
+            bgGradient: 'from-yellow-500 to-orange-600',
+            category: 'Test Araçları'
         }
     ];
 

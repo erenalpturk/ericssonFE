@@ -3891,3 +3891,729 @@ body {
   visibility: visible !important;
   transform: translateY(0) scale(1) !important;
 }
+
+/* Modern API Step Card */
+.api-step-card-modern {
+  background: rgba(255, 255, 255, 0.98) !important;
+  backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(229, 231, 235, 0.4) !important;
+  border-radius: 1rem !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+  overflow: hidden !important;
+  transition: all 0.2s ease !important;
+  position: relative !important;
+  z-index: 5 !important;
+  margin-bottom: 1rem !important;
+}
+
+.api-step-card-modern:hover {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08) !important;
+  border-color: rgba(59, 130, 246, 0.3) !important;
+  transform: translateY(-1px) !important;
+  z-index: 6 !important;
+}
+
+.api-step-card-modern.disabled {
+  opacity: 0.6 !important;
+  filter: grayscale(0.3) !important;
+}
+
+.api-step-card-modern.running {
+  border-color: rgba(16, 185, 129, 0.5) !important;
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.1) !important;
+}
+
+/* Modern Step Header */
+.step-header-modern {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 1rem 1.25rem !important;
+  background: linear-gradient(135deg, rgba(249, 250, 251, 0.8), rgba(243, 244, 246, 0.6)) !important;
+  border-bottom: 1px solid rgba(229, 231, 235, 0.3) !important;
+}
+
+.step-info-modern {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
+  flex: 1 !important;
+  min-width: 0 !important;
+}
+
+.step-number-modern {
+  width: 1.75rem !important;
+  height: 1.75rem !important;
+  background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+  color: white !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-weight: 600 !important;
+  font-size: 0.75rem !important;
+  flex-shrink: 0 !important;
+}
+
+/* Method Badge Modern */
+.method-badge-modern {
+  padding: 0.25rem 0.5rem !important;
+  border-radius: 0.375rem !important;
+  font-size: 0.625rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  flex-shrink: 0 !important;
+}
+
+.method-badge-modern.get {
+  background: linear-gradient(135deg, #10b981, #059669) !important;
+  color: white !important;
+}
+
+.method-badge-modern.post {
+  background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+  color: white !important;
+}
+
+.method-badge-modern.put {
+  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+  color: white !important;
+}
+
+.method-badge-modern.delete {
+  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+  color: white !important;
+}
+
+.method-badge-modern.patch {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed) !important;
+  color: white !important;
+}
+
+.step-details-modern {
+  flex: 1 !important;
+  min-width: 0 !important;
+}
+
+.step-name-modern {
+  border: none !important;
+  background: transparent !important;
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+  color: #1f2937 !important;
+  width: 100% !important;
+  padding: 0.25rem 0 !important;
+  margin-bottom: 0.25rem !important;
+  border-radius: 0.25rem !important;
+  transition: all 0.2s ease !important;
+}
+
+.step-name-modern:focus {
+  outline: none !important;
+  background: rgba(255, 255, 255, 0.8) !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+  padding: 0.25rem 0.5rem !important;
+}
+
+.step-url-preview {
+  font-size: 0.75rem !important;
+  color: #6b7280 !important;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  max-width: 300px !important;
+}
+
+/* Step Actions Modern */
+.step-actions-modern {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+}
+
+.step-toggle-modern {
+  position: relative !important;
+}
+
+.modern-checkbox {
+  opacity: 0 !important;
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+}
+
+.checkbox-label {
+  display: block !important;
+  width: 2rem !important;
+  height: 1rem !important;
+  background: #d1d5db !important;
+  border-radius: 1rem !important;
+  position: relative !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.checkbox-label .checkmark {
+  position: absolute !important;
+  top: 0.125rem !important;
+  left: 0.125rem !important;
+  width: 0.75rem !important;
+  height: 0.75rem !important;
+  background: white !important;
+  border-radius: 50% !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+}
+
+.modern-checkbox:checked + .checkbox-label {
+  background: linear-gradient(135deg, #10b981, #059669) !important;
+}
+
+.modern-checkbox:checked + .checkbox-label .checkmark {
+  transform: translateX(1rem) !important;
+}
+
+.expand-btn-modern, .menu-btn-modern {
+  width: 2rem !important;
+  height: 2rem !important;
+  background: rgba(243, 244, 246, 0.8) !important;
+  border: none !important;
+  border-radius: 0.5rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  color: #6b7280 !important;
+}
+
+.expand-btn-modern:hover, .menu-btn-modern:hover {
+  background: rgba(229, 231, 235, 0.8) !important;
+  color: #374151 !important;
+  transform: scale(1.05) !important;
+}
+
+/* Step Menu Dropdown */
+.step-menu {
+  position: relative !important;
+}
+
+.step-dropdown-menu {
+  right: 0 !important;
+  top: 100% !important;
+  margin-top: 0.25rem !important;
+  min-width: 160px !important;
+}
+
+/* Modern Step Body */
+.step-body-modern {
+  padding: 1.25rem !important;
+}
+
+.url-section-modern {
+  display: flex !important;
+  gap: 0.75rem !important;
+  margin-bottom: 1.5rem !important;
+}
+
+.method-select-modern {
+  min-width: 100px !important;
+}
+
+.form-select-modern {
+  padding: 0.625rem 0.75rem !important;
+  border: 1px solid rgba(209, 213, 219, 0.6) !important;
+  border-radius: 0.5rem !important;
+  background: rgba(255, 255, 255, 0.9) !important;
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+  color: #374151 !important;
+  transition: all 0.2s ease !important;
+}
+
+.form-select-modern:focus {
+  outline: none !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+}
+
+.url-input-modern {
+  flex: 1 !important;
+}
+
+.form-input-modern {
+  width: 100% !important;
+  padding: 0.625rem 0.75rem !important;
+  border: 1px solid rgba(209, 213, 219, 0.6) !important;
+  border-radius: 0.5rem !important;
+  background: rgba(255, 255, 255, 0.9) !important;
+  font-size: 0.8rem !important;
+  color: #374151 !important;
+  transition: all 0.2s ease !important;
+}
+
+.form-input-modern:focus {
+  outline: none !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+  background: white !important;
+}
+
+/* Modern Tabs */
+.tabs-modern {
+  background: rgba(249, 250, 251, 0.5) !important;
+  border-radius: 0.75rem !important;
+  border: 1px solid rgba(229, 231, 235, 0.3) !important;
+  overflow: hidden !important;
+}
+
+.tab-list-modern {
+  display: flex !important;
+  background: rgba(243, 244, 246, 0.6) !important;
+  border-bottom: 1px solid rgba(229, 231, 235, 0.3) !important;
+}
+
+.tab-btn-modern {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  padding: 0.75rem 1rem !important;
+  border: none !important;
+  background: none !important;
+  color: #6b7280 !important;
+  font-size: 0.8rem !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  position: relative !important;
+  border-bottom: 2px solid transparent !important;
+}
+
+.tab-btn-modern:hover {
+  color: #374151 !important;
+  background: rgba(255, 255, 255, 0.5) !important;
+}
+
+.tab-btn-modern.active {
+  color: #2563eb !important;
+  background: rgba(255, 255, 255, 0.8) !important;
+  border-bottom-color: #3b82f6 !important;
+}
+
+.tab-badge {
+  background: #ef4444 !important;
+  color: white !important;
+  font-size: 0.6rem !important;
+  font-weight: 700 !important;
+  padding: 0.125rem 0.375rem !important;
+  border-radius: 0.75rem !important;
+  line-height: 1 !important;
+}
+
+.tab-content-modern {
+  padding: 1rem !important;
+}
+
+.tab-panel-modern {
+  animation: fadeInUp 0.2s ease-out !important;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.form-textarea-modern {
+  width: 100% !important;
+  padding: 0.75rem !important;
+  border: 1px solid rgba(209, 213, 219, 0.6) !important;
+  border-radius: 0.5rem !important;
+  background: rgba(255, 255, 255, 0.9) !important;
+  font-size: 0.8rem !important;
+  color: #374151 !important;
+  resize: vertical !important;
+  transition: all 0.2s ease !important;
+  font-family: inherit !important;
+}
+
+.form-textarea-modern.script {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace !important;
+  font-size: 0.75rem !important;
+  line-height: 1.5 !important;
+  background: #f8fafc !important;
+}
+
+.form-textarea-modern:focus {
+  outline: none !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+  background: white !important;
+}
+
+/* Panel Header Modern */
+.panel-header-modern {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  margin-bottom: 1rem !important;
+}
+
+.add-btn-modern {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  padding: 0.5rem 0.75rem !important;
+  background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 0.5rem !important;
+  font-size: 0.75rem !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.add-btn-modern:hover {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important;
+}
+
+/* Empty State Modern */
+.empty-state-modern {
+  text-align: center !important;
+  padding: 2rem 1rem !important;
+  color: #9ca3af !important;
+}
+
+.empty-state-modern i {
+  font-size: 2rem !important;
+  margin-bottom: 0.5rem !important;
+  opacity: 0.6 !important;
+}
+
+.empty-state-modern p {
+  margin: 0 !important;
+  font-size: 0.875rem !important;
+}
+
+/* Items List Modern */
+.items-list-modern {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.5rem !important;
+}
+
+.item-row-modern {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  padding: 0.75rem !important;
+  background: rgba(255, 255, 255, 0.7) !important;
+  border-radius: 0.5rem !important;
+  border: 1px solid rgba(229, 231, 235, 0.4) !important;
+  transition: all 0.2s ease !important;
+}
+
+.item-row-modern:hover {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border-color: rgba(59, 130, 246, 0.2) !important;
+}
+
+.item-input-modern {
+  padding: 0.5rem 0.625rem !important;
+  border: 1px solid rgba(209, 213, 219, 0.4) !important;
+  border-radius: 0.375rem !important;
+  background: rgba(255, 255, 255, 0.9) !important;
+  font-size: 0.75rem !important;
+  color: #374151 !important;
+  transition: all 0.2s ease !important;
+}
+
+.item-input-modern:focus {
+  outline: none !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1) !important;
+  background: white !important;
+}
+
+.item-input-modern.key {
+  flex: 1 !important;
+  font-weight: 500 !important;
+}
+
+.item-input-modern.value {
+  flex: 2 !important;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace !important;
+}
+
+.remove-btn-modern {
+  width: 1.75rem !important;
+  height: 1.75rem !important;
+  background: rgba(239, 68, 68, 0.1) !important;
+  border: none !important;
+  border-radius: 0.375rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  color: #dc2626 !important;
+  font-size: 0.75rem !important;
+}
+
+.remove-btn-modern:hover {
+  background: rgba(239, 68, 68, 0.2) !important;
+  transform: scale(1.1) !important;
+}
+
+/* Scripts Container Modern */
+.scripts-container-modern {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 1.5rem !important;
+}
+
+.script-section-modern {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.5rem !important;
+}
+
+.script-label-modern {
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+  color: #374151 !important;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .step-info-modern {
+    flex-wrap: wrap !important;
+    gap: 0.5rem !important;
+  }
+  
+  .step-details-modern {
+    width: 100% !important;
+    order: 3 !important;
+  }
+  
+  .step-url-preview {
+    max-width: none !important;
+  }
+  
+  .url-section-modern {
+    flex-direction: column !important;
+  }
+  
+  .tab-list-modern {
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+  }
+  
+  .tab-btn-modern {
+    white-space: nowrap !important;
+  }
+  
+  .item-row-modern {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  
+  .item-input-modern.key,
+  .item-input-modern.value {
+    flex: none !important;
+  }
+}
+
+/* API Tester Specific Styles */
+.api-config-card {
+  background: rgba(255, 255, 255, 0.98) !important;
+  backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(229, 231, 235, 0.4) !important;
+  border-radius: 1rem !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+  overflow: hidden !important;
+}
+
+.result-count.success {
+  background: linear-gradient(135deg, #10b981, #059669) !important;
+  color: white !important;
+}
+
+.result-count.error {
+  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+  color: white !important;
+}
+
+/* Response tabs functionality */
+.response-tabs .tab-btn {
+  background: none !important;
+  border: none !important;
+  padding: 0.5rem 1rem !important;
+  border-bottom: 2px solid transparent !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  color: #6b7280 !important;
+  font-size: 0.8rem !important;
+}
+
+.response-tabs .tab-btn:hover {
+  color: #374151 !important;
+  background: #f9fafb !important;
+}
+
+.response-tabs .tab-btn.active {
+  color: #3b82f6 !important;
+  border-bottom-color: #3b82f6 !important;
+  background: #f0f9ff !important;
+}
+
+/* Single API Tester Layout */
+.single-api-container {
+  display: grid !important;
+  grid-template-columns: 1fr 400px !important;
+  gap: 2rem !important;
+  height: 100% !important;
+}
+
+@media (max-width: 1024px) {
+  .single-api-container {
+    grid-template-columns: 1fr !important;
+    gap: 1.5rem !important;
+  }
+}
+
+/* Dropdown menu improvements for saved APIs */
+.dropdown-menu .method-badge-modern {
+  font-size: 0.5rem !important;
+  padding: 0.125rem 0.375rem !important;
+}
+
+/* Button Loading State */
+.action-btn.loading {
+  position: relative !important;
+  color: transparent !important;
+}
+
+.action-btn.loading::after {
+  content: '' !important;
+  position: absolute !important;
+  width: 1rem !important;
+  height: 1rem !important;
+  top: 50% !important;
+  left: 50% !important;
+  margin-left: -0.5rem !important;
+  margin-top: -0.5rem !important;
+  border: 2px solid transparent !important;
+  border-top-color: currentColor !important;
+  border-radius: 50% !important;
+  animation: spin 1s linear infinite !important;
+}
+
+/* User info styles */
+.user-info {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  margin-top: 0.5rem !important;
+  color: #6b7280 !important;
+  font-size: 0.8rem !important;
+}
+
+/* Color variations */
+.text-yellow-500 { color: #eab308 !important; }
+
+/* Single API Actions in Step Header */
+.single-api-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.25rem !important;
+  margin-right: 0.5rem !important;
+  z-index: 10 !important;
+  position: relative !important;
+}
+
+.single-action-btn {
+  width: 2rem !important;
+  height: 2rem !important;
+  border: none !important;
+  border-radius: 0.5rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  font-size: 0.875rem !important;
+  backdrop-filter: blur(10px) !important;
+  z-index: 10 !important;
+  position: relative !important;
+}
+
+.single-action-btn.run {
+  background: linear-gradient(135deg, #10b981, #059669) !important;
+  color: white !important;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3) !important;
+}
+
+.single-action-btn.run:hover:not(:disabled) {
+  background: linear-gradient(135deg, #059669, #047857) !important;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4) !important;
+  transform: translateY(-1px) scale(1.05) !important;
+}
+
+.single-action-btn.save {
+  background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+  color: white !important;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3) !important;
+}
+
+.single-action-btn.save:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4) !important;
+  transform: translateY(-1px) scale(1.05) !important;
+}
+
+.single-action-btn:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.single-action-btn:active {
+  transform: scale(0.95) !important;
+}
+
+/* Ensure step header doesn't interfere with clicks */
+.step-header-modern {
+  position: relative !important;
+  z-index: 5 !important;
+}
+
+.step-actions-modern {
+  z-index: 10 !important;
+  position: relative !important;
+}
+
+/* Responsive adjustments for single API actions */
+@media (max-width: 768px) {
+  .single-api-actions {
+    gap: 0.125rem !important;
+    margin-right: 0.25rem !important;
+  }
+  
+  .single-action-btn {
+    width: 1.75rem !important;
+    height: 1.75rem !important;
+    font-size: 0.75rem !important;
+  }
+}

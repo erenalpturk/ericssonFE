@@ -271,6 +271,83 @@ export class WorkflowService {
     }
   }
 
+  // Tek step güncelleme
+  static async updateSingleStep(stepId, stepData) {
+    console.log('[WorkflowService] Updating single step:', stepId)
+    
+    const updateData = {
+      name: stepData.name,
+      method: stepData.method,
+      url: stepData.url || '',
+      headers: stepData.headers || {},
+      body: stepData.body || '',
+      variables: stepData.variables || {},
+      pre_request_script: stepData.preRequestScript || '',
+      post_response_script: stepData.postResponseScript || '',
+      enabled: stepData.enabled !== false
+    }
+
+    const { error } = await supabase
+      .from('api_steps')
+      .update(updateData)
+      .eq('id', stepId)
+
+    if (error) {
+      console.error('Error updating single step:', error)
+      throw error
+    }
+    
+    console.log('[WorkflowService] Single step updated successfully:', stepId)
+  }
+
+  // Tek step ekleme
+  static async insertSingleStep(workflowId, stepData) {
+    console.log('[WorkflowService] Inserting single step to workflow:', workflowId)
+    
+    // Mevcut step sayısını al (order_index için)
+    const { data: existingSteps, error: countError } = await supabase
+      .from('api_steps')
+      .select('order_index')
+      .eq('workflow_id', workflowId)
+      .order('order_index', { ascending: false })
+      .limit(1)
+
+    if (countError) {
+      console.error('Error getting step count:', countError)
+      throw countError
+    }
+
+    const nextOrderIndex = existingSteps?.length > 0 ? existingSteps[0].order_index + 1 : 0
+
+    const insertData = {
+      workflow_id: workflowId,
+      name: stepData.name || 'Yeni API Adımı',
+      method: stepData.method,
+      url: stepData.url || '',
+      headers: stepData.headers || {},
+      body: stepData.body || '',
+      variables: stepData.variables || {},
+      pre_request_script: stepData.preRequestScript || '',
+      post_response_script: stepData.postResponseScript || '',
+      enabled: stepData.enabled !== false,
+      order_index: nextOrderIndex
+    }
+
+    const { data, error } = await supabase
+      .from('api_steps')
+      .insert(insertData)
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Error inserting single step:', error)
+      throw error
+    }
+    
+    console.log('[WorkflowService] Single step inserted successfully:', data.id)
+    return data
+  }
+
   static async loadWorkflow(workflowId) {
     const { data: workflow, error: workflowError } = await supabase
       .from('workflows')

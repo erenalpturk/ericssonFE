@@ -81,6 +81,12 @@ function Sidebar({ isCollapsed, onToggle }) {
             icon: 'bi-cpu-fill', 
             label: 'API Otomasyon',
             color: 'text-orange-500'
+        },
+        { 
+            path: '/api-tester', 
+            icon: 'bi-lightning-fill', 
+            label: 'API Tester',
+            color: 'text-yellow-500'
         }
     ]
 

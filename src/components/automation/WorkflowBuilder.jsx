@@ -940,6 +940,146 @@ export default function WorkflowBuilder() {
     return { steps, scriptsCount }
   }
 
+  // Tek API çalıştırma
+  const runSingleApi = async (step) => {
+    console.log('[WorkflowBuilder] runSingleApi called with step:', step)
+    
+    if (!step.url || !step.enabled) {
+      console.log('[WorkflowBuilder] runSingleApi: Invalid step - URL:', step.url, 'Enabled:', step.enabled)
+      return
+    }
+    
+    const stepWithId = step.id || `temp-${Date.now()}`
+    const uniqueResultId = `${stepWithId}-single-${Date.now()}`
+    
+    try {
+      console.log('[WorkflowBuilder] runSingleApi: Starting execution for step:', stepWithId)
+      setIsRunning(true)
+      
+      // Show loading toast
+      const loadingToastId = toast.loading(`${step.name || 'API'} çalıştırılıyor...`)
+      
+      const result = await runSingleStep(step, globalVariables)
+      console.log('[WorkflowBuilder] runSingleApi: Result received:', result)
+      
+      toast.dismiss(loadingToastId)
+      
+      if (result.status === 'success') {
+        toast.success(`${step.name || 'API'} başarıyla çalıştırıldı!`)
+        // Update results - remove previous single results for this step and add new one
+        const newResult = {
+          stepId: uniqueResultId,
+          stepName: step.name || 'API Test',
+          singleExecution: true,
+          originalStepId: stepWithId,
+          ...result
+        }
+        setResults(prev => {
+          // Remove previous single execution results for this step
+          const filteredResults = prev.filter(r => 
+            !(r.singleExecution && r.originalStepId === stepWithId)
+          )
+          return [...filteredResults, newResult]
+        })
+      } else {
+        toast.error(`${step.name || 'API'} çalıştırma hatası: ${result.error}`)
+        // Add error result
+        const errorResult = {
+          stepId: uniqueResultId,
+          stepName: step.name || 'API Test',
+          singleExecution: true,
+          originalStepId: stepWithId,
+          ...result
+        }
+        setResults(prev => {
+          // Remove previous single execution results for this step
+          const filteredResults = prev.filter(r => 
+            !(r.singleExecution && r.originalStepId === stepWithId)
+          )
+          return [...filteredResults, errorResult]
+        })
+      }
+    } catch (error) {
+      toast.error(`Unexpected error: ${error.message}`)
+      console.error('[WorkflowBuilder] Error running single API:', error)
+    } finally {
+      setIsRunning(false)
+    }
+  }
+
+  // Tek API kaydetme  
+  const saveSingleApi = async (step) => {
+    console.log('[WorkflowBuilder] saveSingleApi called with step:', step)
+    
+    if (!step.url) {
+      console.log('[WorkflowBuilder] saveSingleApi: No URL provided')
+      toast.error('API URL\'si gerekli')
+      return
+    }
+
+    if (!step.name || !step.name.trim()) {
+      toast.error('API adı gerekli')
+      return
+    }
+
+    if (!currentWorkflow) {
+      toast.error('Önce bir workflow yükleyin veya oluşturun')
+      return
+    }
+
+    try {
+      console.log('[WorkflowBuilder] saveSingleApi: Processing single step save for workflow:', currentWorkflow.id)
+      
+      // Show loading toast
+      const loadingToastId = toast.loading('API kaydediliyor...')
+      
+      // Step mevcut mu kontrol et (gerçek UUID var mı)
+      const isExistingStep = step.id && 
+                            !step.id.startsWith('step-') && 
+                            step.id.length === 36 && 
+                            step.id.includes('-')
+      
+      if (isExistingStep) {
+        // Mevcut step'i güncelle
+        console.log('[WorkflowBuilder] Updating existing step:', step.id)
+        await WorkflowService.updateSingleStep(step.id, step)
+        
+        // Lokal state'i güncelle
+        const updatedSteps = steps.map(s => s.id === step.id ? step : s)
+        setSteps(updatedSteps)
+        
+        toast.dismiss(loadingToastId)
+        toast.success(`"${step.name.trim()}" başarıyla güncellendi!`)
+        
+      } else {
+        // Yeni step ekle
+        console.log('[WorkflowBuilder] Adding new step to workflow')
+        const insertedStep = await WorkflowService.insertSingleStep(currentWorkflow.id, step)
+        
+        // Lokal state'i güncelle - eski step'i yenisiyle değiştir
+        const updatedSteps = steps.map(s => s.id === step.id ? {
+          ...step,
+          id: insertedStep.id // Yeni UUID'yi kullan
+        } : s)
+        setSteps(updatedSteps)
+        
+        toast.dismiss(loadingToastId)
+        toast.success(`"${step.name.trim()}" başarıyla eklendi!`)
+      }
+      
+      // Workflow'un updated_at'ini güncelle
+      await WorkflowService.updateWorkflow(currentWorkflow.id, { 
+        updated_at: new Date().toISOString() 
+      })
+      
+      console.log('[WorkflowBuilder] saveSingleApi: Single step operation completed')
+      
+    } catch (error) {
+      console.error('[WorkflowBuilder] Error in single step save:', error)
+      toast.error(`Step kaydetme hatası: ${error.message}`)
+    }
+  }
+
   return (
     <div className="modern-page">
   
@@ -1137,6 +1277,8 @@ export default function WorkflowBuilder() {
                     canMoveDown={index < steps.length - 1}
                     variables={globalVariables}
                     isRunning={isRunning}
+                    onRunSingle={runSingleApi}
+                    onSaveSingle={saveSingleApi}
                   />
                 ))}
               </div>

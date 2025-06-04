@@ -12,6 +12,7 @@ import InfodealerToSqlUpdate from './components/InfodealerToSqlUpdate'
 import IccidManagement from './components/IccidManagement'
 import CourierActions from './components/CourierActions'
 import WorkflowBuilder from './components/automation/WorkflowBuilder'
+import SingleApiTester from './components/automation/SingleApiTester'
 
 import ChangePassword from './components/ChangePassword'
 
@@ -145,6 +146,16 @@ function AppRoutes() {
                         <PrivateRoute>
                             <Layout>
                                 <WorkflowBuilder />
+                            </Layout>
+                        </PrivateRoute>
+                    }
+                />
+                <Route
+                    path="/api-tester"
+                    element={
+                        <PrivateRoute>
+                            <Layout>
+                                <SingleApiTester />
                             </Layout>
                         </PrivateRoute>
                     }
