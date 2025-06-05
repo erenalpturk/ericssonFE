@@ -52,11 +52,7 @@ const ActivationList = () => {
   const fetchActivations = async () => {
     try {
       setLoading(true);
-<<<<<<< HEAD
       const response = await fetch(`${baseUrl}/iccid/enesvealpdatalarinizigetiriyor/${user.sicil_no}`, {
-=======
-      const response = await fetch(`${baseUrl}/iccid/enesvealpdatalarinizigetiriyoru/${user.sicil_no}`, {
->>>>>>> f106caa39ab9def93c587b40f8d654e87f4f3777
         method: 'POST'
       });
       const data = await response.json();
