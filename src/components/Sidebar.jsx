@@ -18,64 +18,72 @@ function Sidebar({ isCollapsed, onToggle }) {
             path: '/', 
             icon: 'bi-house-door-fill', 
             label: 'Ana Sayfa',
-            color: 'text-blue-500'
+            color: 'text-blue-500',
+            roles: ['admin', 'support', 'tester']
         },
         { 
             path: '/sms-decrypt', 
             icon: 'bi-shield-lock-fill', 
             label: 'SMS Decrypt',
-            color: 'text-purple-500'
+            color: 'text-purple-500',
+            roles: ['admin', 'support', 'tester']
         },
-        // { 
-        //     path: '/postpaid-activation', 
-        //     icon: 'bi-phone-fill', 
-        //     label: 'Postpaid Activation',
-        //     color: 'text-orange-500',
-        //     disabled: true,
-        //     badge: 'Yapım Aşamasında'
-        // },
         { 
             path: '/sql-create', 
             icon: 'bi-database-fill', 
             label: 'SQL Create',
-            color: 'text-emerald-500'
+            color: 'text-emerald-500',
+            roles: ['admin', 'support', 'tester']
         },
-        // { 
-        //     path: '/infodealer-to-sql', 
-        //     icon: 'bi-database-add', 
-        //     label: 'Infodealer Insert',
-        //     color: 'text-emerald-600'
-        // },
-        // { 
-        //     path: '/infodealer-to-sql-update', 
-        //     icon: 'bi-database-up', 
-        //     label: 'Infodealer Update',
-        //     color: 'text-emerald-600'
-        // },
-        // { 
-        //     path: '/selfybest-insert-sql', 
-        //     icon: 'bi-database-gear', 
-        //     label: 'Selfybest Insert',
-        //     color: 'text-emerald-600'
-        // },
-        // { 
-        //     path: '/cudb-feed', 
-        //     icon: 'bi-arrow-repeat', 
-        //     label: 'CUDB Feed',
-        //     color: 'text-cyan-500'
-        // },
         { 
-            path: '/iccid-management', 
-            icon: 'bi-gear-wide-connected', 
-            label: 'ICCID Management',
-            color: 'text-emerald-500'
+            path: '/iccid-list', 
+            icon: 'bi-credit-card-2-front', 
+            label: 'ICCID List',
+            color: 'text-emerald-500',
+            roles: ['admin', 'support', 'tester']
+        },
+        { 
+            path: '/activation-list', 
+            icon: 'bi-check-circle', 
+            label: 'Aktivasyon List',
+            color: 'text-emerald-500',
+            roles: ['admin', 'support', 'tester']
         },
         { 
             path: '/courier-actions', 
             icon: 'bi-truck', 
             label: 'Kurye Tetikleme',
-            color: 'text-cyan-500'
+            color: 'text-cyan-500',
+            roles: ['admin', 'support', 'tester']
+        },
+        { 
+            path: '/api-automation', 
+            icon: 'bi-cpu-fill', 
+            label: 'API Otomasyon',
+            color: 'text-orange-500',
+            roles: ['admin', 'support', 'tester']
+        },
+        { 
+            path: '/api-tester', 
+            icon: 'bi-lightning-fill', 
+            label: 'API Tester',
+            color: 'text-yellow-500',
+            roles: ['admin', 'support', 'tester']
         }
+        // { 
+        //     path: '/api-automation-management', 
+        //     icon: 'bi-cpu-fill', 
+        //     label: 'API Otomasyon Management',
+        //     color: 'text-orange-500',
+        //     roles: ['admin', 'support']
+        // },
+        // { 
+        //     path: '/iccid-management', 
+        //     icon: 'bi-gear-wide-connected', 
+        //     label: 'ICCID Management',
+        //     color: 'text-emerald-500',
+        //     roles: ['admin', 'support']
+        // }
     ]
 
     return (
@@ -105,7 +113,7 @@ function Sidebar({ isCollapsed, onToggle }) {
             {/* Navigation */}
             <nav className="sidebar-nav">
                 <ul className="nav-list">
-                    {menuItems.map((item) => (
+                    {menuItems.filter(item => item.roles.includes(user.role)).map((item) => (
                         <li key={item.path} className="nav-item">
                             {item.disabled ? (
                                 <div className={`nav-link disabled ${item.color}`}>

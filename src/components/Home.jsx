@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
 
 function Home() {
+    const { user } = useAuth()
     const tools = [
         {
             path: '/sms-decrypt',
@@ -9,18 +11,9 @@ function Home() {
             description: 'SMS şifre çözme ve token doğrulama aracı',
             color: 'text-purple-500',
             bgGradient: 'from-purple-500 to-indigo-600',
-            category: 'Güvenlik'
+            category: 'Güvenlik',
+            roles: ['admin', 'support', 'tester']
         },
-        // {
-        //     path: '/postpaid-activation',
-        //     icon: 'bi-phone-fill',
-        //     title: 'Postpaid Activation',
-        //     description: 'Hat aktivasyon otomasyonu',
-        //     color: 'text-orange-500',
-        //     bgGradient: 'from-orange-500 to-red-600',
-        //     category: 'Aktivasyon',
-        //     disabled: true
-        // },
         {
             path: '/sql-create',
             icon: 'bi-database-fill',
@@ -28,44 +21,28 @@ function Home() {
             description: 'SQL sorgusu oluşturur',
             color: 'text-emerald-500',
             bgGradient: 'from-emerald-500 to-teal-600',
-            category: 'SQL Araçları'
+            category: 'SQL Araçları',
+            roles: ['admin', 'support', 'tester']
         },
-        // {
-        //     path: '/infodealer-to-sql',
-        //     icon: 'bi-database-add',
-        //     title: 'Infodealer Insert',
-        //     description: 'Infodealer için toplu INSERT sorgusu oluşturur',
-        //     color: 'text-emerald-600',
-        //     bgGradient: 'from-emerald-600 to-green-600',
-        //     category: 'SQL Araçları'
-        // },
-        // {
-        //     path: '/infodealer-to-sql-update',
-        //     icon: 'bi-database-up',
-        //     title: 'Infodealer Update',
-        //     description: 'Dealer kodu güncelleme sorguları oluşturur',
-        //     color: 'text-emerald-600',
-        //     bgGradient: 'from-emerald-600 to-green-600',
-        //     category: 'SQL Araçları'
-        // },
-        // {
-        //     path: '/selfybest-insert-sql',
-        //     icon: 'bi-database-gear',
-        //     title: 'Selfybest Insert',
-        //     description: 'Youth tariff konfigürasyonu için INSERT sorgusu',
-        //     color: 'text-emerald-600',
-        //     bgGradient: 'from-emerald-600 to-green-600',
-        //     category: 'SQL Araçları'
-        // },
-        
         {
-            path: '/iccid-management',
+            path: '/iccid-list',
             icon: 'bi-credit-card-2-front',
-            title: 'ICCID Management',
-            description: 'ICCID ve aktivasyon verilerini yönetin',
+            title: 'ICCID List',
+            description: 'ICCID verilerini görüntüle ve yönet',
             color: 'text-emerald-500',
             bgGradient: 'from-emerald-500 to-teal-600',
-            category: 'Yönetim'
+            category: 'Iccidler',
+            roles: ['admin', 'support', 'tester']
+        },
+        {
+            path: '/activation-list',
+            icon: 'bi-check-circle',
+            title: 'Aktivasyon List',
+            description: 'Aktivasyon verilerini görüntüle ve yönet',
+            color: 'text-emerald-500',
+            bgGradient: 'from-emerald-500 to-teal-600',
+            category: 'Aktivasyonlar',
+            roles: ['admin', 'support', 'tester']
         },
         {
             path: '/courier-actions',
@@ -74,8 +51,50 @@ function Home() {
             description: 'Kurye işlemlerini tetikleyin ve yönetin',
             color: 'text-cyan-500',
             bgGradient: 'from-cyan-500 to-blue-600',
-            category: 'Otomasyon'
+            category: 'Otomasyon',
+            roles: ['admin', 'support', 'tester']
+        },
+
+        {
+            path: '/api-automation',
+            icon: 'bi-cpu-fill',
+            title: 'API Otomasyon',
+            description: 'Çoklu API workflow\'larını otomatikleştirin',
+            color: 'text-orange-500',
+            bgGradient: 'from-orange-500 to-red-600',
+            category: 'Otomasyon',
+            roles: ['admin', 'support', 'tester']
+        },
+        {
+            path: '/api-tester',
+            icon: 'bi-lightning-fill',
+            title: 'API Tester',
+            description: 'Tek API isteklerini test edin ve kaydedin',
+            color: 'text-yellow-500',
+            bgGradient: 'from-yellow-500 to-orange-600',
+            category: 'Test Araçları',
+            roles: ['admin', 'support', 'tester']
         }
+        // {
+        //     path: '/api-automation-management',
+        //     icon: 'bi-cpu-fill',
+        //     title: 'API Otomasyon Management',
+        //     description: 'Çoklu API workflow\'larını yönetin',
+        //     color: 'text-orange-500',
+        //     bgGradient: 'from-orange-500 to-red-600',
+        //     category: 'Yönetim',
+        //     roles: ['admin', 'support']
+        // },
+        // {
+        //     path: '/iccid-management',
+        //     icon: 'bi-gear-wide-connected',
+        //     title: 'ICCID Management',
+        //     description: 'ICCID ve aktivasyon yönetimi ana sayfası',
+        //     color: 'text-emerald-500',
+        //     bgGradient: 'from-emerald-500 to-teal-600',
+        //     category: 'Yönetim',
+        //     roles: ['admin', 'support']
+        // },
     ];
 
     const categories = [...new Set(tools.map(tool => tool.category))];
@@ -113,9 +132,9 @@ function Home() {
                     <h2>Araçlar</h2>
                     <p>İhtiyacınıza uygun aracı seçin</p>
                 </div>
-                
+
                 <div className="tools-grid">
-                    {tools.map((tool) => (
+                    {tools.filter(tool => tool.roles.includes(user.role)).map((tool) => (
                         <div key={tool.path} className="tool-card-wrapper">
                             {tool.disabled ? (
                                 <div className="tool-card disabled">

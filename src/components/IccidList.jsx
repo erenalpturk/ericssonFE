@@ -19,9 +19,9 @@ import {
 } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
 
-const ActivationList = () => {
-  const [activations, setActivations] = useState([]);
-  const [selectedActivations, setSelectedActivations] = useState([]);
+const IccidList = () => {
+  const [iccids, setIccids] = useState([]);
+  const [selectedIccids, setSelectedIccids] = useState([]);
   const [loading, setLoading] = useState(false);
   const [orderBy, setOrderBy] = useState('');
   const [order, setOrder] = useState('asc');
@@ -33,10 +33,11 @@ const ActivationList = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const statusOptions = ['available', 'reserved', 'sold'];
   const { baseUrl, user } = useAuth();
 
   useEffect(() => {
-    fetchActivations();
+    fetchIccids();
   }, []);
 
   const showSuccess = (message) => {
@@ -49,50 +50,72 @@ const ActivationList = () => {
     setTimeout(() => setErrorMessage(''), 3000);
   };
 
-  const fetchActivations = async () => {
+  const fetchIccids = async () => {
     try {
       setLoading(true);
-<<<<<<< HEAD
-      const response = await fetch(`${baseUrl}/iccid/enesvealpdatalarinizigetiriyor/${user.sicil_no}`, {
-=======
-      const response = await fetch(`${baseUrl}/iccid/enesvealpdatalarinizigetiriyoru/${user.sicil_no}`, {
->>>>>>> f106caa39ab9def93c587b40f8d654e87f4f3777
+      const response = await fetch(`${baseUrl}/iccid/getAll`, {
         method: 'POST'
       });
       const data = await response.json();
-      setActivations(data);
+      setIccids(data);
     } catch (error) {
-      showError('Veriler yüklenirken bir hata oluştu.');
+      showError('ICCID\'ler yüklenirken bir hata oluştu.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSelectAllActivations = (event) => {
-    const sortedAndFilteredData = filterData(sortData(activations));
+  const handleBulkDelete = async () => {
+    if (selectedIccids.length === 0) {
+      showError('Lütfen silinecek ICCID\'leri seçin');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await fetch(`${baseUrl}/iccid/bulk-delete`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ iccids: selectedIccids }),
+      });
+      const data = await response.json();
+      showSuccess(data.message);
+      setSelectedIccids([]);
+      fetchIccids();
+    } catch (error) {
+      showError('ICCID\'ler silinirken bir hata oluştu.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSelectAllIccids = (event) => {
+    const sortedAndFilteredData = filterData(sortData(iccids));
     const paginatedData = sortedAndFilteredData.slice(
       page * rowsPerPage,
       page * rowsPerPage + rowsPerPage
     );
     if (event.target.checked) {
-      setSelectedActivations(prev => [
+      setSelectedIccids(prev => [
         ...prev,
         ...paginatedData
-          .map(item => item.activationid)
+          .map(item => item.iccid)
           .filter(id => !prev.includes(id))
       ]);
     } else {
-      setSelectedActivations(prev =>
-        prev.filter(id => !paginatedData.map(item => item.activationid).includes(id))
+      setSelectedIccids(prev =>
+        prev.filter(id => !paginatedData.map(item => item.iccid).includes(id))
       );
     }
   };
 
-  const handleSelectActivation = (activationid) => {
-    setSelectedActivations(prev => 
-      prev.includes(activationid)
-        ? prev.filter(id => id !== activationid)
-        : [...prev, activationid]
+  const handleSelectIccid = (iccid) => {
+    setSelectedIccids(prev => 
+      prev.includes(iccid)
+        ? prev.filter(id => id !== iccid)
+        : [...prev, iccid]
     );
   };
 
@@ -162,14 +185,48 @@ const ActivationList = () => {
     });
   };
 
+  const handleStatusChange = async (iccid, newStatus) => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${baseUrl}/iccid/setStatus`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ iccid, status: newStatus }),
+      });
+      const data = await response.json();
+      
+      if (response.ok) {
+        showSuccess('Statü başarıyla güncellendi.');
+        fetchIccids();
+      } else {
+        showError(data.error || 'Statü güncellenemedi.');
+      }
+    } catch (error) {
+      showError('Statü güncellenirken bir hata oluştu.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch(status) {
+      case 'available': return 'text-green-500';
+      case 'reserved': return 'text-yellow-500';
+      case 'sold': return 'text-red-500';
+      default: return 'text-gray-500';
+    }
+  };
+
   const getFilteredData = () => {
-    if (!searchText) return activations;
+    if (!searchText) return iccids;
     
-    return activations.filter(item => {
+    return iccids.filter(item => {
       const searchString = searchText.toLowerCase();
-      return item.msisdn?.toLowerCase().includes(searchString) ||
-             item.tckn?.toLowerCase().includes(searchString) ||
-             item.user?.toLowerCase().includes(searchString);
+      return item.iccid?.toLowerCase().includes(searchString) ||
+             item.type?.toLowerCase().includes(searchString) ||
+             item.stock?.toLowerCase().includes(searchString);
     });
   };
 
@@ -214,16 +271,16 @@ const ActivationList = () => {
       <div className="page-header">
         <div className="header-content">
           <div className="header-icon">
-            <i className="bi bi-check-circle text-emerald-600"></i>
+            <i className="bi bi-credit-card-2-front text-emerald-600"></i>
           </div>
           <div className="header-text">
-            <h1>Aktivasyon Listesi</h1>
-            <p>Aktivasyon verilerini yönetin</p>
+            <h1>ICCID Listesi</h1>
+            <p>ICCID verilerini yönetin</p>
           </div>
         </div>
         <div className="stats-badge">
           <i className="bi bi-list-ol"></i>
-          <span>{activations.length} Aktivasyon</span>
+          <span>{iccids.length} ICCID</span>
         </div>
       </div>
 
@@ -234,7 +291,7 @@ const ActivationList = () => {
             <button 
               className="action-btn primary"
               onClick={() => {
-                navigator.clipboard.writeText(JSON.stringify(activations, null, 2));
+                navigator.clipboard.writeText(JSON.stringify(iccids, null, 2));
                 showSuccess('Veriler kopyalandı!');
               }}
             >
@@ -255,6 +312,16 @@ const ActivationList = () => {
                 onChange={(e) => setSearchText(e.target.value)}
               />
             </div>
+            {selectedIccids.length > 0 && (
+              <button
+                className="action-btn danger"
+                onClick={handleBulkDelete}
+                disabled={loading}
+              >
+                <i className="bi bi-trash"></i>
+                Seçilenleri Sil ({selectedIccids.length})
+              </button>
+            )}
           </div>
 
           {/* Table */}
@@ -262,28 +329,51 @@ const ActivationList = () => {
             <table className="modern-table">
               <thead>
                 <tr>
-                  <th>MSISDN</th>
-                  <th>TCKN</th>
-                  <th>Doğum Tarihi</th>
-                  <th>Kullanıcı</th>
-                  <th>Aktivasyon Tipi</th>
+                  <th>
+                    <input
+                      type="checkbox"
+                      checked={selectedIccids.length === getFilteredData().length && getFilteredData().length > 0}
+                      onChange={handleSelectAllIccids}
+                    />
+                  </th>
+                  <th>ICCID</th>
+                  <th>Durum</th>
+                  <th>Tip</th>
                   <th>Oluşturulma</th>
+                  <th>Güncellenme</th>
                 </tr>
               </thead>
               <tbody>
                 {getPaginatedData().map((row) => (
-                  <tr key={row.activationid}>
-                    <td className="font-mono text-sm">{row.msisdn}</td>
-                    <td className="font-mono text-sm">{row.tckn}</td>
-                    <td>{row.birth_date}</td>
+                  <tr key={row.iccidid}>
                     <td>
-                      <span className="user-badge">{row.user}</span>
+                      <input
+                        type="checkbox"
+                        checked={selectedIccids.includes(row.iccid)}
+                        onChange={() => handleSelectIccid(row.iccid)}
+                      />
+                    </td>
+                    <td className="font-mono text-sm">{row.iccid}</td>
+                    <td>
+                      <select
+                        className={`status-select ${getStatusColor(row.stock)}`}
+                        value={row.stock}
+                        onChange={(e) => handleStatusChange(row.iccid, e.target.value)}
+                        disabled={loading}
+                      >
+                        {statusOptions.map(option => (
+                          <option key={option} value={option}>{option}</option>
+                        ))}
+                      </select>
                     </td>
                     <td>
-                      <span className="type-badge">{row.activationtype}</span>
+                      <span className="type-badge">{row.type}</span>
                     </td>
                     <td className="text-gray-600">
-                      {new Date(row.created_at).toLocaleString('tr-TR')}
+                      {new Date(row.cdate).toLocaleString('tr-TR')}
+                    </td>
+                    <td className="text-gray-600">
+                      {new Date(row.updated_at).toLocaleString('tr-TR')}
                     </td>
                   </tr>
                 ))}
@@ -329,4 +419,4 @@ const ActivationList = () => {
   );
 };
 
-export default ActivationList;
+export default IccidList;
