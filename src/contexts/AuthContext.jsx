@@ -42,9 +42,9 @@ export const AuthProvider = ({ children }) => {
                 setUser(userData);
                 localStorage.setItem('user', JSON.stringify(userData));
                 
-                // Kullanıcı adını localStorage'e user değişkeni olarak kaydet
-                localStorage.setItem('currentUsername', userData.full_name);
-                console.log('[AuthContext] User logged in:', userData.full_name);
+                // Kullanıcı sicil_no'sunu localStorage'e user değişkeni olarak kaydet
+                localStorage.setItem('currentUsername', userData.sicil_no);
+                console.log('[AuthContext] User logged in:', userData.sicil_no);
                 
                 return { 
                     success: true, 
@@ -57,9 +57,9 @@ export const AuthProvider = ({ children }) => {
             setUser(userData);
             localStorage.setItem('user', JSON.stringify(userData));
             
-            // Kullanıcı adını localStorage'e user değişkeni olarak kaydet
-            localStorage.setItem('currentUsername', userData.full_name);
-            console.log('[AuthContext] User logged in:', userData.full_name);
+            // Kullanıcı sicil_no'sunu localStorage'e user değişkeni olarak kaydet
+            localStorage.setItem('currentUsername', userData.sicil_no);
+            console.log('[AuthContext] User logged in:', userData.sicil_no);
             
             // Son giriş zamanını güncelle
             const { error: updateError } = await supabase

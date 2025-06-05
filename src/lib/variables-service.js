@@ -82,7 +82,7 @@ export class VariablesService {
       const stored = localStorage.getItem('omni_runtime_variables')
       let variables = stored ? JSON.parse(stored) : {}
       
-      // Otomatik olarak currentUsername'i user variable'ı olarak ekle
+      // Otomatik olarak currentUsername'i (sicil_no) user variable'ı olarak ekle
       const currentUsername = localStorage.getItem('currentUsername')
       if (currentUsername) {
         variables['user'] = {
