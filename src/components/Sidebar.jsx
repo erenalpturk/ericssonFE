@@ -71,13 +71,6 @@ function Sidebar({ isCollapsed, onToggle }) {
             roles: ['admin', 'support', 'tester']
         },
         { 
-            path: '/api-automation-management', 
-            icon: 'bi-cpu-fill', 
-            label: 'API Otomasyon Management',
-            color: 'text-orange-500',
-            roles: ['admin', 'support']
-        },
-        { 
             path: '/iccid-management', 
             icon: 'bi-gear-wide-connected', 
             label: 'ICCID Management',

@@ -79,7 +79,12 @@ export default function WorkflowResults({ results }) {
                       <i className={getStatusIcon(result.status)}></i>
                     </div>
                     <div className="result-details">
-                      <div className="result-name">{result.stepName}</div>
+                      <div className="result-name">
+                        {result.runNumber && result.runNumber > 1 && (
+                          <span className="run-badge">#{result.runNumber}</span>
+                        )}
+                        {result.stepName}
+                      </div>
                       <div className="result-meta">
                         {result.httpStatus && (
                           <span className="status-code">HTTP {result.httpStatus}</span>

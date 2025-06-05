@@ -33,6 +33,11 @@ export default function WorkflowBuilder() {
   // AbortController for cancelling workflow
   const [abortController, setAbortController] = useState(null)
 
+  // Tekrar sayısı state'leri
+  const [repeatCount, setRepeatCount] = useState(1)
+  const [currentRun, setCurrentRun] = useState(0)
+  const [isRepeating, setIsRepeating] = useState(false)
+
   // Variables'ları yükle
   useEffect(() => {
     console.log('[WorkflowBuilder] Component mounted, loading variables...')
@@ -257,6 +262,8 @@ export default function WorkflowBuilder() {
   }
 
   const runWorkflow = async () => {
+    console.log('[WorkflowBuilder] runWorkflow called with repeatCount:', repeatCount)
+    
     if (steps.length === 0) {
       toast.error('Çalıştırılacak adım bulunamadı')
       return
@@ -267,59 +274,111 @@ export default function WorkflowBuilder() {
     setAbortController(controller)
 
     setIsRunning(true)
+    setIsRepeating(repeatCount > 1)
+    setCurrentRun(0)
     setResults([])
 
     console.log('[WorkflowBuilder] === Starting Workflow ===')
+    console.log('[WorkflowBuilder] Repeat count:', repeatCount, typeof repeatCount)
+    console.log('[WorkflowBuilder] Steps length:', steps.length)
     console.log('[WorkflowBuilder] Available global variables:', globalVariables)
-    console.log('[WorkflowBuilder] Static variables:', staticVariables)
-    console.log('[WorkflowBuilder] Runtime variables:', runtimeVariables)
 
-    const workflowResults = []
-    let workflowVariables = { ...globalVariables }
+    const allResults = []
 
     try {
-      for (let i = 0; i < steps.length; i++) {
-        const step = steps[i]
-
-        // Check if workflow was cancelled
+      // Workflow'u belirtilen sayıda tekrarla
+      console.log('[WorkflowBuilder] Starting for loop with repeatCount:', repeatCount)
+      for (let runIndex = 0; runIndex < repeatCount; runIndex++) {
+        console.log('[WorkflowBuilder] For loop iteration:', runIndex, 'of', repeatCount)
+        
         if (controller.signal.aborted) {
           console.log('[WorkflowBuilder] Workflow cancelled by user')
           break
         }
 
-        if (!step.enabled) {
-          workflowResults.push({
-            stepId: step.id,
-            stepName: step.name,
-            status: 'pending',
-            message: 'Adım devre dışı'
+        setCurrentRun(runIndex + 1)
+        
+        // Her çalıştırma için başlangıç mesajı
+        if (repeatCount > 1) {
+          toast(`Çalıştırma ${runIndex + 1}/${repeatCount} başlıyor...`, {
+            duration: 1500,
+            icon: '🚀'
           })
-          continue
         }
 
-        console.log(`[WorkflowBuilder] Step ${i + 1}: Using variables:`, workflowVariables)
-        const result = await runSingleStep(step, workflowVariables, controller.signal)
-        workflowResults.push(result)
-        setResults([...workflowResults])
+        console.log(`[WorkflowBuilder] === Run ${runIndex + 1}/${repeatCount} ===`)
+        
+        const runResults = []
+        let workflowVariables = { ...globalVariables }
 
-        if (result.status === 'error') {
-          if (result.error?.includes('aborted')) {
-            toast.success('Workflow durduruldu')
-          } else {
-            toast.error(`Workflow durdu: ${result.error}`)
+        // Bu çalıştırma için adımları sırayla çalıştır
+        for (let i = 0; i < steps.length; i++) {
+          const step = steps[i]
+
+          // Check if workflow was cancelled
+          if (controller.signal.aborted) {
+            console.log('[WorkflowBuilder] Workflow cancelled by user')
+            break
           }
-          break
+
+          if (!step.enabled) {
+            runResults.push({
+              stepId: step.id,
+              stepName: step.name,
+              status: 'pending',
+              message: 'Adım devre dışı',
+              runNumber: runIndex + 1
+            })
+            continue
+          }
+
+          console.log(`[WorkflowBuilder] Run ${runIndex + 1} - Step ${i + 1}: Using variables:`, workflowVariables)
+          const result = await runSingleStep(step, workflowVariables, controller.signal)
+          
+          // Çalıştırma numarasını sonuçlara ekle
+          const resultWithRun = {
+            ...result,
+            runNumber: runIndex + 1
+          }
+          
+          runResults.push(resultWithRun)
+          allResults.push(resultWithRun)
+          setResults([...allResults])
+
+          if (result.status === 'error') {
+            if (result.error?.includes('aborted')) {
+              toast.success('Workflow durduruldu')
+            } else {
+              toast.error(`Çalıştırma ${runIndex + 1} durdu: ${result.error}`)
+            }
+            // Hata durumunda kalan çalıştırmaları da durdur
+            return
+          }
+
+          if (result.extractedVariables) {
+            workflowVariables = { ...workflowVariables, ...result.extractedVariables }
+            setGlobalVariables(workflowVariables)
+            console.log('[WorkflowBuilder] Updated variables after step:', workflowVariables)
+          }
         }
 
-        if (result.extractedVariables) {
-          workflowVariables = { ...workflowVariables, ...result.extractedVariables }
-          setGlobalVariables(workflowVariables)
-          console.log('[WorkflowBuilder] Updated variables after step:', workflowVariables)
+        // Bu çalıştırma tamamlandı mesajı
+        if (repeatCount > 1 && !controller.signal.aborted) {
+          toast.success(`Çalıştırma ${runIndex + 1}/${repeatCount} tamamlandı`)
+        }
+
+        // Çalıştırmalar arası kısa bekleme (opsiyonel)
+        if (runIndex < repeatCount - 1 && !controller.signal.aborted) {
+          await new Promise(resolve => setTimeout(resolve, 500))
         }
       }
 
       if (!controller.signal.aborted) {
-        toast.success('Workflow tamamlandı')
+        if (repeatCount > 1) {
+          toast.success(`Tüm workflow çalıştırmaları tamamlandı! (${repeatCount} kez)`)
+        } else {
+          toast.success('Workflow tamamlandı')
+        }
       }
     } catch (error) {
       console.error('Workflow error:', error)
@@ -330,6 +389,8 @@ export default function WorkflowBuilder() {
       }
     } finally {
       setIsRunning(false)
+      setIsRepeating(false)
+      setCurrentRun(0)
       setAbortController(null)
     }
   }
@@ -621,14 +682,61 @@ export default function WorkflowBuilder() {
     toast.success('Workflow durduruldu')
   }
 
-  const handleSaveWorkflow = async () => {
+  // Workflow bilgilerini güncelleme (sadece ad ve açıklama)
+  const handleUpdateWorkflowInfo = async () => {
+    if (!workflowName.trim()) {
+      toast.error('Workflow adı gerekli')
+      return
+    }
+
+    if (!currentWorkflow) {
+      toast.error('Güncellenecek workflow bulunamadı')
+      return
+    }
+
+    const loadingToastId = toast.loading('Workflow bilgileri güncelleniyor...')
+
+    try {
+      await WorkflowService.updateWorkflow(currentWorkflow.id, {
+        name: workflowName,
+        description: workflowDescription
+      })
+
+      // Current workflow'u güncelle
+      setCurrentWorkflow({
+        ...currentWorkflow,
+        name: workflowName,
+        description: workflowDescription
+      })
+
+      toast.dismiss(loadingToastId)
+      toast.success('Workflow bilgileri başarıyla güncellendi!')
+    } catch (error) {
+      toast.dismiss(loadingToastId)
+      console.error('[WorkflowBuilder] Error updating workflow info:', error)
+      
+      let errorMessage = 'Workflow güncellenirken hata oluştu'
+      if (error?.code === '23505') {
+        errorMessage = 'Bu workflow adı zaten kullanımda. Farklı bir ad seçin.'
+      } else if (error?.message) {
+        errorMessage = `Hata: ${error.message}`
+      }
+      
+      toast.error(errorMessage)
+    } finally {
+      setSaveDialogOpen(false)
+    }
+  }
+
+  // Farklı kaydet (yeni workflow oluşturma)
+  const handleSaveAsNewWorkflow = async () => {
     if (!workflowName.trim()) {
       toast.error('Workflow adı gerekli')
       return
     }
 
     // Loading toast
-    const loadingToastId = toast.loading('Workflow kaydediliyor...')
+    const loadingToastId = toast.loading('Yeni workflow oluşturuluyor...')
 
     try {
       // Step validasyonu
@@ -644,52 +752,35 @@ export default function WorkflowBuilder() {
         return
       }
 
-      if (currentWorkflow) {
-        // Mevcut workflow'u güncelle
-        console.log('[WorkflowBuilder] Updating existing workflow:', currentWorkflow.id)
-        console.log('[WorkflowBuilder] Steps to save:', steps.length, steps.map(s => ({ id: s.id, name: s.name })))
+      // Yeni workflow oluştur
+      console.log('[WorkflowBuilder] Creating new workflow:', workflowName)
+      console.log('[WorkflowBuilder] Steps to save:', steps.length)
 
-        await WorkflowService.updateWorkflow(currentWorkflow.id, {
-          name: workflowName,
-          description: workflowDescription
-        })
-        await WorkflowService.saveWorkflowSteps(currentWorkflow.id, steps)
+      const newWorkflow = await WorkflowService.createWorkflow(workflowName, workflowDescription)
+      console.log('[WorkflowBuilder] Created workflow:', newWorkflow.id)
 
-        // Step'leri veritabanından yeniden yükle - gerçek UUID'leri al
-        console.log('[WorkflowBuilder] Reloading steps to get actual UUIDs...')
-        const freshSteps = await WorkflowService.getWorkflowSteps(currentWorkflow.id)
-        setSteps(freshSteps)
+      await WorkflowService.saveWorkflowSteps(newWorkflow.id, steps)
 
-        toast.dismiss(loadingToastId)
-        toast.success('Workflow başarıyla güncellendi!')
-      } else {
-        // Yeni workflow oluştur
-        console.log('[WorkflowBuilder] Creating new workflow:', workflowName)
-        console.log('[WorkflowBuilder] Steps to save:', steps.length)
+      // Step'leri veritabanından yükle - gerçek UUID'leri al
+      console.log('[WorkflowBuilder] Loading saved steps with actual UUIDs...')
+      const savedSteps = await WorkflowService.getWorkflowSteps(newWorkflow.id)
+      setSteps(savedSteps)
 
-        const newWorkflow = await WorkflowService.createWorkflow(workflowName, workflowDescription)
-        console.log('[WorkflowBuilder] Created workflow:', newWorkflow.id)
-
-        await WorkflowService.saveWorkflowSteps(newWorkflow.id, steps)
-
-        // Step'leri veritabanından yükle - gerçek UUID'leri al
-        console.log('[WorkflowBuilder] Loading saved steps with actual UUIDs...')
-        const savedSteps = await WorkflowService.getWorkflowSteps(newWorkflow.id)
-        setSteps(savedSteps)
-
-        setCurrentWorkflow(newWorkflow)
-        toast.dismiss(loadingToastId)
-        toast.success(`Workflow "${workflowName}" oluşturuldu ve kaydedildi!`)
-      }
+      setCurrentWorkflow(newWorkflow)
+      setWorkflowName(newWorkflow.name)
+      setWorkflowDescription(newWorkflow.description || '')
+      
+      toast.dismiss(loadingToastId)
+      toast.success(`Yeni workflow "${workflowName}" oluşturuldu ve kaydedildi!`)
     } catch (error) {
       toast.dismiss(loadingToastId)
-      console.error('[WorkflowBuilder] ❌ Error saving workflow:', error)
+      console.error('[WorkflowBuilder] ❌ Error creating new workflow:', error)
 
       // Hata tipine göre daha detaylı mesaj
       let errorMessage = 'Workflow kaydedilirken bilinmeyen bir hata oluştu'
 
       if (error?.code === '23502') {
-        errorMessage = 'Veri doğrulama hatası: Eksik bilgi tespit edildi. Lütfen tüm alanları kontrol edin.'
+        errorMessage = 'Veri doğrulama hatası: Eksik bilgi tespit edildi. Lütfen tüm alanları doldurun.'
       } else if (error?.code === '23505') {
         errorMessage = 'Bu workflow adı zaten kullanımda. Farklı bir ad seçin.'
       } else if (error?.message?.includes('violates not-null constraint')) {
@@ -1141,14 +1232,46 @@ export default function WorkflowBuilder() {
           )}
 
           {steps.length > 0 && (
-            <button
-              className={`action-btn ${isRunning ? 'danger' : 'success'}`}
-              onClick={isRunning ? stopWorkflow : runWorkflow}
-              title={isRunning ? 'Workflow\'u durdur' : 'Workflow\'u çalıştır'}
-            >
-              <i className={`bi ${isRunning ? 'bi-stop-fill' : 'bi-play-fill'}`}></i>
-              <span>{isRunning ? 'Durdur' : 'Çalıştır'}</span>
-            </button>
+            <div className="run-controls">
+              <div className="repeat-control">
+                <label className="repeat-label">
+                  <i className="bi bi-arrow-repeat"></i>
+                  <span>Tekrar:</span>
+                </label>
+                <select
+                  className="repeat-select"
+                  value={repeatCount}
+                  onChange={(e) => {
+                    const newValue = Number(e.target.value)
+                    console.log('[WorkflowBuilder] Repeat count changed from', repeatCount, 'to', newValue)
+                    setRepeatCount(newValue)
+                  }}
+                  disabled={isRunning}
+                >
+                  <option value={1}>1x</option>
+                  <option value={2}>2x</option>
+                  <option value={3}>3x</option>
+                  <option value={5}>5x</option>
+                  <option value={10}>10x</option>
+                  <option value={25}>25x</option>
+                  <option value={50}>50x</option>
+                </select>
+              </div>
+              <button
+                className={`action-btn ${isRunning ? 'danger' : 'success'}`}
+                onClick={isRunning ? stopWorkflow : runWorkflow}
+                title={isRunning ? 'Workflow\'u durdur' : 'Workflow\'u çalıştır'}
+              >
+                <i className={`bi ${isRunning ? 'bi-stop-fill' : 'bi-play-fill'}`}></i>
+                <span>
+                  {isRunning ? (
+                    isRepeating ? `Durduruluyor... (${currentRun}/${repeatCount})` : 'Durdur'
+                  ) : (
+                    repeatCount > 1 ? `${repeatCount}x Çalıştır` : 'Çalıştır'
+                  )}
+                </span>
+              </button>
+            </div>
           )}
         </div>
 
@@ -1219,7 +1342,22 @@ export default function WorkflowBuilder() {
                   <i className="bi bi-save-fill"></i>
                   <span>{currentWorkflow ? 'Hızlı Kaydet' : 'Kaydet'}</span>
                 </button>
+                {currentWorkflow && (
+                  <button className="dropdown-item" onClick={() => {
+                    setSaveDialogOpen(true)
+                    setShowSaveDropdown(false)
+                  }}>
+                    <i className="bi bi-pencil-square"></i>
+                    <span>Bilgileri Düzenle</span>
+                  </button>
+                )}
                 <button className="dropdown-item" onClick={() => {
+                  // Yeni workflow oluşturmak için workflow'u temizleyip dialog aç
+                  const currentName = workflowName
+                  const currentDesc = workflowDescription
+                  setCurrentWorkflow(null)
+                  setWorkflowName(currentName ? `${currentName} - Kopya` : '')
+                  setWorkflowDescription(currentDesc)
                   setSaveDialogOpen(true)
                   setShowSaveDropdown(false)
                 }} disabled={steps.length === 0}>
@@ -1351,7 +1489,10 @@ export default function WorkflowBuilder() {
         <div className="modal-overlay">
           <div className="modal-content">
             <div className="modal-header">
-              <h3>{currentWorkflow ? 'Workflow Güncelle' : 'Workflow Kaydet'}</h3>
+              <h3>
+                <i className={`bi ${currentWorkflow ? 'bi-pencil-square' : 'bi-save'}`}></i>
+                {currentWorkflow ? 'Workflow Bilgilerini Güncelle' : 'Yeni Workflow Kaydet'}
+              </h3>
               <button
                 className="modal-close"
                 onClick={() => setSaveDialogOpen(false)}
@@ -1386,12 +1527,14 @@ export default function WorkflowBuilder() {
                 className="action-btn outline"
                 onClick={() => setSaveDialogOpen(false)}
               >
+                <i className="bi bi-x-circle"></i>
                 İptal
               </button>
               <button
                 className="action-btn primary"
-                onClick={handleSaveWorkflow}
+                onClick={currentWorkflow ? handleUpdateWorkflowInfo : handleSaveAsNewWorkflow}
               >
+                <i className="bi bi-check-circle"></i>
                 {currentWorkflow ? 'Güncelle' : 'Kaydet'}
               </button>
             </div>
