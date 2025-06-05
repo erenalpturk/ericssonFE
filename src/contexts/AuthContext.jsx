@@ -44,7 +44,6 @@ export const AuthProvider = ({ children }) => {
                 
                 // Kullanıcı adını localStorage'e user değişkeni olarak kaydet
                 localStorage.setItem('currentUsername', userData.full_name);
-                localStorage.setItem('currentUserSicilNo', userData.sicil_no);
                 console.log('[AuthContext] User logged in:', userData.full_name);
                 
                 return { 
@@ -57,7 +56,7 @@ export const AuthProvider = ({ children }) => {
             // Normal giriş işlemi
             setUser(userData);
             localStorage.setItem('user', JSON.stringify(userData));
-            
+            localStorage.setItem('currentUserSicilNo', userData.sicil_no);
             // Kullanıcı adını localStorage'e user değişkeni olarak kaydet
             localStorage.setItem('currentUsername', userData.full_name);
             console.log('[AuthContext] User logged in:', userData.full_name);
