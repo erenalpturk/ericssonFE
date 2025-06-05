@@ -7,8 +7,8 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [needsPasswordChange, setNeedsPasswordChange] = useState(false);
-    // const baseUrl = 'https://iccid.vercel.app';
-    const baseUrl = 'http://localhost:5432';
+     const baseUrl = 'https://iccid.vercel.app';
+    //const baseUrl = 'http://localhost:5432';
     useEffect(() => {
         // Local storage'dan kullanıcı bilgisini al
         const storedUser = localStorage.getItem('user');
@@ -23,7 +23,7 @@ export const AuthProvider = ({ children }) => {
             // Users tablosundan kullanıcıyı kontrol et
             const { data: userData, error: userError } = await supabase
                 .from('users')
-                .select('id, sicil_no, password, full_name')
+                .select('*')
                 .eq('sicil_no', username)
                 .single();
 
@@ -41,6 +41,11 @@ export const AuthProvider = ({ children }) => {
                 setNeedsPasswordChange(true);
                 setUser(userData);
                 localStorage.setItem('user', JSON.stringify(userData));
+                
+                // Kullanıcı adını localStorage'e user değişkeni olarak kaydet
+                localStorage.setItem('currentUsername', userData.full_name);
+                console.log('[AuthContext] User logged in:', userData.full_name);
+                
                 return { 
                     success: true, 
                     needsPasswordChange: true,
@@ -51,6 +56,10 @@ export const AuthProvider = ({ children }) => {
             // Normal giriş işlemi
             setUser(userData);
             localStorage.setItem('user', JSON.stringify(userData));
+            
+            // Kullanıcı adını localStorage'e user değişkeni olarak kaydet
+            localStorage.setItem('currentUsername', userData.full_name);
+            console.log('[AuthContext] User logged in:', userData.full_name);
             
             // Son giriş zamanını güncelle
             const { error: updateError } = await supabase
@@ -108,6 +117,7 @@ export const AuthProvider = ({ children }) => {
         try {
             setUser(null);
             localStorage.removeItem('user');
+            localStorage.removeItem('currentUsername');
             return { success: true };
         } catch (error) {
             return { success: false, error: error.message };

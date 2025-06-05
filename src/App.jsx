@@ -11,7 +11,10 @@ import SelfybestInsertSql from './components/SelfybestInsertSql'
 import InfodealerToSqlUpdate from './components/InfodealerToSqlUpdate'
 import IccidManagement from './components/IccidManagement'
 import CourierActions from './components/CourierActions'
-
+import WorkflowBuilder from './components/automation/WorkflowBuilder'
+import SingleApiTester from './components/automation/SingleApiTester'
+import IccidList from './components/IccidList'
+import ActivationList from './components/ActivationList'
 import ChangePassword from './components/ChangePassword'
 
 function PrivateRoute({ children }) {
@@ -129,11 +132,51 @@ function AppRoutes() {
                     }
                 />
                 <Route
+                    path="/iccid-list"
+                    element={
+                        <PrivateRoute>
+                            <Layout>
+                                <IccidList />
+                            </Layout>
+                        </PrivateRoute>
+                    }
+                />
+                <Route
+                    path="/activation-list"
+                    element={
+                        <PrivateRoute>
+                            <Layout>
+                                <ActivationList />
+                            </Layout>
+                        </PrivateRoute>
+                    }
+                />
+                <Route
                     path="/courier-actions"
                     element={
                         <PrivateRoute>
                             <Layout>
                                 <CourierActions onApiCall={handleApiCall} />
+                            </Layout>
+                        </PrivateRoute>
+                    }
+                />
+                <Route
+                    path="/api-automation"
+                    element={
+                        <PrivateRoute>
+                            <Layout>
+                                <WorkflowBuilder />
+                            </Layout>
+                        </PrivateRoute>
+                    }
+                />
+                <Route
+                    path="/api-tester"
+                    element={
+                        <PrivateRoute>
+                            <Layout>
+                                <SingleApiTester />
                             </Layout>
                         </PrivateRoute>
                     }
