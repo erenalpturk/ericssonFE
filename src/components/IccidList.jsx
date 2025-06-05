@@ -49,22 +49,28 @@ const IccidList = () => {
     setErrorMessage(message);
     setTimeout(() => setErrorMessage(''), 3000);
   };
-
+console.log(user)
   const fetchIccids = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${baseUrl}/iccid/getAll`, {
+      const endpoint = user.role === 'admin' 
+        ? `${baseUrl}/iccid/getAll`
+        : `${baseUrl}/iccid/getAll/${user.sicil_no}`;
+      
+      const response = await fetch(endpoint, {
         method: 'POST'
       });
       const data = await response.json();
-      setIccids(data);
+      
+      // Eğer admin değilse, data.data içinden ICCID'leri al
+      setIccids(user.role === 'admin' ? data : data.data);
     } catch (error) {
       showError('ICCID\'ler yüklenirken bir hata oluştu.');
     } finally {
       setLoading(false);
     }
   };
-
+console.log(iccids)
   const handleBulkDelete = async () => {
     if (selectedIccids.length === 0) {
       showError('Lütfen silinecek ICCID\'leri seçin');
@@ -233,6 +239,7 @@ const IccidList = () => {
   const getPaginatedData = () => {
     const filtered = getFilteredData();
     const start = page * rowsPerPage;
+    if (!filtered || filtered.length === 0) return [];
     return filtered.slice(start, start + rowsPerPage);
   };
 
@@ -280,7 +287,7 @@ const IccidList = () => {
         </div>
         <div className="stats-badge">
           <i className="bi bi-list-ol"></i>
-          <span>{iccids.length} ICCID</span>
+          <span>{Array.isArray(iccids) ? iccids.length : 0} ICCID</span>
         </div>
       </div>
 
@@ -332,7 +339,7 @@ const IccidList = () => {
                   <th>
                     <input
                       type="checkbox"
-                      checked={selectedIccids.length === getFilteredData().length && getFilteredData().length > 0}
+                      checked={selectedIccids.length > 0 && getFilteredData() && selectedIccids.length === getFilteredData().length}
                       onChange={handleSelectAllIccids}
                     />
                   </th>
@@ -341,6 +348,7 @@ const IccidList = () => {
                   <th>Tip</th>
                   <th>Oluşturulma</th>
                   <th>Güncellenme</th>
+                  <th>Kullanıcı</th>
                 </tr>
               </thead>
               <tbody>
@@ -375,6 +383,9 @@ const IccidList = () => {
                     <td className="text-gray-600">
                       {new Date(row.updated_at).toLocaleString('tr-TR')}
                     </td>
+                    <td className="text-gray-600">
+                      {row.used_by}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -384,7 +395,7 @@ const IccidList = () => {
           {/* Pagination */}
           <div className="pagination">
             <div className="pagination-info">
-              Toplam {getFilteredData().length} kayıt
+              Toplam {getFilteredData()?.length || 0} kayıt
             </div>
             <div className="pagination-controls">
               <select
@@ -403,11 +414,11 @@ const IccidList = () => {
                 <i className="bi bi-chevron-left"></i>
               </button>
               <span>
-                Sayfa {page + 1} / {Math.ceil(getFilteredData().length / rowsPerPage)}
+                Sayfa {page + 1} / {Math.ceil(getFilteredData()?.length || 0 / rowsPerPage)}
               </span>
               <button
-                onClick={() => setPage(Math.min(Math.ceil(getFilteredData().length / rowsPerPage) - 1, page + 1))}
-                disabled={page >= Math.ceil(getFilteredData().length / rowsPerPage) - 1}
+                onClick={() => setPage(Math.min(Math.ceil(getFilteredData()?.length || 0 / rowsPerPage) - 1, page + 1))}
+                disabled={page >= Math.ceil(getFilteredData()?.length || 0 / rowsPerPage) - 1}
               >
                 <i className="bi bi-chevron-right"></i>
               </button>

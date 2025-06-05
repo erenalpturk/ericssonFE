@@ -52,7 +52,12 @@ const ActivationList = () => {
   const fetchActivations = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${baseUrl}/iccid/enesvealpdatalarinizigetiriyor/${user.sicil_no}`, {
+
+      const endpoint = user.role === 'admin' 
+        ? `${baseUrl}/iccid/enesvealpdatalarinizigetiriyoru`
+        : `${baseUrl}/iccid/enesvealpdatalarinizigetiriyor/${user.sicil_no}`;
+
+      const response = await fetch(endpoint, {
         method: 'POST'
       });
       const data = await response.json();
@@ -172,6 +177,7 @@ const ActivationList = () => {
   const getPaginatedData = () => {
     const filtered = getFilteredData();
     const start = page * rowsPerPage;
+    if (!filtered || !Array.isArray(filtered) || filtered.length === 0) return [];
     return filtered.slice(start, start + rowsPerPage);
   };
 
