@@ -53,6 +53,7 @@ const ActivationList = () => {
     try {
       setLoading(true);
       const response = await fetch(`${baseUrl}/iccid/enesvealpdatalarinizigetiriyor/${user.sicil_no}`, {
+      const response = await fetch(`${baseUrl}/iccid/enesvealpdatalarinizigetiriyoru/${user.sicil_no}`, {
         method: 'POST'
       });
       const data = await response.json();
