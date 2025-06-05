@@ -59,7 +59,7 @@ function Sidebar({ isCollapsed, onToggle }) {
         { 
             path: '/api-automation', 
             icon: 'bi-cpu-fill', 
-            label: 'API Otomasyon',
+            label: 'OMNI Otomasyon',
             color: 'text-orange-500',
             roles: ['admin', 'support', 'tester']
         },

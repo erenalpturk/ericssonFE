@@ -38,11 +38,21 @@ export default function WorkflowBuilder() {
   const [currentRun, setCurrentRun] = useState(0)
   const [isRepeating, setIsRepeating] = useState(false)
 
+  // LocalStorage bilgileri state'i
+  const [localStorageData, setLocalStorageData] = useState({
+    user: '',
+    msisdn: '',
+    customerId: '',
+    customerOrder: ''
+  })
+
   // Variables'ları yükle
   useEffect(() => {
     console.log('[WorkflowBuilder] Component mounted, loading variables...')
     loadVariables()
     VariablesService.cleanupOldRuntimeVariables(24)
+    
+    // Component mount olduğunda localStorage verilerini yükleme - sadece otomasyon sonrası
   }, [])
 
   // Component focus aldığında variables'ları yenile
@@ -309,31 +319,31 @@ export default function WorkflowBuilder() {
         console.log(`[WorkflowBuilder] === Run ${runIndex + 1}/${repeatCount} ===`)
         
         const runResults = []
-        let workflowVariables = { ...globalVariables }
+    let workflowVariables = { ...globalVariables }
 
         // Bu çalıştırma için adımları sırayla çalıştır
-        for (let i = 0; i < steps.length; i++) {
-          const step = steps[i]
+      for (let i = 0; i < steps.length; i++) {
+        const step = steps[i]
 
-          // Check if workflow was cancelled
-          if (controller.signal.aborted) {
-            console.log('[WorkflowBuilder] Workflow cancelled by user')
-            break
-          }
+        // Check if workflow was cancelled
+        if (controller.signal.aborted) {
+          console.log('[WorkflowBuilder] Workflow cancelled by user')
+          break
+        }
 
-          if (!step.enabled) {
+        if (!step.enabled) {
             runResults.push({
-              stepId: step.id,
-              stepName: step.name,
-              status: 'pending',
+            stepId: step.id,
+            stepName: step.name,
+            status: 'pending',
               message: 'Adım devre dışı',
               runNumber: runIndex + 1
-            })
-            continue
-          }
+          })
+          continue
+        }
 
           console.log(`[WorkflowBuilder] Run ${runIndex + 1} - Step ${i + 1}: Using variables:`, workflowVariables)
-          const result = await runSingleStep(step, workflowVariables, controller.signal)
+        const result = await runSingleStep(step, workflowVariables, controller.signal)
           
           // Çalıştırma numarasını sonuçlara ekle
           const resultWithRun = {
@@ -345,26 +355,53 @@ export default function WorkflowBuilder() {
           allResults.push(resultWithRun)
           setResults([...allResults])
 
-          if (result.status === 'error') {
-            if (result.error?.includes('aborted')) {
-              toast.success('Workflow durduruldu')
-            } else {
-              toast.error(`Çalıştırma ${runIndex + 1} durdu: ${result.error}`)
-            }
-            // Hata durumunda kalan çalıştırmaları da durdur
-            return
+        if (result.status === 'error') {
+          if (result.error?.includes('aborted')) {
+            console.log('[WorkflowBuilder] Workflow was aborted by user')
+            toast.success('Workflow durduruldu')
+            return // Kullanıcı durdurduğu zaman tamamen çık
+          } else {
+            const errorMsg = `Çalıştırma ${runIndex + 1}/${repeatCount} - Adım ${i + 1} hatası: ${result.error}`
+            console.error('[WorkflowBuilder] Step error:', errorMsg)
+            console.log(`[WorkflowBuilder] Run ${runIndex + 1} failed, skipping to next run`)
+            
+            // Toast mesajını göster
+            toast.error(errorMsg, {
+              duration: 3000,
+              icon: '❌'
+            })
+            
+            // Hata durumunda bu run'ı atla, bir sonraki run'a geç
+            break // Bu run'ın kalan adımlarını atla, bir sonraki run'a geç
           }
+        }
 
-          if (result.extractedVariables) {
-            workflowVariables = { ...workflowVariables, ...result.extractedVariables }
-            setGlobalVariables(workflowVariables)
-            console.log('[WorkflowBuilder] Updated variables after step:', workflowVariables)
+        if (result.extractedVariables) {
+          workflowVariables = { ...workflowVariables, ...result.extractedVariables }
+          setGlobalVariables(workflowVariables)
+          console.log('[WorkflowBuilder] Updated variables after step:', workflowVariables)
           }
         }
 
         // Bu çalıştırma tamamlandı mesajı
         if (repeatCount > 1 && !controller.signal.aborted) {
-          toast.success(`Çalıştırma ${runIndex + 1}/${repeatCount} tamamlandı`)
+          // Eğer bu run'da hata vardıysa farklı mesaj göster
+          const hasError = runResults.some(r => r.status === 'error')
+          if (hasError) {
+            const errorMsg = `Çalıştırma ${runIndex + 1}/${repeatCount} hatalarla tamamlandı`
+            console.warn(`[WorkflowBuilder] ${errorMsg}`)
+            toast.error(errorMsg, {
+              duration: 2000,
+              icon: '⚠️'
+            })
+          } else {
+            const successMsg = `Çalıştırma ${runIndex + 1}/${repeatCount} başarıyla tamamlandı`
+            console.log(`[WorkflowBuilder] ${successMsg}`)
+            toast.success(successMsg, {
+              duration: 2000,
+              icon: '✅'
+            })
+          }
         }
 
         // Çalıştırmalar arası kısa bekleme (opsiyonel)
@@ -375,9 +412,83 @@ export default function WorkflowBuilder() {
 
       if (!controller.signal.aborted) {
         if (repeatCount > 1) {
-          toast.success(`Tüm workflow çalıştırmaları tamamlandı! (${repeatCount} kez)`)
+          // Tüm sonuçları kontrol et ve özet bilgi ver
+          const totalRuns = repeatCount
+          const successfulRuns = []
+          const failedRuns = []
+          
+          for (let i = 0; i < totalRuns; i++) {
+            const runResults = allResults.filter(r => r.runNumber === i + 1)
+            const hasError = runResults.some(r => r.status === 'error')
+            if (hasError) {
+              failedRuns.push(i + 1)
+            } else {
+              successfulRuns.push(i + 1)
+            }
+          }
+          
+          if (failedRuns.length === 0) {
+            const finalMsg = `Tüm workflow çalıştırmaları başarıyla tamamlandı! (${totalRuns}/${totalRuns})`
+            console.log(`[WorkflowBuilder] ${finalMsg}`)
+            toast.success(finalMsg, {
+              duration: 4000,
+              icon: '🎉'
+            })
+            // Tüm çalıştırmalar başarılı - localStorage verilerini yükle
+            setTimeout(() => {
+              loadLocalStorageData()
+            }, 1000)
+          } else if (successfulRuns.length === 0) {
+            const finalMsg = `Tüm workflow çalıştırmaları başarısız oldu! (0/${totalRuns})`
+            console.error(`[WorkflowBuilder] ${finalMsg}`)
+            toast.error(finalMsg, {
+              duration: 4000,
+              icon: '❌'
+            })
+            // Tüm çalıştırmalar başarısız - localStorage verilerini temizle
+            setLocalStorageData({
+              user: '',
+              msisdn: '',
+              customerId: '',
+              customerOrder: ''
+            })
+          } else {
+            const finalMsg = `${successfulRuns.length}/${totalRuns} çalıştırma başarılı, ${failedRuns.length} çalıştırma başarısız`
+            console.warn(`[WorkflowBuilder] ${finalMsg}`)
+            console.log(`[WorkflowBuilder] Successful runs: ${successfulRuns.join(', ')}`)
+            console.log(`[WorkflowBuilder] Failed runs: ${failedRuns.join(', ')}`)
+            toast(finalMsg, {
+              icon: '⚠️',
+              duration: 4000,
+              style: {
+                background: '#f59e0b',
+                color: 'white'
+              }
+            })
+            // Kısmi başarı - localStorage verilerini yükle
+            setTimeout(() => {
+              loadLocalStorageData()
+            }, 1000)
+          }
         } else {
-          toast.success('Workflow tamamlandı')
+          // Tek çalıştırma için başarı kontrolü
+          const hasErrors = allResults.some(r => r.status === 'error')
+          if (hasErrors) {
+            toast.error('Workflow hatalarla tamamlandı')
+            // Hata var - localStorage verilerini temizle
+            setLocalStorageData({
+              user: '',
+              msisdn: '',
+              customerId: '',
+              customerOrder: ''
+            })
+          } else {
+            toast.success('Workflow tamamlandı')
+            // Başarılı - localStorage verilerini yükle
+            setTimeout(() => {
+              loadLocalStorageData()
+            }, 1000)
+          }
         }
       }
     } catch (error) {
@@ -752,25 +863,25 @@ export default function WorkflowBuilder() {
         return
       }
 
-      // Yeni workflow oluştur
-      console.log('[WorkflowBuilder] Creating new workflow:', workflowName)
-      console.log('[WorkflowBuilder] Steps to save:', steps.length)
+        // Yeni workflow oluştur
+        console.log('[WorkflowBuilder] Creating new workflow:', workflowName)
+        console.log('[WorkflowBuilder] Steps to save:', steps.length)
 
-      const newWorkflow = await WorkflowService.createWorkflow(workflowName, workflowDescription)
-      console.log('[WorkflowBuilder] Created workflow:', newWorkflow.id)
+        const newWorkflow = await WorkflowService.createWorkflow(workflowName, workflowDescription)
+        console.log('[WorkflowBuilder] Created workflow:', newWorkflow.id)
 
-      await WorkflowService.saveWorkflowSteps(newWorkflow.id, steps)
+        await WorkflowService.saveWorkflowSteps(newWorkflow.id, steps)
 
-      // Step'leri veritabanından yükle - gerçek UUID'leri al
-      console.log('[WorkflowBuilder] Loading saved steps with actual UUIDs...')
-      const savedSteps = await WorkflowService.getWorkflowSteps(newWorkflow.id)
-      setSteps(savedSteps)
+        // Step'leri veritabanından yükle - gerçek UUID'leri al
+        console.log('[WorkflowBuilder] Loading saved steps with actual UUIDs...')
+        const savedSteps = await WorkflowService.getWorkflowSteps(newWorkflow.id)
+        setSteps(savedSteps)
 
-      setCurrentWorkflow(newWorkflow)
+        setCurrentWorkflow(newWorkflow)
       setWorkflowName(newWorkflow.name)
       setWorkflowDescription(newWorkflow.description || '')
       
-      toast.dismiss(loadingToastId)
+        toast.dismiss(loadingToastId)
       toast.success(`Yeni workflow "${workflowName}" oluşturuldu ve kaydedildi!`)
     } catch (error) {
       toast.dismiss(loadingToastId)
@@ -1174,6 +1285,39 @@ export default function WorkflowBuilder() {
     }
   }
 
+  // LocalStorage verilerini oku
+  const loadLocalStorageData = () => {
+    try {
+      // Runtime variables'dan veri al
+      const runtimeVars = VariablesService.getRuntimeVariables()
+      
+      // User verisi için localStorage'dan al (farklı formatta)
+      const userData = localStorage.getItem('user')
+      
+      // User'ı parse et
+      let userValue = ''
+      if (userData) {
+        try {
+          const parsed = JSON.parse(userData)
+          userValue = parsed.sicil_no || parsed.value || ''
+        } catch {
+          userValue = userData
+        }
+      }
+
+      const parsedData = {
+        user: userValue,
+        msisdn: runtimeVars.msisdn?.value || '',
+        customerId: runtimeVars.customerId?.value || '',
+        customerOrder: runtimeVars.customerOrder?.value || ''
+      }
+
+      setLocalStorageData(parsedData)
+    } catch (error) {
+      console.error('[WorkflowBuilder] Error loading localStorage data:', error)
+    }
+  }
+
   return (
     <div className="modern-page">
 
@@ -1257,12 +1401,12 @@ export default function WorkflowBuilder() {
                   <option value={50}>50x</option>
                 </select>
               </div>
-              <button
-                className={`action-btn ${isRunning ? 'danger' : 'success'}`}
-                onClick={isRunning ? stopWorkflow : runWorkflow}
-                title={isRunning ? 'Workflow\'u durdur' : 'Workflow\'u çalıştır'}
-              >
-                <i className={`bi ${isRunning ? 'bi-stop-fill' : 'bi-play-fill'}`}></i>
+            <button
+              className={`action-btn ${isRunning ? 'danger' : 'success'}`}
+              onClick={isRunning ? stopWorkflow : runWorkflow}
+              title={isRunning ? 'Workflow\'u durdur' : 'Workflow\'u çalıştır'}
+            >
+              <i className={`bi ${isRunning ? 'bi-stop-fill' : 'bi-play-fill'}`}></i>
                 <span>
                   {isRunning ? (
                     isRepeating ? `Durduruluyor... (${currentRun}/${repeatCount})` : 'Durdur'
@@ -1270,7 +1414,7 @@ export default function WorkflowBuilder() {
                     repeatCount > 1 ? `${repeatCount}x Çalıştır` : 'Çalıştır'
                   )}
                 </span>
-              </button>
+            </button>
             </div>
           )}
         </div>
@@ -1279,44 +1423,44 @@ export default function WorkflowBuilder() {
         <div className="action-group-right">
           {/* Admin kullanıcılar için araçlar dropdown */}
           {isAdmin && (
-            <div className="dropdown">
-              <button
-                className="action-btn secondary dropdown-toggle"
-                type="button"
-                title="Araçlar ve ayarlar"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setShowToolsDropdown(!showToolsDropdown)
-                  setShowSaveDropdown(false)
-                }}
-              >
-                <i className="bi bi-three-dots"></i>
-                <span>Araçlar</span>
+          <div className="dropdown">
+            <button
+              className="action-btn secondary dropdown-toggle"
+              type="button"
+              title="Araçlar ve ayarlar"
+              onClick={(e) => {
+                e.stopPropagation()
+                setShowToolsDropdown(!showToolsDropdown)
+                setShowSaveDropdown(false)
+              }}
+            >
+              <i className="bi bi-three-dots"></i>
+              <span>Araçlar</span>
+            </button>
+            <div className={`dropdown-menu ${showToolsDropdown ? 'show' : ''}`}>
+              <button className="dropdown-item" onClick={() => {
+                setShowVariablesManager(true)
+                setShowToolsDropdown(false)
+              }}>
+                <i className="bi bi-gear-fill"></i>
+                <span>Değişkenler</span>
               </button>
-              <div className={`dropdown-menu ${showToolsDropdown ? 'show' : ''}`}>
-                <button className="dropdown-item" onClick={() => {
-                  setShowVariablesManager(true)
-                  setShowToolsDropdown(false)
-                }}>
-                  <i className="bi bi-gear-fill"></i>
-                  <span>Değişkenler</span>
-                </button>
-                <button className="dropdown-item" onClick={() => {
-                  loadVariables()
-                  setShowToolsDropdown(false)
-                }} title="Değişkenleri yenile">
-                  <i className="bi bi-arrow-clockwise"></i>
-                  <span>Yenile</span>
-                </button>
-                <button className="dropdown-item" onClick={() => {
-                  setShowWorkflowManager(true)
-                  setShowToolsDropdown(false)
-                }}>
-                  <i className="bi bi-folder-fill"></i>
-                  <span>Workflow Yönetimi</span>
-                </button>
-              </div>
+              <button className="dropdown-item" onClick={() => {
+                loadVariables()
+                setShowToolsDropdown(false)
+              }} title="Değişkenleri yenile">
+                <i className="bi bi-arrow-clockwise"></i>
+                <span>Yenile</span>
+              </button>
+              <button className="dropdown-item" onClick={() => {
+                setShowWorkflowManager(true)
+                setShowToolsDropdown(false)
+              }}>
+                <i className="bi bi-folder-fill"></i>
+                <span>Workflow Yönetimi</span>
+              </button>
             </div>
+          </div>
           )}
           {isAdmin && (
             <div className="dropdown">
@@ -1343,7 +1487,7 @@ export default function WorkflowBuilder() {
                   <span>{currentWorkflow ? 'Hızlı Kaydet' : 'Kaydet'}</span>
                 </button>
                 {currentWorkflow && (
-                  <button className="dropdown-item" onClick={() => {
+                <button className="dropdown-item" onClick={() => {
                     setSaveDialogOpen(true)
                     setShowSaveDropdown(false)
                   }}>
@@ -1426,7 +1570,7 @@ export default function WorkflowBuilder() {
 
           </div>
         ) : (
-          <div className="workflow-container">
+          <div className={isAdmin ? "workflow-container" : "workflow-container-user"}>
             {/* Steps Column */}
             <div className="steps-column" style={{ display: isAdmin ? 'block' : 'none' }}>
               <div className="section-header">
@@ -1458,12 +1602,96 @@ export default function WorkflowBuilder() {
               </div>
             </div>
 
-            {/* Results Column */}
-            <div className="results-column">
-              {results.length > 0 && (
+            {/* Results Column - Sadece admin için */}
+            {isAdmin && (
+              <div className="results-column">
+                {results.length > 0 && (
+                  <WorkflowResults results={results} />
+                )}
+              </div>
+            )}
+
+            {/* Normal kullanıcı için sol tarafta workflow sonuçları */}
+            {!isAdmin && results.length > 0 && (
+              <div className="steps-column">
                 <WorkflowResults results={results} />
-              )}
-            </div>
+              </div>
+            )}
+
+            {/* LocalStorage Info Column - Sadece normal kullanıcılar için */}
+            {!isAdmin && (localStorageData.user || localStorageData.msisdn || localStorageData.customerId || localStorageData.customerOrder) && (
+              <div className="localstorage-column">
+                <div className="section-header">
+                  <h2>
+                    <i className="bi bi-check-circle-fill text-emerald-500"></i>
+                    Son Aktivasyon Bilgileri
+                  </h2>
+                </div>
+
+                <div className="localstorage-card">
+                  <div className="localstorage-content">
+                    {localStorageData.user && (
+                      <div className="localstorage-item">
+                        <div className="localstorage-icon">
+                          <i className="bi bi-person-fill"></i>
+                        </div>
+                        <div className="localstorage-info">
+                          <label>Kullanıcı</label>
+                          <span>{localStorageData.user}</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {localStorageData.msisdn && (
+                      <div className="localstorage-item">
+                        <div className="localstorage-icon">
+                          <i className="bi bi-phone-fill"></i>
+                        </div>
+                        <div className="localstorage-info">
+                          <label>MSISDN</label>
+                          <span>{localStorageData.msisdn}</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {localStorageData.customerId && (
+                      <div className="localstorage-item">
+                        <div className="localstorage-icon">
+                          <i className="bi bi-person-badge-fill"></i>
+                        </div>
+                        <div className="localstorage-info">
+                          <label>Müşteri ID</label>
+                          <span>{localStorageData.customerId}</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {localStorageData.customerOrder && (
+                      <div className="localstorage-item">
+                        <div className="localstorage-icon">
+                          <i className="bi bi-receipt-cutoff"></i>
+                        </div>
+                        <div className="localstorage-info">
+                          <label>Sipariş No</label>
+                          <span>{localStorageData.customerOrder}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="localstorage-footer">
+                    <button 
+                      className="refresh-btn"
+                      onClick={loadLocalStorageData}
+                      title="Verileri yenile"
+                    >
+                      <i className="bi bi-arrow-clockwise"></i>
+                      <span>Yenile</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -1543,4 +1771,4 @@ export default function WorkflowBuilder() {
       )}
     </div>
   )
-} 
+}

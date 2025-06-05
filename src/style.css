@@ -2364,6 +2364,22 @@ body {
   position: relative;
 }
 
+.workflow-container:has(.localstorage-column) {
+  grid-template-columns: 1fr 400px 350px;
+}
+
+.workflow-container:not(:has(.localstorage-column)) {
+  grid-template-columns: 1fr 400px;
+}
+
+/* Normal kullanıcı layout'u */
+.workflow-container-user {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  position: relative;
+}
+
 .steps-column {
   min-width: 0;
   position: relative;
@@ -2373,6 +2389,224 @@ body {
   position: sticky;
   top: 2rem;
   height: fit-content;
+}
+
+/* LocalStorage Column */
+.localstorage-column {
+  position: sticky;
+  top: 2rem;
+  height: fit-content;
+}
+
+.localstorage-column .section-header {
+  background: white;
+  border-radius: 0.75rem;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 1rem;
+  margin-bottom: 1rem;
+  transition: all 0.2s ease;
+}
+
+.localstorage-column .section-header:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-color: #cbd5e1;
+}
+
+.localstorage-column .section-header h2 {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1f2937;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.localstorage-column .section-header h2 i {
+  font-size: 1.125rem;
+}
+
+.localstorage-card {
+  background: white;
+  border-radius: 0.75rem;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.localstorage-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-color: #cbd5e1;
+}
+
+.localstorage-content {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.localstorage-item {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 0.875rem;
+  background: #f8fafc;
+  border-radius: 0.5rem;
+  border: 1px solid #f1f5f9;
+  transition: all 0.2s ease;
+}
+
+.localstorage-item:hover {
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+}
+
+.localstorage-icon {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.localstorage-item:nth-child(1) .localstorage-icon {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
+}
+
+.localstorage-item:nth-child(2) .localstorage-icon {
+  background: linear-gradient(135deg, #10b981, #047857);
+  color: white;
+}
+
+.localstorage-item:nth-child(3) .localstorage-icon {
+  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+  color: white;
+}
+
+.localstorage-item:nth-child(4) .localstorage-icon {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+}
+
+.localstorage-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.localstorage-info label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+.localstorage-info span {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #1f2937;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  word-break: break-all;
+}
+
+.localstorage-footer {
+  padding: 0.875rem 1.25rem;
+  background: #f9fafb;
+  border-top: 1px solid #f3f4f6;
+  display: flex;
+  justify-content: center;
+}
+
+.refresh-btn {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.625rem 1rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.refresh-btn:hover {
+  background: #2563eb;
+}
+
+.refresh-btn:active {
+  background: #1d4ed8;
+}
+
+.refresh-btn i {
+  font-size: 0.8125rem;
+}
+
+/* Mobile Responsive */
+@media (max-width: 1200px) {
+  .workflow-container {
+    grid-template-columns: 1fr 350px;
+    gap: 1.5rem;
+  }
+  
+  .workflow-container:has(.localstorage-column) {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .workflow-container-user {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .localstorage-column {
+    position: relative;
+    top: auto;
+  }
+  
+  .results-column {
+    position: relative;
+    top: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .localstorage-content {
+    padding: 0.875rem;
+    gap: 0.625rem;
+  }
+  
+  .localstorage-item {
+    padding: 0.625rem;
+    gap: 0.625rem;
+  }
+  
+  .localstorage-icon {
+    width: 1.75rem;
+    height: 1.75rem;
+    font-size: 0.75rem;
+  }
+  
+  .localstorage-info span {
+    font-size: 0.75rem;
+  }
+  
+  .localstorage-footer {
+    padding: 0.625rem 0.875rem;
+  }
 }
 
 .steps-list {
