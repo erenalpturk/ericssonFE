@@ -3625,6 +3625,14 @@ body {
   color: #b91c1c;
 }
 
+.workflow-action-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+  background: rgba(156, 163, 175, 0.3) !important;
+  color: #9ca3af !important;
+}
+
 /* Minimal Action Bar */
 .action-bar-minimal {
   display: flex !important;

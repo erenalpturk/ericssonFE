@@ -1092,8 +1092,30 @@ export default function WorkflowBuilder() {
         {/* Sol grup - Ana işlemler */}
 
         <div className="action-group-left">
-          {isAdmin && (
+          {/* Normal kullanıcılar için araçlar */}
+          {!isAdmin && (
+            <>
+              <button
+                className="action-btn secondary"
+                onClick={() => setShowWorkflowManager(true)}
+                title="Workflow Yönetimi"
+              >
+                <i className="bi bi-folder-fill"></i>
+                <span>Workflow Yönetimi</span>
+              </button>
+              <button
+                className="action-btn secondary"
+                onClick={() => loadVariables()}
+                title="Değişkenleri yenile"
+              >
+                <i className="bi bi-arrow-clockwise"></i>
+                <span>Yenile</span>
+              </button>
+            </>
+          )}
 
+          {/* Admin kullanıcılar için ana işlemler */}
+          {isAdmin && (
             <button
               className="action-btn primary"
               onClick={addStep}
@@ -1105,7 +1127,6 @@ export default function WorkflowBuilder() {
             </button>
           )}
           {isAdmin && (
-
             <label className="action-btn secondary" style={{ cursor: 'pointer', margin: 0 }} title="Postman collection import et">
               <i className="bi bi-upload"></i>
               <span>Import</span>
@@ -1133,44 +1154,47 @@ export default function WorkflowBuilder() {
 
         {/* Sağ grup - Yönetim */}
         <div className="action-group-right">
-          <div className="dropdown">
-            <button
-              className="action-btn secondary dropdown-toggle"
-              type="button"
-              title="Araçlar ve ayarlar"
-              onClick={(e) => {
-                e.stopPropagation()
-                setShowToolsDropdown(!showToolsDropdown)
-                setShowSaveDropdown(false)
-              }}
-            >
-              <i className="bi bi-three-dots"></i>
-              <span>Araçlar</span>
-            </button>
-            <div className={`dropdown-menu ${showToolsDropdown ? 'show' : ''}`}>
-              <button className="dropdown-item" onClick={() => {
-                setShowVariablesManager(true)
-                setShowToolsDropdown(false)
-              }}>
-                <i className="bi bi-gear-fill"></i>
-                <span>Değişkenler</span>
+          {/* Admin kullanıcılar için araçlar dropdown */}
+          {isAdmin && (
+            <div className="dropdown">
+              <button
+                className="action-btn secondary dropdown-toggle"
+                type="button"
+                title="Araçlar ve ayarlar"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setShowToolsDropdown(!showToolsDropdown)
+                  setShowSaveDropdown(false)
+                }}
+              >
+                <i className="bi bi-three-dots"></i>
+                <span>Araçlar</span>
               </button>
-              <button className="dropdown-item" onClick={() => {
-                loadVariables()
-                setShowToolsDropdown(false)
-              }} title="Değişkenleri yenile">
-                <i className="bi bi-arrow-clockwise"></i>
-                <span>Yenile</span>
-              </button>
-              <button className="dropdown-item" onClick={() => {
-                setShowWorkflowManager(true)
-                setShowToolsDropdown(false)
-              }}>
-                <i className="bi bi-folder-fill"></i>
-                <span>Workflow Yönetimi</span>
-              </button>
+              <div className={`dropdown-menu ${showToolsDropdown ? 'show' : ''}`}>
+                <button className="dropdown-item" onClick={() => {
+                  setShowVariablesManager(true)
+                  setShowToolsDropdown(false)
+                }}>
+                  <i className="bi bi-gear-fill"></i>
+                  <span>Değişkenler</span>
+                </button>
+                <button className="dropdown-item" onClick={() => {
+                  loadVariables()
+                  setShowToolsDropdown(false)
+                }} title="Değişkenleri yenile">
+                  <i className="bi bi-arrow-clockwise"></i>
+                  <span>Yenile</span>
+                </button>
+                <button className="dropdown-item" onClick={() => {
+                  setShowWorkflowManager(true)
+                  setShowToolsDropdown(false)
+                }}>
+                  <i className="bi bi-folder-fill"></i>
+                  <span>Workflow Yönetimi</span>
+                </button>
+              </div>
             </div>
-          </div>
+          )}
           {isAdmin && (
             <div className="dropdown">
               <button

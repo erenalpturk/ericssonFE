@@ -164,6 +164,7 @@ export default function WorkflowManager({ onClose, onLoadWorkflow, user }) {
                               className="workflow-action-btn copy"
                               onClick={() => handleDuplicateWorkflow(workflow.id)}
                               title="Kopyala"
+                              disabled={user.role !== 'admin'}
                             >
                               <i className="bi bi-copy"></i>
                             </button>
