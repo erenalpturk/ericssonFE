@@ -44,6 +44,7 @@ export const AuthProvider = ({ children }) => {
                 
                 // Kullanıcı adını localStorage'e user değişkeni olarak kaydet
                 localStorage.setItem('currentUsername', userData.full_name);
+                localStorage.setItem('currentUserSicilNo', userData.sicil_no);
                 console.log('[AuthContext] User logged in:', userData.full_name);
                 
                 return { 

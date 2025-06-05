@@ -84,10 +84,11 @@ export class VariablesService {
       
       // Otomatik olarak currentUsername'i user variable'ı olarak ekle
       const currentUsername = localStorage.getItem('currentUsername')
+      const currentUserSicilNo = localStorage.getItem('currentUserSicilNo')
       if (currentUsername) {
         variables['user'] = {
           key: 'user',
-          value: currentUsername,
+          value: currentUserSicilNo,
           source: 'auth',
           timestamp: Date.now()
         }
