@@ -69,23 +69,23 @@ function Sidebar({ isCollapsed, onToggle }) {
             label: 'API Tester',
             color: 'text-yellow-500',
             roles: ['admin', 'support', 'tester']
+        },
+        { 
+            path: '/api-automation-management', 
+            icon: 'bi-cpu-fill', 
+            label: 'API Otomasyon Management',
+            color: 'text-orange-500',
+            roles: ['admin', 'support']
+        },
+        { 
+            path: '/iccid-management', 
+            icon: 'bi-gear-wide-connected', 
+            label: 'ICCID Management',
+            color: 'text-emerald-500',
+            roles: ['admin', 'support']
         }
-        // { 
-        //     path: '/api-automation-management', 
-        //     icon: 'bi-cpu-fill', 
-        //     label: 'API Otomasyon Management',
-        //     color: 'text-orange-500',
-        //     roles: ['admin', 'support']
-        // },
-        // { 
-        //     path: '/iccid-management', 
-        //     icon: 'bi-gear-wide-connected', 
-        //     label: 'ICCID Management',
-        //     color: 'text-emerald-500',
-        //     roles: ['admin', 'support']
-        // }
     ]
-
+console.log(user.role)
     return (
         <aside className={`modern-sidebar ${isCollapsed ? 'collapsed' : ''}`}>
             {/* Header */}
