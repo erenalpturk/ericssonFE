@@ -259,8 +259,10 @@ const ActivationList = () => {
               <thead>
                 <tr>
                   <th>MSISDN</th>
+                  <th>Tarife</th>
                   <th>TCKN</th>
                   <th>Doğum Tarihi</th>
+                  <th>Ad Soyad</th>
                   <th>Kullanıcı</th>
                   <th>Aktivasyon Tipi</th>
                   <th>Oluşturulma</th>
@@ -270,8 +272,11 @@ const ActivationList = () => {
                 {getPaginatedData().map((row) => (
                   <tr key={row.activationid}>
                     <td className="font-mono text-sm">{row.msisdn}</td>
+                    <td className="font-mono text-sm">{row.prod_ofr_id}</td>
                     <td className="font-mono text-sm">{row.tckn}</td>
                     <td>{row.birth_date}</td>
+                    <td>{row.birth_date}</td>
+
                     <td>
                       <span className="user-badge">{row.user}</span>
                     </td>
