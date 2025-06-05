@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import { WorkflowService } from '../../lib/workflow-service'
 
-export default function WorkflowManager({ onClose, onLoadWorkflow }) {
+export default function WorkflowManager({ onClose, onLoadWorkflow, user }) {
   const [workflows, setWorkflows] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedWorkflow, setSelectedWorkflow] = useState(null)
@@ -167,6 +167,7 @@ export default function WorkflowManager({ onClose, onLoadWorkflow }) {
                             >
                               <i className="bi bi-copy"></i>
                             </button>
+                            {user.role === 'admin' && ( 
                             <button
                               className="workflow-action-btn delete"
                               onClick={() => handleDeleteWorkflow(workflow.id)}
@@ -174,6 +175,7 @@ export default function WorkflowManager({ onClose, onLoadWorkflow }) {
                             >
                               <i className="bi bi-trash"></i>
                             </button>
+                            )}
                           </div>
                         </td>
                       </tr>

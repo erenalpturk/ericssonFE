@@ -6,15 +6,18 @@ import WorkflowManager from './WorkflowManager'
 import VariablesManager from './VariablesManager'
 import { WorkflowService } from '../../lib/workflow-service'
 import { VariablesService } from '../../lib/variables-service'
+import { useAuth } from '../../contexts/AuthContext'
 
 export default function WorkflowBuilder() {
+  const { user } = useAuth()
+  const isAdmin = user?.role === 'admin'
   const [steps, setSteps] = useState([])
   const [isRunning, setIsRunning] = useState(false)
   const [results, setResults] = useState([])
   const [globalVariables, setGlobalVariables] = useState({})
   const [staticVariables, setStaticVariables] = useState({})
   const [runtimeVariables, setRuntimeVariables] = useState({})
-  
+
   // Veritabanı işlemleri için state'ler
   const [currentWorkflow, setCurrentWorkflow] = useState(null)
   const [showWorkflowManager, setShowWorkflowManager] = useState(false)
@@ -22,7 +25,7 @@ export default function WorkflowBuilder() {
   const [saveDialogOpen, setSaveDialogOpen] = useState(false)
   const [workflowName, setWorkflowName] = useState('')
   const [workflowDescription, setWorkflowDescription] = useState('')
-  
+
   // Dropdown state'leri
   const [showToolsDropdown, setShowToolsDropdown] = useState(false)
   const [showSaveDropdown, setShowSaveDropdown] = useState(false)
@@ -50,7 +53,7 @@ export default function WorkflowBuilder() {
         loadVariables()
       }
     }
-    
+
     // Dropdown'ları kapatmak için global click listener
     const handleClickOutside = (event) => {
       if (!event.target.closest('.dropdown')) {
@@ -129,7 +132,7 @@ export default function WorkflowBuilder() {
     }
     const newSteps = [...steps, newStep]
     setSteps(newSteps)
-    
+
     // Otomatik kaydetme kapatıldı
     // if (currentWorkflow) {
     //   autoSaveWorkflow(newSteps)
@@ -137,11 +140,11 @@ export default function WorkflowBuilder() {
   }
 
   const updateStep = (id, updatedStep) => {
-    const newSteps = steps.map(step => 
+    const newSteps = steps.map(step =>
       step.id === id ? { ...step, ...updatedStep } : step
     )
     setSteps(newSteps)
-    
+
     // Otomatik kaydetme kapatıldı
     // if (currentWorkflow) {
     //   debouncedAutoSave(newSteps)
@@ -153,16 +156,16 @@ export default function WorkflowBuilder() {
       if (currentWorkflow && !id.startsWith('step-')) {
         await WorkflowService.deleteApiStep(id)
       }
-      
+
       const newSteps = steps.filter(step => step.id !== id)
       setSteps(newSteps)
-      
+
       // Otomatik kaydetme kapatıldı
       // if (currentWorkflow) {
       //   await autoSaveWorkflow(newSteps)
       //   toast.success('API adımı silindi')
       // }
-      
+
       toast.success('API adımı silindi')
     } catch (error) {
       console.error('Error deleting step:', error)
@@ -173,15 +176,15 @@ export default function WorkflowBuilder() {
   // Otomatik kaydetme fonksiyonu
   const autoSaveWorkflow = async (stepsToSave = steps) => {
     if (!currentWorkflow) return
-    
+
     try {
       console.log('[WorkflowBuilder] Auto-saving workflow:', currentWorkflow.id)
       await WorkflowService.saveWorkflowSteps(currentWorkflow.id, stepsToSave)
-      
+
       // Gerçek UUID'leri almak için step'leri yeniden yükle
       const freshSteps = await WorkflowService.getWorkflowSteps(currentWorkflow.id)
       setSteps(freshSteps)
-      
+
       console.log('[WorkflowBuilder] Auto-save completed, refreshed steps')
     } catch (error) {
       console.error('[WorkflowBuilder] Auto-save failed:', error)
@@ -225,23 +228,23 @@ export default function WorkflowBuilder() {
 
   const replaceVariables = (text, variables) => {
     if (!text || typeof text !== 'string') return text
-    
+
     let result = text
-    
+
     if (text.includes('{{')) {
       console.log('[WorkflowBuilder] Replacing variables in:', text)
       console.log('[WorkflowBuilder] Available variables:', variables)
-      
+
       Object.entries(variables || {}).forEach(([key, value]) => {
         const regex = new RegExp(`{{${key}}}`, 'g')
         const oldResult = result
         result = result.replace(regex, value || '')
-        
+
         if (oldResult !== result) {
           console.log(`[WorkflowBuilder] Replaced {{${key}}} with "${value}" in: ${oldResult} -> ${result}`)
         }
       })
-      
+
       // Eğer hala {{ }} varsa, bunları logla
       const remainingVariables = result.match(/\{\{[^}]+\}\}/g)
       if (remainingVariables) {
@@ -249,7 +252,7 @@ export default function WorkflowBuilder() {
         console.warn('[WorkflowBuilder] Available variable keys:', Object.keys(variables || {}))
       }
     }
-    
+
     return result
   }
 
@@ -262,28 +265,28 @@ export default function WorkflowBuilder() {
     // Create new AbortController for this workflow run
     const controller = new AbortController()
     setAbortController(controller)
-    
+
     setIsRunning(true)
     setResults([])
-    
+
     console.log('[WorkflowBuilder] === Starting Workflow ===')
     console.log('[WorkflowBuilder] Available global variables:', globalVariables)
     console.log('[WorkflowBuilder] Static variables:', staticVariables)
     console.log('[WorkflowBuilder] Runtime variables:', runtimeVariables)
-    
+
     const workflowResults = []
     let workflowVariables = { ...globalVariables }
 
     try {
       for (let i = 0; i < steps.length; i++) {
         const step = steps[i]
-        
+
         // Check if workflow was cancelled
         if (controller.signal.aborted) {
           console.log('[WorkflowBuilder] Workflow cancelled by user')
           break
         }
-        
+
         if (!step.enabled) {
           workflowResults.push({
             stepId: step.id,
@@ -333,18 +336,18 @@ export default function WorkflowBuilder() {
 
   const runSingleStep = async (step, variables = {}, signal) => {
     const startTime = Date.now()
-    
+
     console.log(`[WorkflowBuilder] === Running Step: ${step.name} ===`)
     console.log('[WorkflowBuilder] Step URL:', step.url)
     console.log('[WorkflowBuilder] Available variables for this step:', variables)
     console.log('[WorkflowBuilder] Global variables:', globalVariables)
-    
+
     try {
       const processedUrl = replaceVariables(step.url, variables)
       const processedBody = replaceVariables(step.body, variables)
-      
+
       console.log('[WorkflowBuilder] Processed URL:', processedUrl)
-      
+
       const processedHeaders = {}
       Object.entries(step.headers || {}).forEach(([key, value]) => {
         processedHeaders[key] = replaceVariables(value, variables)
@@ -354,7 +357,7 @@ export default function WorkflowBuilder() {
       const hasContentType = Object.keys(processedHeaders).some(
         key => key.toLowerCase() === 'content-type'
       )
-      
+
       if (!hasContentType && step.method !== 'GET') {
         processedHeaders['Content-Type'] = 'application/json'
         console.log('[WorkflowBuilder] Added default Content-Type: application/json')
@@ -408,10 +411,10 @@ export default function WorkflowBuilder() {
         try {
           console.log('[WorkflowBuilder] Executing post-response script...')
           finalVariables = executePostResponseScript(
-            step.postResponseScript, 
-            requestVariables, 
-            parsedData, 
-            responseHeaders, 
+            step.postResponseScript,
+            requestVariables,
+            parsedData,
+            responseHeaders,
             response.status
           )
           console.log('[WorkflowBuilder] Post-response script executed successfully')
@@ -468,7 +471,7 @@ export default function WorkflowBuilder() {
 
     } catch (error) {
       const duration = Date.now() - startTime
-      
+
       // Handle AbortError specially
       if (error.name === 'AbortError') {
         return {
@@ -479,7 +482,7 @@ export default function WorkflowBuilder() {
           duration
         }
       }
-      
+
       return {
         stepId: step.id,
         stepName: step.name,
@@ -503,12 +506,12 @@ export default function WorkflowBuilder() {
     try {
       // Mutable copies
       const mutableVariables = { ...variables }
-      const mutableRequest = { 
+      const mutableRequest = {
         url: request.url,
         headers: { ...request.headers },
-        body: request.body 
+        body: request.body
       }
-      
+
       const scriptContext = {
         // Safe JavaScript operations
         console: {
@@ -554,7 +557,7 @@ export default function WorkflowBuilder() {
     try {
       // Mutable variables copy
       const mutableVariables = { ...variables }
-      
+
       const scriptContext = {
         response: {
           data: response,
@@ -629,9 +632,9 @@ export default function WorkflowBuilder() {
 
     try {
       // Step validasyonu
-      const invalidSteps = steps.filter(step => 
-        !step.method || 
-        !step.url?.trim() || 
+      const invalidSteps = steps.filter(step =>
+        !step.method ||
+        !step.url?.trim() ||
         !step.name?.trim()
       )
 
@@ -645,35 +648,35 @@ export default function WorkflowBuilder() {
         // Mevcut workflow'u güncelle
         console.log('[WorkflowBuilder] Updating existing workflow:', currentWorkflow.id)
         console.log('[WorkflowBuilder] Steps to save:', steps.length, steps.map(s => ({ id: s.id, name: s.name })))
-        
+
         await WorkflowService.updateWorkflow(currentWorkflow.id, {
           name: workflowName,
           description: workflowDescription
         })
         await WorkflowService.saveWorkflowSteps(currentWorkflow.id, steps)
-        
+
         // Step'leri veritabanından yeniden yükle - gerçek UUID'leri al
         console.log('[WorkflowBuilder] Reloading steps to get actual UUIDs...')
         const freshSteps = await WorkflowService.getWorkflowSteps(currentWorkflow.id)
         setSteps(freshSteps)
-        
+
         toast.dismiss(loadingToastId)
         toast.success('Workflow başarıyla güncellendi!')
       } else {
         // Yeni workflow oluştur
         console.log('[WorkflowBuilder] Creating new workflow:', workflowName)
         console.log('[WorkflowBuilder] Steps to save:', steps.length)
-        
+
         const newWorkflow = await WorkflowService.createWorkflow(workflowName, workflowDescription)
         console.log('[WorkflowBuilder] Created workflow:', newWorkflow.id)
-        
+
         await WorkflowService.saveWorkflowSteps(newWorkflow.id, steps)
-        
+
         // Step'leri veritabanından yükle - gerçek UUID'leri al
         console.log('[WorkflowBuilder] Loading saved steps with actual UUIDs...')
         const savedSteps = await WorkflowService.getWorkflowSteps(newWorkflow.id)
         setSteps(savedSteps)
-        
+
         setCurrentWorkflow(newWorkflow)
         toast.dismiss(loadingToastId)
         toast.success(`Workflow "${workflowName}" oluşturuldu ve kaydedildi!`)
@@ -681,10 +684,10 @@ export default function WorkflowBuilder() {
     } catch (error) {
       toast.dismiss(loadingToastId)
       console.error('[WorkflowBuilder] ❌ Error saving workflow:', error)
-      
+
       // Hata tipine göre daha detaylı mesaj
       let errorMessage = 'Workflow kaydedilirken bilinmeyen bir hata oluştu'
-      
+
       if (error?.code === '23502') {
         errorMessage = 'Veri doğrulama hatası: Eksik bilgi tespit edildi. Lütfen tüm alanları kontrol edin.'
       } else if (error?.code === '23505') {
@@ -698,9 +701,9 @@ export default function WorkflowBuilder() {
       } else if (error?.message) {
         errorMessage = `Hata: ${error.message}`
       }
-      
+
       toast.error(errorMessage)
-      
+
       // Development ortamında daha detaylı log
       console.error('[WorkflowBuilder] Error details:', {
         error,
@@ -721,11 +724,11 @@ export default function WorkflowBuilder() {
     setResults([])
     setGlobalVariables({})
     setShowWorkflowManager(false)
-    
+
     // Workflow yüklendiğinde variables'ları yenile
     console.log('[WorkflowBuilder] Refreshing variables after workflow load...')
     await loadVariables()
-    
+
     toast.success(`Workflow yüklendi: ${workflow.name}`)
   }
 
@@ -750,14 +753,14 @@ export default function WorkflowBuilder() {
     }
 
     const loadingToastId = toast.loading('Kaydet ediliyor...')
-    
+
     try {
       await WorkflowService.saveWorkflowSteps(currentWorkflow.id, steps)
-      
+
       // Step'leri yeniden yükle
       const freshSteps = await WorkflowService.getWorkflowSteps(currentWorkflow.id)
       setSteps(freshSteps)
-      
+
       toast.dismiss(loadingToastId)
       toast.success('Workflow kaydedildi!')
     } catch (error) {
@@ -777,15 +780,15 @@ export default function WorkflowBuilder() {
       try {
         const jsonData = JSON.parse(e.target.result)
         const importResult = parsePostmanCollection(jsonData)
-        
+
         if (importResult.steps.length > 0) {
           setSteps([...steps, ...importResult.steps])
-          
+
           let message = `${importResult.steps.length} API adımı Postman'den import edildi!`
           if (importResult.scriptsCount > 0) {
             message += ` (${importResult.scriptsCount} script dahil)`
           }
-          
+
           toast.success(message)
           console.log('[PostmanImport] Import completed:', {
             steps: importResult.steps.length,
@@ -808,7 +811,7 @@ export default function WorkflowBuilder() {
   const parsePostmanCollection = (collection) => {
     const steps = []
     let scriptsCount = 0
-    
+
     const parseItems = (items, parentName = '') => {
       items.forEach((item, index) => {
         if (item.item) {
@@ -817,7 +820,7 @@ export default function WorkflowBuilder() {
         } else if (item.request) {
           // Request ise, step'e çevir
           const request = item.request
-          
+
           // URL parse et
           let url = ''
           if (typeof request.url === 'string') {
@@ -875,13 +878,13 @@ export default function WorkflowBuilder() {
           // Script'leri parse et
           let preRequestScript = ''
           let postResponseScript = ''
-          
+
           if (item.event && Array.isArray(item.event)) {
             item.event.forEach(event => {
               if (event.listen === 'prerequest' && event.script && event.script.exec) {
                 // Pre-request script'i birleştir
-                preRequestScript = Array.isArray(event.script.exec) 
-                  ? event.script.exec.join('\n') 
+                preRequestScript = Array.isArray(event.script.exec)
+                  ? event.script.exec.join('\n')
                   : event.script.exec || ''
                 if (preRequestScript.trim()) scriptsCount++
               } else if (event.listen === 'test' && event.script && event.script.exec) {
@@ -895,7 +898,7 @@ export default function WorkflowBuilder() {
           }
 
           const stepName = parentName ? `${parentName} - ${item.name}` : item.name
-          
+
           const step = {
             id: `imported-${Date.now()}-${Math.random()}-${index}`, // Daha unique ID
             name: stepName || `İmport Edilen Adım ${steps.length + 1}`,
@@ -908,9 +911,9 @@ export default function WorkflowBuilder() {
             postResponseScript: postResponseScript,
             enabled: true
           }
-          
+
           steps.push(step)
-          
+
           // Debug log
           console.log('[PostmanImport] Parsed step:', {
             name: step.name,
@@ -943,27 +946,27 @@ export default function WorkflowBuilder() {
   // Tek API çalıştırma
   const runSingleApi = async (step) => {
     console.log('[WorkflowBuilder] runSingleApi called with step:', step)
-    
+
     if (!step.url || !step.enabled) {
       console.log('[WorkflowBuilder] runSingleApi: Invalid step - URL:', step.url, 'Enabled:', step.enabled)
       return
     }
-    
+
     const stepWithId = step.id || `temp-${Date.now()}`
     const uniqueResultId = `${stepWithId}-single-${Date.now()}`
-    
+
     try {
       console.log('[WorkflowBuilder] runSingleApi: Starting execution for step:', stepWithId)
       setIsRunning(true)
-      
+
       // Show loading toast
       const loadingToastId = toast.loading(`${step.name || 'API'} çalıştırılıyor...`)
-      
+
       const result = await runSingleStep(step, globalVariables)
       console.log('[WorkflowBuilder] runSingleApi: Result received:', result)
-      
+
       toast.dismiss(loadingToastId)
-      
+
       if (result.status === 'success') {
         toast.success(`${step.name || 'API'} başarıyla çalıştırıldı!`)
         // Update results - remove previous single results for this step and add new one
@@ -976,7 +979,7 @@ export default function WorkflowBuilder() {
         }
         setResults(prev => {
           // Remove previous single execution results for this step
-          const filteredResults = prev.filter(r => 
+          const filteredResults = prev.filter(r =>
             !(r.singleExecution && r.originalStepId === stepWithId)
           )
           return [...filteredResults, newResult]
@@ -993,7 +996,7 @@ export default function WorkflowBuilder() {
         }
         setResults(prev => {
           // Remove previous single execution results for this step
-          const filteredResults = prev.filter(r => 
+          const filteredResults = prev.filter(r =>
             !(r.singleExecution && r.originalStepId === stepWithId)
           )
           return [...filteredResults, errorResult]
@@ -1010,7 +1013,7 @@ export default function WorkflowBuilder() {
   // Tek API kaydetme  
   const saveSingleApi = async (step) => {
     console.log('[WorkflowBuilder] saveSingleApi called with step:', step)
-    
+
     if (!step.url) {
       console.log('[WorkflowBuilder] saveSingleApi: No URL provided')
       toast.error('API URL\'si gerekli')
@@ -1029,51 +1032,51 @@ export default function WorkflowBuilder() {
 
     try {
       console.log('[WorkflowBuilder] saveSingleApi: Processing single step save for workflow:', currentWorkflow.id)
-      
+
       // Show loading toast
       const loadingToastId = toast.loading('API kaydediliyor...')
-      
+
       // Step mevcut mu kontrol et (gerçek UUID var mı)
-      const isExistingStep = step.id && 
-                            !step.id.startsWith('step-') && 
-                            step.id.length === 36 && 
-                            step.id.includes('-')
-      
+      const isExistingStep = step.id &&
+        !step.id.startsWith('step-') &&
+        step.id.length === 36 &&
+        step.id.includes('-')
+
       if (isExistingStep) {
         // Mevcut step'i güncelle
         console.log('[WorkflowBuilder] Updating existing step:', step.id)
         await WorkflowService.updateSingleStep(step.id, step)
-        
+
         // Lokal state'i güncelle
         const updatedSteps = steps.map(s => s.id === step.id ? step : s)
         setSteps(updatedSteps)
-        
+
         toast.dismiss(loadingToastId)
         toast.success(`"${step.name.trim()}" başarıyla güncellendi!`)
-        
+
       } else {
         // Yeni step ekle
         console.log('[WorkflowBuilder] Adding new step to workflow')
         const insertedStep = await WorkflowService.insertSingleStep(currentWorkflow.id, step)
-        
+
         // Lokal state'i güncelle - eski step'i yenisiyle değiştir
         const updatedSteps = steps.map(s => s.id === step.id ? {
           ...step,
           id: insertedStep.id // Yeni UUID'yi kullan
         } : s)
         setSteps(updatedSteps)
-        
+
         toast.dismiss(loadingToastId)
         toast.success(`"${step.name.trim()}" başarıyla eklendi!`)
       }
-      
+
       // Workflow'un updated_at'ini güncelle
-      await WorkflowService.updateWorkflow(currentWorkflow.id, { 
-        updated_at: new Date().toISOString() 
+      await WorkflowService.updateWorkflow(currentWorkflow.id, {
+        updated_at: new Date().toISOString()
       })
-      
+
       console.log('[WorkflowBuilder] saveSingleApi: Single step operation completed')
-      
+
     } catch (error) {
       console.error('[WorkflowBuilder] Error in single step save:', error)
       toast.error(`Step kaydetme hatası: ${error.message}`)
@@ -1082,36 +1085,42 @@ export default function WorkflowBuilder() {
 
   return (
     <div className="modern-page">
-  
+
 
       {/* Action Bar */}
       <div className="action-bar-minimal">
         {/* Sol grup - Ana işlemler */}
+
         <div className="action-group-left">
-          <button 
-            className="action-btn primary"
-            onClick={addStep}
-            disabled={isRunning}
-            title="Yeni API adımı ekle"
-          >
-            <i className="bi bi-plus-lg"></i>
-            <span>API Adımı Ekle</span>
-          </button>
-          
-          <label className="action-btn secondary" style={{ cursor: 'pointer', margin: 0 }} title="Postman collection import et">
-            <i className="bi bi-upload"></i>
-            <span>Import</span>
-            <input
-              type="file"
-              accept=".json"
-              onChange={handlePostmanImport}
-              style={{ display: 'none' }}
+          {isAdmin && (
+
+            <button
+              className="action-btn primary"
+              onClick={addStep}
               disabled={isRunning}
-            />
-          </label>
-          
+              title="Yeni API adımı ekle"
+            >
+              <i className="bi bi-plus-lg"></i>
+              <span>API Adımı Ekle</span>
+            </button>
+          )}
+          {isAdmin && (
+
+            <label className="action-btn secondary" style={{ cursor: 'pointer', margin: 0 }} title="Postman collection import et">
+              <i className="bi bi-upload"></i>
+              <span>Import</span>
+              <input
+                type="file"
+                accept=".json"
+                onChange={handlePostmanImport}
+                style={{ display: 'none' }}
+                disabled={isRunning}
+              />
+            </label>
+          )}
+
           {steps.length > 0 && (
-            <button 
+            <button
               className={`action-btn ${isRunning ? 'danger' : 'success'}`}
               onClick={isRunning ? stopWorkflow : runWorkflow}
               title={isRunning ? 'Workflow\'u durdur' : 'Workflow\'u çalıştır'}
@@ -1125,9 +1134,9 @@ export default function WorkflowBuilder() {
         {/* Sağ grup - Yönetim */}
         <div className="action-group-right">
           <div className="dropdown">
-            <button 
-              className="action-btn secondary dropdown-toggle" 
-              type="button" 
+            <button
+              className="action-btn secondary dropdown-toggle"
+              type="button"
               title="Araçlar ve ayarlar"
               onClick={(e) => {
                 e.stopPropagation()
@@ -1162,47 +1171,48 @@ export default function WorkflowBuilder() {
               </button>
             </div>
           </div>
-          
-          <div className="dropdown">
-            <button 
-              className="action-btn outline dropdown-toggle" 
-              type="button" 
-              disabled={steps.length === 0}
-              title="Kaydetme seçenekleri"
-              onClick={(e) => {
-                e.stopPropagation()
-                setShowSaveDropdown(!showSaveDropdown)
-                setShowToolsDropdown(false)
-              }}
-            >
-              <i className="bi bi-save-fill"></i>
-              <span>Kaydet</span>
-            </button>
-            <div className={`dropdown-menu ${showSaveDropdown ? 'show' : ''}`}>
-              <button className="dropdown-item" onClick={() => {
-                quickSave()
-                setShowSaveDropdown(false)
-              }} disabled={steps.length === 0}>
+          {isAdmin && (
+            <div className="dropdown">
+              <button
+                className="action-btn outline dropdown-toggle"
+                type="button"
+                disabled={steps.length === 0}
+                title="Kaydetme seçenekleri"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setShowSaveDropdown(!showSaveDropdown)
+                  setShowToolsDropdown(false)
+                }}
+              >
                 <i className="bi bi-save-fill"></i>
-                <span>{currentWorkflow ? 'Hızlı Kaydet' : 'Kaydet'}</span>
+                <span>Kaydet</span>
               </button>
-              <button className="dropdown-item" onClick={() => {
-                setSaveDialogOpen(true)
-                setShowSaveDropdown(false)
-              }} disabled={steps.length === 0}>
-                <i className="bi bi-save2-fill"></i>
-                <span>Farklı Kaydet</span>
-              </button>
-              <div className="dropdown-divider"></div>
-              <button className="dropdown-item" onClick={() => {
-                handleCreateNewWorkflow()
-                setShowSaveDropdown(false)
-              }}>
-                <i className="bi bi-plus-square-fill"></i>
-                <span>Yeni Workflow</span>
-              </button>
+              <div className={`dropdown-menu ${showSaveDropdown ? 'show' : ''}`}>
+                <button className="dropdown-item" onClick={() => {
+                  quickSave()
+                  setShowSaveDropdown(false)
+                }} disabled={steps.length === 0}>
+                  <i className="bi bi-save-fill"></i>
+                  <span>{currentWorkflow ? 'Hızlı Kaydet' : 'Kaydet'}</span>
+                </button>
+                <button className="dropdown-item" onClick={() => {
+                  setSaveDialogOpen(true)
+                  setShowSaveDropdown(false)
+                }} disabled={steps.length === 0}>
+                  <i className="bi bi-save2-fill"></i>
+                  <span>Farklı Kaydet</span>
+                </button>
+                <div className="dropdown-divider"></div>
+                <button className="dropdown-item" onClick={() => {
+                  handleCreateNewWorkflow()
+                  setShowSaveDropdown(false)
+                }}>
+                  <i className="bi bi-plus-square-fill"></i>
+                  <span>Yeni Workflow</span>
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
@@ -1223,22 +1233,23 @@ export default function WorkflowBuilder() {
 
       {/* Main Content */}
       <div className="tools-section">
-        {steps.length === 0 ? (
+        {steps.length === 0 && isAdmin ? (
           <div className="empty-state">
             <div className="empty-icon">
               <i className="bi bi-plus-circle"></i>
             </div>
             <h3>Henüz API adımı eklenmedi</h3>
             <p>Workflow'unuzu oluşturmaya başlamak için yukarıdan "API Adımı Ekle" butonuna tıklayın veya Postman collection'ınızı import edin</p>
+          
             <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-              <button 
+              <button
                 className="action-btn primary"
                 onClick={addStep}
               >
                 <i className="bi bi-plus-lg"></i>
                 <span>İlk Adımı Ekle</span>
               </button>
-              
+
               <label className="action-btn outline" style={{ cursor: 'pointer', margin: 0 }}>
                 <i className="bi bi-file-earmark-code"></i>
                 <span>Postman Import</span>
@@ -1250,11 +1261,12 @@ export default function WorkflowBuilder() {
                 />
               </label>
             </div>
+
           </div>
         ) : (
           <div className="workflow-container">
             {/* Steps Column */}
-            <div className="steps-column">
+            <div className="steps-column" style={{ display: isAdmin ? 'block' : 'none' }}>
               <div className="section-header">
                 <h2>
                   <i className="bi bi-list-check"></i>
@@ -1262,7 +1274,7 @@ export default function WorkflowBuilder() {
                 </h2>
                 <p>Workflow'unuzun adımlarını burada yönetin</p>
               </div>
-              
+
               <div className="steps-list">
                 {steps.map((step, index) => (
                   <ApiStep
@@ -1299,6 +1311,7 @@ export default function WorkflowBuilder() {
         <WorkflowManager
           onClose={() => setShowWorkflowManager(false)}
           onLoadWorkflow={handleLoadWorkflow}
+          user={user}
         />
       )}
 
@@ -1315,7 +1328,7 @@ export default function WorkflowBuilder() {
           <div className="modal-content">
             <div className="modal-header">
               <h3>{currentWorkflow ? 'Workflow Güncelle' : 'Workflow Kaydet'}</h3>
-              <button 
+              <button
                 className="modal-close"
                 onClick={() => setSaveDialogOpen(false)}
               >
@@ -1325,7 +1338,7 @@ export default function WorkflowBuilder() {
             <div className="modal-body">
               <div className="form-group">
                 <label>Workflow Adı *</label>
-                <input 
+                <input
                   type="text"
                   className="form-input"
                   value={workflowName}
@@ -1335,7 +1348,7 @@ export default function WorkflowBuilder() {
               </div>
               <div className="form-group">
                 <label>Açıklama</label>
-                <textarea 
+                <textarea
                   className="form-input"
                   rows="3"
                   value={workflowDescription}
@@ -1345,13 +1358,13 @@ export default function WorkflowBuilder() {
               </div>
             </div>
             <div className="modal-footer">
-              <button 
+              <button
                 className="action-btn outline"
                 onClick={() => setSaveDialogOpen(false)}
               >
                 İptal
               </button>
-              <button 
+              <button
                 className="action-btn primary"
                 onClick={handleSaveWorkflow}
               >

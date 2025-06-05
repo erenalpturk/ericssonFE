@@ -23,7 +23,7 @@ export const AuthProvider = ({ children }) => {
             // Users tablosundan kullanıcıyı kontrol et
             const { data: userData, error: userError } = await supabase
                 .from('users')
-                .select('id, sicil_no, password, full_name')
+                .select('*')
                 .eq('sicil_no', username)
                 .single();
 

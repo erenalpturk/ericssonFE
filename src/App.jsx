@@ -13,7 +13,8 @@ import IccidManagement from './components/IccidManagement'
 import CourierActions from './components/CourierActions'
 import WorkflowBuilder from './components/automation/WorkflowBuilder'
 import SingleApiTester from './components/automation/SingleApiTester'
-
+import IccidList from './components/IccidList'
+import ActivationList from './components/ActivationList'
 import ChangePassword from './components/ChangePassword'
 
 function PrivateRoute({ children }) {
@@ -126,6 +127,26 @@ function AppRoutes() {
                         <PrivateRoute>
                             <Layout>
                                 <IccidManagement />
+                            </Layout>
+                        </PrivateRoute>
+                    }
+                />
+                <Route
+                    path="/iccid-list"
+                    element={
+                        <PrivateRoute>
+                            <Layout>
+                                <IccidList />
+                            </Layout>
+                        </PrivateRoute>
+                    }
+                />
+                <Route
+                    path="/activation-list"
+                    element={
+                        <PrivateRoute>
+                            <Layout>
+                                <ActivationList />
                             </Layout>
                         </PrivateRoute>
                     }
