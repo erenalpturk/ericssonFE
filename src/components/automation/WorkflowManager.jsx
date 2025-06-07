@@ -112,6 +112,173 @@ export default function WorkflowManager({ onClose, onLoadWorkflow, user }) {
                 </div>
               </div>
 
+              <div className="workflow-list">
+                {workflows.map(workflow => (
+                  <div key={workflow.id} className="workflow-card">
+                    <div className="workflow-card-header">
+                      <div className="workflow-card-title">
+                        <div className="workflow-icon">
+                          <i className="bi bi-gear-wide-connected"></i>
+                        </div>
+                        <div className="workflow-name">
+                          {workflow.name}
+                        </div>
+                      </div>
+                      <div className="workflow-actions">
+                        <button
+                          className="workflow-action-btn load"
+                          onClick={() => handleLoadWorkflow(workflow)}
+                          title="Yükle"
+                        >
+                          <i className="bi bi-upload"></i>
+                        </button>
+                        <button
+                          className="workflow-action-btn copy"
+                          onClick={() => handleDuplicateWorkflow(workflow.id)}
+                          title="Kopyala"
+                          disabled={user.role !== 'admin'}
+                        >
+                          <i className="bi bi-copy"></i>
+                        </button>
+                        {user.role === 'admin' && ( 
+                        <button
+                          className="workflow-action-btn delete"
+                          onClick={() => handleDeleteWorkflow(workflow.id)}
+                          title="Sil"
+                        >
+                          <i className="bi bi-trash"></i>
+                        </button>
+                        )}
+                      </div>
+                    </div>
+                    <div className="workflow-card-body">
+                      <div className="workflow-info">
+                        <div className="workflow-description">
+                          {workflow.description || 'Açıklama yok'}
+                        </div>
+                        <div className="workflow-date">
+                          <i className="bi bi-clock"></i>
+                          {formatDate(workflow.updated_at)}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <style jsx>{`
+                .workflow-list {
+                  display: flex;
+                  flex-direction: column;
+                  gap: 1rem;
+                }
+
+                .workflow-card {
+                  background: white;
+                  border-radius: 8px;
+                  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                  overflow: hidden;
+                }
+
+                .workflow-card-header {
+                  padding: 1rem;
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  border-bottom: 1px solid #eee;
+                }
+
+                .workflow-card-title {
+                  display: flex;
+                  align-items: center;
+                  gap: 0.75rem;
+                }
+
+                .workflow-card-body {
+                  padding: 1rem;
+                }
+
+                .workflow-info {
+                  display: flex;
+                  flex-direction: column;
+                  gap: 0.5rem;
+                }
+
+                .workflow-description {
+                  color: #666;
+                  font-size: 0.9rem;
+                }
+
+                .workflow-date {
+                  display: flex;
+                  align-items: center;
+                  gap: 0.5rem;
+                  color: #888;
+                  font-size: 0.85rem;
+                }
+
+                .workflow-actions {
+                  display: flex;
+                  gap: 0.5rem;
+                }
+
+                .workflow-action-btn {
+                  padding: 0.5rem;
+                  border: none;
+                  border-radius: 4px;
+                  background: transparent;
+                  cursor: pointer;
+                  transition: all 0.2s;
+                }
+
+                .workflow-action-btn:hover {
+                  background: #f5f5f5;
+                }
+
+                .workflow-action-btn.load {
+                  color: #2196f3;
+                }
+
+                .workflow-action-btn.copy {
+                  color: #4caf50;
+                }
+
+                .workflow-action-btn.delete {
+                  color: #f44336;
+                }
+
+                .workflow-action-btn:disabled {
+                  opacity: 0.5;
+                  cursor: not-allowed;
+                }
+
+                @media (min-width: 768px) {
+                  .workflow-list {
+                    display: none;
+                  }
+
+                  .table-container {
+                    display: block;
+                  }
+                }
+
+                @media (max-width: 767px) {
+                  .table-container {
+                    display: none;
+                  }
+
+                  .workflow-list {
+                    display: flex;
+                  }
+
+                  .modal-content {
+                    width: 95%;
+                    max-width: 95%;
+                    margin: 1rem;
+                  }
+                }
+              `}</style>
+
               <div className="table-container">
                 <table className="modern-table">
                   <thead>
