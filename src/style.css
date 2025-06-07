@@ -1376,9 +1376,15 @@ body {
 .table-controls {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   margin-bottom: 1.5rem;
   gap: 1rem;
+}
+
+.table-controls  div{
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
 }
 
 .search-box {

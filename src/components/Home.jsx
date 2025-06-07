@@ -37,8 +37,8 @@ function Home() {
         {
             path: '/activation-list',
             icon: 'bi-check-circle',
-            title: 'Aktivasyon List',
-            description: 'Aktivasyon verilerini görüntüle ve yönet',
+            title: 'Aktivasyonlarım',
+            description: 'Aktivasyonlarınızı görüntüleyin',
             color: 'text-emerald-500',
             bgGradient: 'from-emerald-500 to-teal-600',
             category: 'Aktivasyonlar',

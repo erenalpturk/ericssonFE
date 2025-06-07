@@ -14,71 +14,72 @@ function Sidebar({ isCollapsed, onToggle }) {
     }
 
     const menuItems = [
-        { 
-            path: '/', 
-            icon: 'bi-house-door-fill', 
+
+        {
+            path: '/',
+            icon: 'bi-house-door-fill',
             label: 'Ana Sayfa',
             color: 'text-blue-500',
             roles: ['admin', 'support', 'tester']
         },
-        { 
-            path: '/sms-decrypt', 
-            icon: 'bi-shield-lock-fill', 
-            label: 'SMS Decrypt',
-            color: 'text-purple-500',
-            roles: ['admin', 'support', 'tester']
-        },
-        { 
-            path: '/sql-create', 
-            icon: 'bi-database-fill', 
-            label: 'SQL Create',
+        {
+            path: '/activation-list',
+            icon: 'bi-check-circle',
+            label: 'Aktivasyonlarım',
             color: 'text-emerald-500',
             roles: ['admin', 'support', 'tester']
         },
-        { 
-            path: '/iccid-list', 
-            icon: 'bi-credit-card-2-front', 
-            label: 'ICCID List',
-            color: 'text-emerald-500',
-            roles: ['admin', 'support', 'tester']
-        },
-        { 
-            path: '/activation-list', 
-            icon: 'bi-check-circle', 
-            label: 'Aktivasyon List',
-            color: 'text-emerald-500',
-            roles: ['admin', 'support', 'tester']
-        },
-        { 
-            path: '/courier-actions', 
-            icon: 'bi-truck', 
-            label: 'Kurye Tetikleme',
-            color: 'text-cyan-500',
-            roles: ['admin', 'support', 'tester']
-        },
-        { 
-            path: '/api-automation', 
-            icon: 'bi-cpu-fill', 
+        {
+            path: '/api-automation',
+            icon: 'bi-cpu-fill',
             label: 'OMNI Otomasyon',
             color: 'text-orange-500',
             roles: ['admin', 'support', 'tester']
         },
-        { 
-            path: '/api-tester', 
-            icon: 'bi-lightning-fill', 
-            label: 'API Tester',
+        {
+            path: '/api-tester',
+            icon: 'bi-lightning-fill',
+            label: 'Dostman',
             color: 'text-yellow-500',
             roles: ['admin', 'support', 'tester']
         },
-        { 
-            path: '/iccid-management', 
-            icon: 'bi-gear-wide-connected', 
+        {
+            path: '/iccid-list',
+            icon: 'bi-credit-card-2-front',
+            label: 'ICCID List',
+            color: 'text-emerald-500',
+            roles: ['admin', 'support', 'tester']
+        },
+        {
+            path: '/iccid-management',
+            icon: 'bi-gear-wide-connected',
             label: 'ICCID Management',
             color: 'text-emerald-500',
             roles: ['admin', 'support']
-        }
+        },
+        {
+            path: '/sms-decrypt',
+            icon: 'bi-shield-lock-fill',
+            label: 'SMS Decrypt',
+            color: 'text-purple-500',
+            roles: ['admin', 'support', 'tester']
+        },
+        {
+            path: '/sql-create',
+            icon: 'bi-database-fill',
+            label: 'SQL Create',
+            color: 'text-emerald-500',
+            roles: ['admin', 'support', 'tester']
+        },
+        {
+            path: '/courier-actions',
+            icon: 'bi-truck',
+            label: 'Kurye Tetikleme',
+            color: 'text-cyan-500',
+            roles: ['admin', 'support', 'tester']
+        },
+
     ]
-console.log(user.role)
     return (
         <aside className={`modern-sidebar ${isCollapsed ? 'collapsed' : ''}`}>
             {/* Header */}
@@ -94,7 +95,7 @@ console.log(user.role)
                         </div>
                     )}
                 </div>
-                <button 
+                <button
                     className="toggle-btn"
                     onClick={() => onToggle(!isCollapsed)}
                     title={isCollapsed ? "Menüyü Genişlet" : "Menüyü Daralt"}
@@ -125,8 +126,8 @@ console.log(user.role)
                                     )}
                                 </div>
                             ) : (
-                                <Link 
-                                    to={item.path} 
+                                <Link
+                                    to={item.path}
                                     className={`nav-link group ${location.pathname === item.path ? 'active' : ''}`}
                                     title={isCollapsed ? item.label : ''}
                                 >
@@ -159,7 +160,7 @@ console.log(user.role)
                             <i className="bi bi-person-fill"></i>
                             <span>{user.full_name}</span>
                         </div>
-                        <button 
+                        <button
                             className="logout-btn"
                             onClick={handleLogout}
                         >
