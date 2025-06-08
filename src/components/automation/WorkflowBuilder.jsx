@@ -38,13 +38,9 @@ export default function WorkflowBuilder() {
   const [currentRun, setCurrentRun] = useState(0)
   const [isRepeating, setIsRepeating] = useState(false)
 
-  // LocalStorage bilgileri state'i
-  const [localStorageData, setLocalStorageData] = useState({
-    user: '',
-    msisdn: '',
-    customerId: '',
-    customerOrder: ''
-  })
+  // LocalStorage bilgileri state'i - artık array olacak her run için
+  const [localStorageData, setLocalStorageData] = useState([])
+  const [runResults, setRunResults] = useState([])
 
   // Variables'ları yükle
   useEffect(() => {
@@ -287,13 +283,92 @@ export default function WorkflowBuilder() {
     setIsRepeating(repeatCount > 1)
     setCurrentRun(0)
     setResults([])
+    setRunResults([]) // Yeni - run özetlerini temizle
+    setLocalStorageData([]) // Yeni - localStorage verilerini temizle
 
     console.log('[WorkflowBuilder] === Starting Workflow ===')
     console.log('[WorkflowBuilder] Repeat count:', repeatCount, typeof repeatCount)
     console.log('[WorkflowBuilder] Steps length:', steps.length)
     console.log('[WorkflowBuilder] Available global variables:', globalVariables)
 
+    // Otomasyon başlarken sadece step'lerde kullanılan global değişkenleri localStorage'a sakla
+    try {
+      console.log('[WorkflowBuilder] Finding variables used in steps...')
+      
+      // Step'lerde kullanılan değişkenleri tespit et
+      const usedVariables = new Set()
+      
+      steps.forEach((step, index) => {
+        console.log(`[WorkflowBuilder] Scanning step ${index + 1}: ${step.name}`)
+        
+        // URL'deki değişkenleri bul
+        const urlMatches = (step.url || '').match(/\{\{(\w+)\}\}/g)
+        if (urlMatches) {
+          urlMatches.forEach(match => {
+            const varName = match.replace(/\{\{|\}\}/g, '')
+            usedVariables.add(varName)
+          })
+        }
+        
+        // Headers'daki değişkenleri bul
+        Object.values(step.headers || {}).forEach(headerValue => {
+          const headerMatches = (headerValue || '').match(/\{\{(\w+)\}\}/g)
+          if (headerMatches) {
+            headerMatches.forEach(match => {
+              const varName = match.replace(/\{\{|\}\}/g, '')
+              usedVariables.add(varName)
+            })
+          }
+        })
+        
+        // Body'deki değişkenleri bul
+        const bodyMatches = (step.body || '').match(/\{\{(\w+)\}\}/g)
+        if (bodyMatches) {
+          bodyMatches.forEach(match => {
+            const varName = match.replace(/\{\{|\}\}/g, '')
+            usedVariables.add(varName)
+          })
+        }
+        
+        // Pre-request script'teki değişkenleri bul
+        const preScriptMatches = (step.preRequestScript || '').match(/\{\{(\w+)\}\}/g)
+        if (preScriptMatches) {
+          preScriptMatches.forEach(match => {
+            const varName = match.replace(/\{\{|\}\}/g, '')
+            usedVariables.add(varName)
+          })
+        }
+        
+        // Post-response script'teki değişkenleri bul
+        const postScriptMatches = (step.postResponseScript || '').match(/\{\{(\w+)\}\}/g)
+        if (postScriptMatches) {
+          postScriptMatches.forEach(match => {
+            const varName = match.replace(/\{\{|\}\}/g, '')
+            usedVariables.add(varName)
+          })
+        }
+      })
+      
+      console.log('[WorkflowBuilder] Used variables found:', Array.from(usedVariables))
+      console.log('[WorkflowBuilder] Saving only used variables to localStorage...')
+      
+      let savedCount = 0
+      usedVariables.forEach(varName => {
+        const value = globalVariables[varName]
+        if (value !== undefined && value !== null && value !== '') {
+          VariablesService.setRuntimeVariable(varName, String(value), 'automation')
+          console.log(`[WorkflowBuilder] Saved used variable to localStorage: ${varName} = ${value}`)
+          savedCount++
+        }
+      })
+      
+      console.log(`[WorkflowBuilder] Successfully saved ${savedCount} used variables to localStorage`)
+    } catch (error) {
+      console.error('[WorkflowBuilder] Error saving used variables to localStorage:', error)
+    }
+
     const allResults = []
+    const allRunResults = [] // Yeni - her run'ın özet bilgilerini sakla
 
     try {
       // Workflow'u belirtilen sayıda tekrarla
@@ -345,10 +420,11 @@ export default function WorkflowBuilder() {
           console.log(`[WorkflowBuilder] Run ${runIndex + 1} - Step ${i + 1}: Using variables:`, workflowVariables)
         const result = await runSingleStep(step, workflowVariables, controller.signal)
           
-          // Çalıştırma numarasını sonuçlara ekle
+          // Çalıştırma numarasını ve timestamp'i sonuçlara ekle
           const resultWithRun = {
             ...result,
-            runNumber: runIndex + 1
+            runNumber: runIndex + 1,
+            timestamp: new Date().toISOString()
           }
           
           runResults.push(resultWithRun)
@@ -383,24 +459,44 @@ export default function WorkflowBuilder() {
           }
         }
 
-        // Bu çalıştırma tamamlandı mesajı
-        if (repeatCount > 1 && !controller.signal.aborted) {
-          // Eğer bu run'da hata vardıysa farklı mesaj göster
+        // Bu çalıştırma tamamlandı mesajı ve localStorage verilerini topla
+        if (!controller.signal.aborted) {
           const hasError = runResults.some(r => r.status === 'error')
-          if (hasError) {
-            const errorMsg = `Çalıştırma ${runIndex + 1}/${repeatCount} hatalarla tamamlandı`
-            console.warn(`[WorkflowBuilder] ${errorMsg}`)
-            toast.error(errorMsg, {
-              duration: 2000,
-              icon: '⚠️'
-            })
-          } else {
-            const successMsg = `Çalıştırma ${runIndex + 1}/${repeatCount} başarıyla tamamlandı`
-            console.log(`[WorkflowBuilder] ${successMsg}`)
-            toast.success(successMsg, {
-              duration: 2000,
-              icon: '✅'
-            })
+          
+          // Bu run'ın localStorage verilerini topla (başarılı ise)
+          if (!hasError) {
+            const currentRunData = loadLocalStorageDataForRun(runIndex + 1)
+            setLocalStorageData(prev => [...prev, currentRunData])
+          }
+          
+          // Run özet bilgilerini kaydet
+          const runSummary = {
+            runNumber: runIndex + 1,
+            status: hasError ? 'error' : 'success',
+            completedAt: new Date().toISOString(),
+            stepCount: runResults.length,
+            successCount: runResults.filter(r => r.status === 'success').length,
+            errorCount: runResults.filter(r => r.status === 'error').length
+          }
+          allRunResults.push(runSummary)
+          setRunResults([...allRunResults])
+          
+          if (repeatCount > 1) {
+            if (hasError) {
+              const errorMsg = `Çalıştırma ${runIndex + 1}/${repeatCount} hatalarla tamamlandı`
+              console.warn(`[WorkflowBuilder] ${errorMsg}`)
+              toast.error(errorMsg, {
+                duration: 2000,
+                icon: '⚠️'
+              })
+            } else {
+              const successMsg = `Çalıştırma ${runIndex + 1}/${repeatCount} başarıyla tamamlandı`
+              console.log(`[WorkflowBuilder] ${successMsg}`)
+              toast.success(successMsg, {
+                duration: 2000,
+                icon: '✅'
+              })
+            }
           }
         }
 
@@ -434,10 +530,11 @@ export default function WorkflowBuilder() {
               duration: 4000,
               icon: '🎉'
             })
-            // Tüm çalıştırmalar başarılı - localStorage verilerini yükle
+            // Tüm çalıştırmalar başarılı - localStorage verileri zaten toplandı
+            // Otomasyon tamamlandı, localStorage'ı temizle (user hariç)
             setTimeout(() => {
-              loadLocalStorageData()
-            }, 1000)
+              cleanupLocalStorageAfterAutomation()
+            }, 2000)
           } else if (successfulRuns.length === 0) {
             const finalMsg = `Tüm workflow çalıştırmaları başarısız oldu! (0/${totalRuns})`
             console.error(`[WorkflowBuilder] ${finalMsg}`)
@@ -446,12 +543,11 @@ export default function WorkflowBuilder() {
               icon: '❌'
             })
             // Tüm çalıştırmalar başarısız - localStorage verilerini temizle
-            setLocalStorageData({
-              user: '',
-              msisdn: '',
-              customerId: '',
-              customerOrder: ''
-            })
+            setLocalStorageData([])
+            // Hata durumunda da localStorage'ı temizle (user hariç)
+            setTimeout(() => {
+              cleanupLocalStorageAfterAutomation()
+            }, 2000)
           } else {
             const finalMsg = `${successfulRuns.length}/${totalRuns} çalıştırma başarılı, ${failedRuns.length} çalıştırma başarısız`
             console.warn(`[WorkflowBuilder] ${finalMsg}`)
@@ -465,10 +561,11 @@ export default function WorkflowBuilder() {
                 color: 'white'
               }
             })
-            // Kısmi başarı - localStorage verilerini yükle
+            // Kısmi başarı - localStorage verileri zaten başarılı run'lar için toplandı
+            // Otomasyon tamamlandı, localStorage'ı temizle (user hariç)
             setTimeout(() => {
-              loadLocalStorageData()
-            }, 1000)
+              cleanupLocalStorageAfterAutomation()
+            }, 2000)
           }
         } else {
           // Tek çalıştırma için başarı kontrolü
@@ -476,18 +573,28 @@ export default function WorkflowBuilder() {
           if (hasErrors) {
             toast.error('Workflow hatalarla tamamlandı')
             // Hata var - localStorage verilerini temizle
-            setLocalStorageData({
-              user: '',
-              msisdn: '',
-              customerId: '',
-              customerOrder: ''
-            })
+            setLocalStorageData([])
+            // Hata durumunda da localStorage'ı temizle (user hariç)
+            setTimeout(() => {
+              cleanupLocalStorageAfterAutomation()
+            }, 2000)
           } else {
             toast.success('Workflow tamamlandı')
-            // Başarılı - localStorage verilerini yükle
+            // Başarılı - localStorage verilerini yükle (tek run için)
+            const currentRunData = loadLocalStorageDataForRun(1)
+            setLocalStorageData([currentRunData])
+            setRunResults([{
+              runNumber: 1,
+              status: 'success',
+              completedAt: new Date().toISOString(),
+              stepCount: allResults.length,
+              successCount: allResults.filter(r => r.status === 'success').length,
+              errorCount: allResults.filter(r => r.status === 'error').length
+            }])
+            // Otomasyon tamamlandı, localStorage'ı temizle (user hariç)
             setTimeout(() => {
-              loadLocalStorageData()
-            }, 1000)
+              cleanupLocalStorageAfterAutomation()
+            }, 2000)
           }
         }
       }
@@ -498,6 +605,10 @@ export default function WorkflowBuilder() {
       } else {
         toast.error('Workflow çalıştırılırken hata oluştu')
       }
+      // Hata durumunda da localStorage'ı temizle (user hariç)
+      setTimeout(() => {
+        cleanupLocalStorageAfterAutomation()
+      }, 2000)
     } finally {
       setIsRunning(false)
       setIsRepeating(false)
@@ -924,6 +1035,8 @@ export default function WorkflowBuilder() {
     setWorkflowName(workflow.name)
     setWorkflowDescription(workflow.description || '')
     setResults([])
+    setRunResults([]) // Yeni workflow yüklendiğinde run sonuçlarını temizle
+    setLocalStorageData([]) // Yeni workflow yüklendiğinde localStorage verilerini temizle
     setGlobalVariables({})
     setShowWorkflowManager(false)
 
@@ -942,6 +1055,8 @@ export default function WorkflowBuilder() {
     setWorkflowName('')
     setWorkflowDescription('')
     setResults([])
+    setRunResults([]) // Yeni workflow oluşturulduğunda run sonuçlarını temizle
+    setLocalStorageData([]) // Yeni workflow oluşturulduğunda localStorage verilerini temizle
     setGlobalVariables({})
     setSaveDialogOpen(false)
     toast.success('Yeni workflow oluşturuldu')
@@ -1286,7 +1401,8 @@ export default function WorkflowBuilder() {
   }
 
   // LocalStorage verilerini oku
-  const loadLocalStorageData = () => {
+  // Her run için localStorage verilerini topla
+  const loadLocalStorageDataForRun = (runNumber) => {
     try {
       // Runtime variables'dan veri al
       const runtimeVars = VariablesService.getRuntimeVariables()
@@ -1305,16 +1421,83 @@ export default function WorkflowBuilder() {
         }
       }
 
-      const parsedData = {
-        user: userValue,
-        msisdn: runtimeVars.msisdn?.value || '',
-        customerId: runtimeVars.customerId?.value || '',
-        customerOrder: runtimeVars.customerOrder?.value || ''
+      // TCKN için tcReg veya tcFonk'u kontrol et
+      const tcknValue = runtimeVars.tcReg?.value || runtimeVars.tcFonk?.value || ''
+      
+      // Doğum tarihi için birthDateReg veya birthDateFonk'u kontrol et
+      const birthDateValue = runtimeVars.birthDateReg?.value || runtimeVars.birthDateFonk?.value || ''
+      
+      // Tarife mapping - prod_ofr_id değerine göre tarife adını belirle
+      const prodOfrId = runtimeVars.prod_ofr_id?.value || ''
+      let tarifeValue = ''
+      if (prodOfrId === '400041110') {
+        tarifeValue = 'Ailece 15GB'
+      } else if (prodOfrId === '400079751') {
+        tarifeValue = 'Uygun 10GB'
+      } else if (prodOfrId === '100000071879') {
+        tarifeValue = 'Kral Tarife'
+      } else if (prodOfrId) {
+        tarifeValue = prodOfrId // Bilinmeyen ID'ler için ID'yi göster
       }
 
-      setLocalStorageData(parsedData)
+      // Ortam belirleme - localStorage key'lerine göre
+      let ortamValue = ''
+      if (runtimeVars.RegPost?.value || runtimeVars.RegPre?.value) {
+        ortamValue = 'Regresyon'
+      } else if (runtimeVars.FonkPost?.value || runtimeVars.FonkPre?.value) {
+        ortamValue = 'Fonksiyonel'
+      }
+
+      return {
+        runNumber: runNumber,
+        user: userValue,
+        msisdn: runtimeVars.msisdn?.value || '',
+        tckn: tcknValue,
+        birthDate: birthDateValue,
+        customerId: runtimeVars.customerId?.value || '',
+        customerOrder: runtimeVars.customerOrder?.value || '',
+        tarife: tarifeValue,
+        ortam: ortamValue,
+        timestamp: new Date().toISOString()
+      }
     } catch (error) {
-      console.error('[WorkflowBuilder] Error loading localStorage data:', error)
+      console.error('[WorkflowBuilder] Error loading localStorage data for run:', runNumber, error)
+      return {
+        runNumber: runNumber,
+        user: '',
+        msisdn: '',
+        tckn: '',
+        birthDate: '',
+        customerId: '',
+        customerOrder: '',
+        tarife: '',
+        ortam: '',
+        timestamp: new Date().toISOString()
+      }
+    }
+  }
+
+  // Eski loadLocalStorageData fonksiyonu - geriye dönük uyumluluk için
+  const loadLocalStorageData = () => {
+    const data = loadLocalStorageDataForRun(1)
+    setLocalStorageData([data])
+  }
+
+  // Otomasyon sonrası localStorage temizlik fonksiyonu (user hariç)
+  const cleanupLocalStorageAfterAutomation = () => {
+    try {
+      // RuntimeVariables'dan user hariç tüm değişkenleri temizle
+      const runtimeVars = VariablesService.getRuntimeVariables()
+      
+      Object.keys(runtimeVars).forEach(key => {
+        if (key !== 'user') {
+          VariablesService.deleteRuntimeVariable(key)
+        }
+      })
+      
+      console.log('[WorkflowBuilder] Cleaned up localStorage after automation (except user)')
+    } catch (error) {
+      console.error('[WorkflowBuilder] Error cleaning up localStorage:', error)
     }
   }
 
@@ -1619,75 +1802,63 @@ export default function WorkflowBuilder() {
             )}
 
             {/* LocalStorage Info Column - Sadece normal kullanıcılar için */}
-            {!isAdmin && (localStorageData.user || localStorageData.msisdn || localStorageData.customerId || localStorageData.customerOrder) && (
+            {!isAdmin && localStorageData.length > 0 && (
               <div className="localstorage-column">
                 <div className="section-header">
                   <h2>
                     <i className="bi bi-check-circle-fill text-emerald-500"></i>
-                    Son Aktivasyon Bilgileri
+                    Otomasyon Bilgileri
                   </h2>
                 </div>
 
                 <div className="localstorage-card">
                   <div className="localstorage-content">
-                    {localStorageData.user && (
-                      <div className="localstorage-item">
-                        <div className="localstorage-icon">
-                          <i className="bi bi-person-fill"></i>
+                    <div className="data-content">
+                      {localStorageData.map((runData, index) => (
+                        <div key={runData.runNumber} className="data-block">
+                          <div className="data-header">
+                            <h4>Data {runData.runNumber}</h4>
+                          </div>
+                          <div className="data-items">
+                            {runData.msisdn && (
+                              <div className="data-line">
+                                <strong>MSISDN:</strong> {runData.msisdn}
+                              </div>
+                            )}
+                            {runData.tckn && (
+                              <div className="data-line">
+                                <strong>TCKN:</strong> {runData.tckn}
+                              </div>
+                            )}
+                            {runData.birthDate && (
+                              <div className="data-line">
+                                <strong>Doğum Tarihi:</strong> {runData.birthDate}
+                              </div>
+                            )}
+                            {runData.customerId && (
+                              <div className="data-line">
+                                <strong>Müşteri no:</strong> {runData.customerId}
+                              </div>
+                            )}
+                            {runData.customerOrder && (
+                              <div className="data-line">
+                                <strong>Sipariş no:</strong> {runData.customerOrder}
+                              </div>
+                            )}
+                            {runData.tarife && (
+                              <div className="data-line">
+                                <strong>Tarife:</strong> {runData.tarife}
+                              </div>
+                            )}
+                            {runData.ortam && (
+                              <div className="data-line">
+                                <strong>Ortam:</strong> {runData.ortam}
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        <div className="localstorage-info">
-                          <label>Kullanıcı</label>
-                          <span>{localStorageData.user}</span>
-                        </div>
-                      </div>
-                    )}
-
-                    {localStorageData.msisdn && (
-                      <div className="localstorage-item">
-                        <div className="localstorage-icon">
-                          <i className="bi bi-phone-fill"></i>
-                        </div>
-                        <div className="localstorage-info">
-                          <label>MSISDN</label>
-                          <span>{localStorageData.msisdn}</span>
-                        </div>
-                      </div>
-                    )}
-
-                    {localStorageData.customerId && (
-                      <div className="localstorage-item">
-                        <div className="localstorage-icon">
-                          <i className="bi bi-person-badge-fill"></i>
-                        </div>
-                        <div className="localstorage-info">
-                          <label>Müşteri ID</label>
-                          <span>{localStorageData.customerId}</span>
-                        </div>
-                      </div>
-                    )}
-
-                    {localStorageData.customerOrder && (
-                      <div className="localstorage-item">
-                        <div className="localstorage-icon">
-                          <i className="bi bi-receipt-cutoff"></i>
-                        </div>
-                        <div className="localstorage-info">
-                          <label>Sipariş No</label>
-                          <span>{localStorageData.customerOrder}</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="localstorage-footer">
-                    <button 
-                      className="refresh-btn"
-                      onClick={loadLocalStorageData}
-                      title="Verileri yenile"
-                    >
-                      <i className="bi bi-arrow-clockwise"></i>
-                      <span>Yenile</span>
-                    </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>

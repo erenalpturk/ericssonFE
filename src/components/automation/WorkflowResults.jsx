@@ -69,10 +69,10 @@ export default function WorkflowResults({ results }) {
         ) : (
           <div className="results-list">
             {results.map((result, index) => (
-              <div key={result.stepId} className="result-item">
+              <div key={`${result.runNumber}-${result.stepId}`} className="result-item">
                 <div 
                   className="result-header"
-                  onClick={() => toggleExpand(result.stepId)}
+                  onClick={() => toggleExpand(`${result.runNumber}-${result.stepId}`)}
                 >
                   <div className="result-info">
                     <div className="result-status">
@@ -98,12 +98,12 @@ export default function WorkflowResults({ results }) {
                       {result.status}
                     </div>
                     <button className="expand-btn">
-                      <i className={`bi bi-chevron-${expandedResult === result.stepId ? 'up' : 'down'}`}></i>
+                      <i className={`bi bi-chevron-${expandedResult === `${result.runNumber}-${result.stepId}` ? 'up' : 'down'}`}></i>
                     </button>
                   </div>
                 </div>
 
-                {expandedResult === result.stepId && (
+                {expandedResult === `${result.runNumber}-${result.stepId}` && (
                   <div className="result-body">
                     {/* Error Display */}
                     {result.error && (
