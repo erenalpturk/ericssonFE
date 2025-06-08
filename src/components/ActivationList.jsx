@@ -311,7 +311,7 @@ const ActivationList = () => {
       <div className="output-card">
         <div className="card-header">
           <div className="card-actions">
-            <button
+            {/* <button
               className="action-btn primary"
               onClick={() => {
                 navigator.clipboard.writeText(JSON.stringify(activations, null, 2));
@@ -320,7 +320,7 @@ const ActivationList = () => {
             >
               <i className="bi bi-clipboard"></i>
               Verileri Kopyala
-            </button>
+            </button> */}
           </div>
         </div>
         <div className="card-body">
@@ -580,7 +580,7 @@ const ActivationList = () => {
                         </div>
                       </div>
                     </td>
-                    <td onClick={() => console.log(row.status)} >
+                    <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
 
                         <Select
@@ -721,13 +721,22 @@ const ActivationList = () => {
                       </div>
                     </td>
                     <td className="text-gray-600">
-                      {new Date(row.created_at).toLocaleString('tr-TR', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        day: '2-digit',
-                        month: '2-digit',
-                        year: 'numeric'
-                      })}
+                      <div className="flex flex-col items-center">
+                        <span className="text-sm font-medium">
+                          {new Date(row.created_at).toLocaleString('tr-TR', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </span>
+                        <br />
+                        <span className="text-xs text-gray-500">
+                          {new Date(row.created_at).toLocaleString('tr-TR', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric'
+                          })}
+                        </span>
+                      </div>
                     </td>
                   </tr>
                 ))}
