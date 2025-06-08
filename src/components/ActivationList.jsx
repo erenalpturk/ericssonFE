@@ -214,7 +214,7 @@ const ActivationList = () => {
 
   const handleNoteSubmit = async (activationId) => {
     try {
-      const response = await fetch(`${baseUrl}/iccid/update-note`, {
+      const response = await fetch(`${baseUrl}/iccid/update-activation`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

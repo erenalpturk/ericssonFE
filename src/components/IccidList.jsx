@@ -1,22 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Box,
-  Typography,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Checkbox,
-  TableSortLabel,
-  Menu,
-  MenuItem,
-  Chip,
-  TablePagination,
-  Select,
-  FormControl,
-} from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
 
 const IccidList = () => {
@@ -25,10 +7,7 @@ const IccidList = () => {
   const [loading, setLoading] = useState(false);
   const [orderBy, setOrderBy] = useState('');
   const [order, setOrder] = useState('asc');
-  const [filterAnchorEl, setFilterAnchorEl] = useState(null);
-  const [activeFilters, setActiveFilters] = useState({});
   const [searchText, setSearchText] = useState('');
-  const [selectedFilter, setSelectedFilter] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [successMessage, setSuccessMessage] = useState('');
@@ -49,11 +28,11 @@ const IccidList = () => {
     setErrorMessage(message);
     setTimeout(() => setErrorMessage(''), 3000);
   };
-console.log(user)
+
   const fetchIccids = async () => {
     try {
       setLoading(true);
-      const endpoint = user.role === 'admin' 
+      const endpoint = user.role === 'admin' || user.role === 'support'
         ? `${baseUrl}/iccid/getAll`
         : `${baseUrl}/iccid/getAll/${user.sicil_no}`;
       
@@ -63,14 +42,14 @@ console.log(user)
       const data = await response.json();
       
       // Eğer admin değilse, data.data içinden ICCID'leri al
-      setIccids(user.role === 'admin' ? data : data.data);
+      setIccids(user.role === 'admin' || user.role === 'support' ? data : data.data);
     } catch (error) {
       showError('ICCID\'ler yüklenirken bir hata oluştu.');
     } finally {
       setLoading(false);
     }
   };
-console.log(iccids)
+
   const handleBulkDelete = async () => {
     if (selectedIccids.length === 0) {
       showError('Lütfen silinecek ICCID\'leri seçin');
@@ -125,37 +104,6 @@ console.log(iccids)
     );
   };
 
-  const handleRequestSort = (property) => {
-    const isAsc = orderBy === property && order === 'asc';
-    setOrder(isAsc ? 'desc' : 'asc');
-    setOrderBy(property);
-  };
-
-  const handleFilterClick = (event) => {
-    setFilterAnchorEl(event.currentTarget);
-  };
-
-  const handleFilterClose = () => {
-    setFilterAnchorEl(null);
-  };
-
-  const handleFilterSelect = (filter) => {
-    setSelectedFilter(filter);
-    handleFilterClose();
-  };
-
-  const handleFilterApply = (value) => {
-    setActiveFilters(prev => ({
-      ...prev,
-      [selectedFilter]: value
-    }));
-  };
-
-  const clearFilters = () => {
-    setActiveFilters({});
-    setSearchText('');
-  };
-
   const sortData = (data) => {
     if (!orderBy) return data;
 
@@ -190,16 +138,16 @@ console.log(iccids)
       return true;
     });
   };
-
-  const handleStatusChange = async (iccid, newStatus) => {
+console.log(iccids)
+  const handleStatusChange = async (iccidid, newStatus) => {
     try {
       setLoading(true);
-      const response = await fetch(`${baseUrl}/iccid/setStatus`, {
+      const response = await fetch(`${baseUrl}/iccid/update-iccid`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ iccid, status: newStatus }),
+        body: JSON.stringify({ iccidid, used_by: user.sicil_no, status: newStatus }),
       });
       const data = await response.json();
       
@@ -366,7 +314,7 @@ console.log(iccids)
                       <select
                         className={`status-select ${getStatusColor(row.stock)}`}
                         value={row.stock}
-                        onChange={(e) => handleStatusChange(row.iccid, e.target.value)}
+                        onChange={(e) => handleStatusChange(row.iccidid, e.target.value)}
                         disabled={loading}
                       >
                         {statusOptions.map(option => (
