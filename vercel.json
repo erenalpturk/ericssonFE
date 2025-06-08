@@ -1,8 +1,18 @@
 {
-    "routes": [
+    "version": 2,
+    "builds": [
         {
-            "src": "/(.*)",
-            "dest": "https://iccid.vercel.app/$1"
+            "src": "package.json",
+            "use": "@vercel/static-build",
+            "config": {
+                "distDir": "build"
+            }
+        }
+    ],
+    "rewrites": [
+        {
+            "source": "/(.*)",
+            "destination": "/index.html"
         }
     ]
 }
