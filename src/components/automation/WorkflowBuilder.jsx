@@ -29,6 +29,7 @@ export default function WorkflowBuilder() {
   // Dropdown state'leri
   const [showToolsDropdown, setShowToolsDropdown] = useState(false)
   const [showSaveDropdown, setShowSaveDropdown] = useState(false)
+  const [availableWorkflows, setAvailableWorkflows] = useState([])
 
   // AbortController for cancelling workflow
   const [abortController, setAbortController] = useState(null)
@@ -47,6 +48,7 @@ export default function WorkflowBuilder() {
     console.log('[WorkflowBuilder] Component mounted, loading variables...')
     loadVariables()
     VariablesService.cleanupOldRuntimeVariables(24)
+    loadAvailableWorkflows() // Workflow'ları yükle
     
     // Component mount olduğunda localStorage verilerini yükleme - sadece otomasyon sonrası
   }, [])
@@ -122,6 +124,7 @@ export default function WorkflowBuilder() {
   const handleVariablesChanged = async () => {
     console.log('[WorkflowBuilder] Variables changed, refreshing...')
     await loadVariables()
+    await loadAvailableWorkflows() // Workflow'ları da yenile
     setTimeout(async () => {
       console.log('[WorkflowBuilder] Secondary variables refresh...')
       await loadVariables()
@@ -1501,6 +1504,17 @@ export default function WorkflowBuilder() {
     }
   }
 
+  const loadAvailableWorkflows = async () => {
+    if (!isAdmin) {
+      try {
+        const workflows = await WorkflowService.getAllWorkflows()
+        setAvailableWorkflows(workflows)
+      } catch (error) {
+        console.error('[WorkflowBuilder] Error loading workflows:', error)
+      }
+    }
+  }
+
   return (
     <div className="modern-page">
 
@@ -1513,14 +1527,38 @@ export default function WorkflowBuilder() {
           {/* Normal kullanıcılar için araçlar */}
           {!isAdmin && (
             <>
-              <button
-                className="action-btn secondary"
-                onClick={() => setShowWorkflowManager(true)}
-                title="Workflow Yönetimi"
-              >
-                <i className="bi bi-folder-fill"></i>
-                <span>Workflow Yönetimi</span>
-              </button>
+              {/* Workflow Butonları */}
+              <div className="workflow-buttons-container">
+                {availableWorkflows.length === 0 ? (
+                  <div className="no-workflows-message">
+                    <i className="bi bi-folder-x"></i>
+                    <span>Henüz workflow bulunamadı</span>
+                  </div>
+                ) : (
+                  availableWorkflows.map(workflow => (
+                    <button
+                      key={workflow.id}
+                      className={`workflow-btn ${currentWorkflow?.id === workflow.id ? 'active' : ''}`}
+                      onClick={async () => {
+                        try {
+                          const { workflow: workflowData, steps } = await WorkflowService.loadWorkflow(workflow.id)
+                          await handleLoadWorkflow(workflowData, steps)
+                        } catch (error) {
+                          console.error('Error loading workflow:', error)
+                          toast.error('Workflow yüklenirken hata oluştu')
+                        }
+                      }}
+                      title={`${workflow.name}${workflow.description ? ' - ' + workflow.description : ''}`}
+                    >
+                      <i className="bi bi-gear-wide-connected"></i>
+                      <span>{workflow.name}</span>
+                    </button>
+                  ))
+                )}
+              </div>
+              
+              <div className="action-divider"></div>
+              
               <button
                 className="action-btn secondary"
                 onClick={() => loadVariables()}
@@ -1752,6 +1790,21 @@ export default function WorkflowBuilder() {
             </div>
 
           </div>
+        ) : steps.length === 0 && !isAdmin ? (
+          <div className="empty-state">
+            <div className="empty-icon">
+              <i className="bi bi-gear-wide-connected"></i>
+            </div>
+            <h3>Workflow Seçin</h3>
+            <p>Otomasyonu başlatmak için yukarıdan bir workflow seçin</p>
+            
+            {availableWorkflows.length === 0 && (
+              <div className="alert alert-info">
+                <i className="bi bi-info-circle"></i>
+                Henüz kullanılabilir workflow bulunamadı. Lütfen admin ile iletişime geçin.
+              </div>
+            )}
+          </div>
         ) : (
           <div className={isAdmin ? "workflow-container" : "workflow-container-user"}>
             {/* Steps Column */}
@@ -1868,7 +1921,7 @@ export default function WorkflowBuilder() {
       </div>
 
       {/* Modals */}
-      {showWorkflowManager && (
+      {showWorkflowManager && isAdmin && (
         <WorkflowManager
           onClose={() => setShowWorkflowManager(false)}
           onLoadWorkflow={handleLoadWorkflow}
