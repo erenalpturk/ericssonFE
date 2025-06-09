@@ -38,11 +38,11 @@ const ActivationList = () => {
     fetchActivations();
   }, []);
 
-  useEffect(() => {
-    if (activations.length > 0) {
-      fetchActivationStatusesForCurrentPage();
-    }
-  }, [activations, page, rowsPerPage, activeFilters, searchText]);
+  // useEffect(() => {
+  //   if (activations.length > 0) {
+  //     fetchActivationStatusesForCurrentPage();
+  //   }
+  // }, [activations, page, rowsPerPage, activeFilters, searchText]);
 
   const showSuccess = (message) => {
     setSuccessMessage(message);
@@ -612,9 +612,11 @@ const ActivationList = () => {
                       </span>
                     )}
                   </th>
+                  {/*
                   <th>
                     Aktiflik/Pasiflik
                   </th>
+                  */}
                   <th onClick={() => handleSort('note')} style={{ cursor: 'pointer' }}>
                     Not
                     {sortConfig.key === 'note' && (
@@ -787,7 +789,7 @@ const ActivationList = () => {
                         </Select>
                       </div>
                     </td>
-                    <td>
+                    {/* <td>
                       <div className="flex items-center justify-center">
                         {(() => {
                           const activationStatus = activationStatuses[row.activationid];
@@ -847,7 +849,7 @@ const ActivationList = () => {
                           }
                         })()}
                       </div>
-                    </td>
+                    </td> */}
                     <td style={{ padding: '0px' }}>
                       <div >
                         {editingNote === row.activationid ? (

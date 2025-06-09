@@ -1,33 +1,92 @@
 import { useState, useEffect } from 'react'
+import 'bootstrap/dist/css/bootstrap.min.css'
+import 'bootstrap/dist/js/bootstrap.bundle.min.js'
 import { DECRYPT_ENDPOINTS } from '../services/config'
-import { useAuth } from '../contexts/AuthContext'
 
 function SmsDecrypt() {
     const [loading, setLoading] = useState(false)
-    const [selectedEnvironment, setSelectedEnvironment] = useState(null)
+    const [result, setResult] = useState(null)
+    const [error, setError] = useState(null)
     const [authToken, setAuthToken] = useState(null)
     const [tokenError, setTokenError] = useState(null)
-    const [smsData, setSmsData] = useState([])
-    const [decryptedResults, setDecryptedResults] = useState({})
-    const { baseUrl } = useAuth()
+    const [apiLogs, setApiLogs] = useState([])
+    const [inputValue, setInputValue] = useState('')
+
+    const addLog = (message, type = 'info') => {
+        const timestamp = new Date().toLocaleTimeString()
+        setApiLogs(prev => [...prev, { timestamp, message, type }])
+    }
 
     useEffect(() => {
+        let mounted = true;
+
+        const getToken = async () => {
+            const loginBody = {
+                "userName": "Etiya_Admin",
+                "password": "aa1234"
+            }
+
+            if (authToken) return;
+
+            addLog('Token alınıyor...', 'info')
+
+            try {
+                const response = await fetch(DECRYPT_ENDPOINTS.auth, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(loginBody)
+                })
+
+                if (!mounted) return;
+
+                if (!response.ok) {
+                    throw new Error('Token alınamadı')
+                }
+
+                const token = response.headers.get('authorization')
+                if (!token) {
+                    throw new Error('Authorization token bulunamadı')
+                }
+
+                setAuthToken(token)
+                setTokenError(null)
+                addLog('Token başarıyla alındı', 'success')
+                addLog(`Token: ${token.substring(0, 20)}...`, 'success')
+            } catch (error) {
+                if (!mounted) return;
+                
+                setTokenError(error.message)
+                setAuthToken(null)
+                addLog(`Token hatası: ${error.message}`, 'error')
+            }
+        }
+
         getToken()
+
+        return () => {
+            mounted = false;
+        }
     }, [])
 
-    const getToken = async () => {
-        if (authToken) return;
-
+    const refreshToken = async () => {
+        setTokenError(null)
+        setAuthToken(null)
+        addLog('Token yenileniyor...', 'info')
+        
         try {
+            const loginBody = {
+                "userName": "Etiya_Admin",
+                "password": "aa1234"
+            }
+
             const response = await fetch(DECRYPT_ENDPOINTS.auth, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    userName: "Etiya_Admin",
-                    password: "aa1234"
-                })
+                body: JSON.stringify(loginBody)
             })
 
             if (!response.ok) {
@@ -41,738 +100,329 @@ function SmsDecrypt() {
 
             setAuthToken(token)
             setTokenError(null)
+            addLog('Token başarıyla yenilendi', 'success')
+            addLog(`Yeni Token: ${token.substring(0, 20)}...`, 'success')
         } catch (error) {
             setTokenError(error.message)
             setAuthToken(null)
+            addLog(`Token yenileme hatası: ${error.message}`, 'error')
         }
     }
 
-    const selectEnvironment = async (environment) => {
-        setSelectedEnvironment(environment)
-        setSmsData([])
-        setDecryptedResults({})
-        
-        const dbName = environment === 'functional' ? 'OMNI4' : 'OMNI2'
-        await fetchEncryptedSms(dbName)
-    }
+    const sendRequest = async (e) => {
+        e.preventDefault()
+        const trimmedValue = inputValue.trim()
 
-    const fetchEncryptedSms = async (dbName) => {
+        if (!trimmedValue) {
+            setError('Lütfen şifrelenmiş bir değer girin')
+            addLog('Boş değer girişi', 'error')
+            return
+        }
+
+        if (!authToken) {
+            setError('Token bulunamadı. Lütfen sayfayı yenileyin.')
+            addLog('Token bulunamadı, işlem iptal edildi', 'error')
+            return
+        }
+
+        addLog(`Şifrelenmiş değer gönderiliyor: ${trimmedValue}`, 'info')
+
         try {
             setLoading(true)
-            const response = await fetch(`${baseUrl}/oracle/encrypted-sms/${dbName}`, {
-                timeout: 30000, // 30 second timeout
-                signal: AbortSignal.timeout(30000)
+            setError(null)
+            setResult(null)
+
+            const response2 = await fetch(DECRYPT_ENDPOINTS.decrypt, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': authToken,
+                    'LocalToken': '1'
+                },
+                body: JSON.stringify({ value: trimmedValue })
             })
 
-            if (!response.ok) {
-                throw new Error('Şifrelenmiş SMS verileri alınamadı')
+            if (!response2.ok) {
+                throw new Error('Decrypt API request failed')
             }
 
-            const data = await response.json()
-            setSmsData(data.data)
-            
-            // Otomatik şifre çözme
-            await decryptAllSms(data.data)
+            const data = await response2.json()
+            setResult(data)
+            addLog('Şifre çözme işlemi başarılı', 'success')
+            addLog(`Çözülen değer: ${JSON.stringify(data)}`, 'success')
         } catch (error) {
-            console.error('Hata:', error)
+            setError(error.message)
+            addLog(`Şifre çözme hatası: ${error.message}`, 'error')
         } finally {
             setLoading(false)
         }
     }
 
-    const decryptAllSms = async (smsData) => {
-        if (!authToken) return;
+    const clearAll = () => {
+        setInputValue('')
+        setResult(null)
+        setError(null)
+        setApiLogs([])
+    }
 
-        const results = {}
-
-        for (const sms of smsData) {
+    const copyResult = async () => {
+        if (result) {
             try {
-                const response = await fetch(DECRYPT_ENDPOINTS.decrypt, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': authToken,
-                        'LocalToken': '1'
-                    },
-                    body: JSON.stringify({ value: sms.encryptedValue })
-                })
-
-                if (!response.ok) {
-                    throw new Error('Şifre çözme API hatası')
-                }
-
-                const decryptedData = await response.json()
-                results[sms.msisdn] = {
-                    status: 'success',
-                    data: decryptedData
-                }
-            } catch (error) {
-                results[sms.msisdn] = {
-                    status: 'error',
-                    error: error.message
+                await navigator.clipboard.writeText(JSON.stringify(result, null, 2))
+                addLog('Sonuç panoya kopyalandı', 'success')
+            } catch (err) {
+                addLog('Kopyalama başarısız', 'error')
             }
         }
     }
 
-        setDecryptedResults(results)
+    const getTokenStatus = () => {
+        if (tokenError) return { status: 'error', text: 'Token Hatası', color: 'text-red-500' }
+        if (!authToken) return { status: 'loading', text: 'Token Yükleniyor', color: 'text-yellow-500' }
+        return { status: 'success', text: 'Token Aktif', color: 'text-green-500' }
     }
 
-    const refreshData = async () => {
-        if (!selectedEnvironment) return;
-        
-        setSmsData([])
-        setDecryptedResults({})
-        
-        const dbName = selectedEnvironment === 'functional' ? 'OMNI4' : 'OMNI2'
-        await fetchEncryptedSms(dbName)
-    }
-
-    const copyResult = async (content) => {
-        try {
-            await navigator.clipboard.writeText(content)
-            alert('📋 Başarıyla kopyalandı!')
-        } catch (err) {
-            console.error('Kopyalama hatası:', err)
-            alert('❌ Kopyalama başarısız!')
-        }
-    }
+    const tokenStatus = getTokenStatus()
 
     return (
-        <div style={{ 
-            minHeight: '100vh',
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            padding: '20px',
-            fontFamily: "'Inter', 'Segoe UI', system-ui, sans-serif"
-        }}>
-            {/* Header */}
-            <div style={{ 
-                background: 'rgba(255, 255, 255, 0.95)',
-                backdropFilter: 'blur(20px)',
-                borderRadius: '24px',
-                padding: '32px',
-                marginBottom: '32px',
-                boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1)',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                flexWrap: 'wrap',
-                gap: '20px'
-            }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                    <div style={{
-                        width: '64px',
-                        height: '64px',
-                        background: 'linear-gradient(135deg, #667eea, #764ba2)',
-                        borderRadius: '20px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '28px',
-                        boxShadow: '0 8px 24px rgba(102, 126, 234, 0.3)',
-                        animation: 'float 3s ease-in-out infinite'
-                    }}>
-                        🔐
+        <div className="modern-page">
+            {/* Header Section */}
+            <div className="page-header">
+                <div className="header-content">
+                    <div className="header-icon">
+                        <i className="bi bi-shield-lock-fill text-purple-500"></i>
                     </div>
-                    <div>
-                        <h1 style={{ 
-                            margin: '0 0 8px 0', 
-                            fontSize: '2.5rem',
-                            fontWeight: '800',
-                            background: 'linear-gradient(135deg, #667eea, #764ba2)',
-                            WebkitBackgroundClip: 'text',
-                            WebkitTextFillColor: 'transparent',
-                            backgroundClip: 'text'
-                        }}>
-                            SMS Decrypt Tool
-                        </h1>
-                        <p style={{ margin: '0', color: '#64748b', fontSize: '1.1rem', fontWeight: '500' }}>
-                            Oracle veritabanından son 5 şifrelenmiş SMS'i otomatik çözün
-                        </p>
+                    <div className="header-text">
+                        <h1>SMS Decrypt Tool</h1>
+                        <p>Şifrelenmiş SMS değerlerini güvenli şekilde çözün</p>
                     </div>
                 </div>
-                
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '12px',
-                        padding: '12px 20px',
-                        borderRadius: '50px',
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        background: tokenError 
-                            ? 'linear-gradient(135deg, #fee2e2, #fecaca)' 
-                            : !authToken 
-                                ? 'linear-gradient(135deg, #fef3c7, #fde68a)' 
-                                : 'linear-gradient(135deg, #d1fae5, #a7f3d0)',
-                        color: tokenError ? '#dc2626' : !authToken ? '#d97706' : '#065f46',
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                        animation: tokenError ? 'shake 0.5s ease-in-out' : 'none'
-                    }}>
-                        <span style={{ fontSize: '16px' }}>
-                            {tokenError ? '❌' : !authToken ? '⏳' : '✅'}
-                        </span>
-                        {tokenError ? 'Token Hatası' : !authToken ? 'Token Yükleniyor' : 'Token Aktif'}
-                    </div>
-                    
-                    {tokenError && (
-                        <button 
-                            onClick={getToken}
-                            style={{
-                                padding: '12px 24px',
-                                background: 'linear-gradient(135deg, #ef4444, #dc2626)',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '50px',
-                                cursor: 'pointer',
-                                fontWeight: '600',
-                                fontSize: '14px',
-                                boxShadow: '0 4px 16px rgba(239, 68, 68, 0.3)',
-                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px'
-                            }}
-                            onMouseEnter={(e) => {
-                                e.target.style.transform = 'translateY(-2px)'
-                                e.target.style.boxShadow = '0 8px 24px rgba(239, 68, 68, 0.4)'
-                            }}
-                            onMouseLeave={(e) => {
-                                e.target.style.transform = 'translateY(0)'
-                                e.target.style.boxShadow = '0 4px 16px rgba(239, 68, 68, 0.3)'
-                            }}
-                        >
-                            🔄 Token Yenile
-                        </button>
-                    )}
+                <div className="stats-badge">
+                    <i className={`bi ${tokenStatus.status === 'success' ? 'bi-shield-check' : tokenStatus.status === 'error' ? 'bi-shield-x' : 'bi-shield'}`}></i>
+                    <span className={tokenStatus.color}>{tokenStatus.text}</span>
                 </div>
             </div>
 
-            {/* Environment Selection */}
-            {!selectedEnvironment ? (
-                <div style={{ 
-                    background: 'rgba(255, 255, 255, 0.95)',
-                    backdropFilter: 'blur(20px)',
-                    borderRadius: '24px',
-                    padding: '48px',
-                    boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    textAlign: 'center'
-                }}>
-                    <div style={{ marginBottom: '48px' }}>
-                        <h2 style={{ 
-                            margin: '0 0 16px 0', 
-                            fontSize: '2.25rem',
-                            fontWeight: '700',
-                            color: '#1e293b'
-                        }}>
-                            Ortam Seçimi
-                        </h2>
-                        <p style={{ 
-                            margin: '0', 
-                            fontSize: '1.2rem',
-                            color: '#64748b',
-                            fontWeight: '500'
-                        }}>
-                            Şifrelenmiş SMS'leri almak istediğiniz ortamı seçin
-                        </p>
-                    </div>
-                    
-                    <div style={{ 
-                        display: 'grid', 
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-                        gap: '32px', 
-                        maxWidth: '800px',
-                        margin: '0 auto'
-                    }}>
-                        <div 
-                            onClick={() => authToken && selectEnvironment('functional')}
-                            style={{
-                                background: 'linear-gradient(135deg, #f0fdf4, #dcfce7)',
-                                border: '2px solid #22c55e',
-                                borderRadius: '20px',
-                                padding: '40px',
-                                cursor: authToken ? 'pointer' : 'not-allowed',
-                                opacity: authToken ? 1 : 0.6,
-                                textAlign: 'center',
-                                transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                                position: 'relative',
-                                overflow: 'hidden',
-                                boxShadow: '0 10px 30px rgba(34, 197, 94, 0.2)'
-                            }}
-                            onMouseEnter={(e) => {
-                                if (authToken) {
-                                    e.target.style.transform = 'translateY(-8px) scale(1.02)'
-                                    e.target.style.boxShadow = '0 20px 40px rgba(34, 197, 94, 0.3)'
-                                }
-                            }}
-                            onMouseLeave={(e) => {
-                                if (authToken) {
-                                    e.target.style.transform = 'translateY(0) scale(1)'
-                                    e.target.style.boxShadow = '0 10px 30px rgba(34, 197, 94, 0.2)'
-                                }
-                            }}
-                        >
-                            <div style={{ 
-                                fontSize: '64px', 
-                                marginBottom: '24px',
-                                animation: 'bounce 2s infinite'
-                            }}>
-                                ⚙️
-                            </div>
-                            <h3 style={{ 
-                                margin: '0', 
-                                fontSize: '2rem',
-                                fontWeight: '700',
-                                color: '#16a34a'
-                            }}>
-                                Fonksiyonel
-                            </h3>
+            {/* Main Content */}
+            <div className="content-grid">
+                {/* Input Section */}
+                <div className="input-card">
+                    <div className="card-header">
+                        <div className="card-title">
+                            <i className="bi bi-key-fill text-blue-500"></i>
+                            <span>Şifrelenmiş Değer</span>
                         </div>
-
-                        <div 
-                            onClick={() => authToken && selectEnvironment('regression')}
-                            style={{
-                                background: 'linear-gradient(135deg, #fffbeb, #fef3c7)',
-                                border: '2px solid #f59e0b',
-                                borderRadius: '20px',
-                                padding: '40px',
-                                cursor: authToken ? 'pointer' : 'not-allowed',
-                                opacity: authToken ? 1 : 0.6,
-                                textAlign: 'center',
-                                transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                                position: 'relative',
-                                overflow: 'hidden',
-                                boxShadow: '0 10px 30px rgba(245, 158, 11, 0.2)'
-                            }}
-                            onMouseEnter={(e) => {
-                                if (authToken) {
-                                    e.target.style.transform = 'translateY(-8px) scale(1.02)'
-                                    e.target.style.boxShadow = '0 20px 40px rgba(245, 158, 11, 0.3)'
-                                }
-                            }}
-                            onMouseLeave={(e) => {
-                                if (authToken) {
-                                    e.target.style.transform = 'translateY(0) scale(1)'
-                                    e.target.style.boxShadow = '0 10px 30px rgba(245, 158, 11, 0.2)'
-                                }
-                            }}
-                            >
-                            <div style={{ 
-                                fontSize: '64px', 
-                                marginBottom: '24px',
-                                animation: 'wiggle 2s ease-in-out infinite'
-                            }}>
-                                🐛
-                            </div>
-                            <h3 style={{ 
-                                margin: '0', 
-                                fontSize: '2rem',
-                                fontWeight: '700',
-                                color: '#d97706'
-                            }}>
-                                Regresyon
-                            </h3>
-                        </div>
-                    </div>
-
-                    {!authToken && (
-                        <div style={{ 
-                            marginTop: '40px',
-                            padding: '20px',
-                            background: 'linear-gradient(135deg, #f1f5f9, #e2e8f0)',
-                            borderRadius: '16px',
-                            color: '#64748b',
-                            fontSize: '1.1rem',
-                            fontWeight: '500'
-                        }}>
-                            Token alınırken bekleyin...
-                            </div>
-                        )}
-                                    </div>
-            ) : (
-                /* Results Section */
-                <div style={{ 
-                    background: 'rgba(255, 255, 255, 0.95)',
-                    backdropFilter: 'blur(20px)',
-                    borderRadius: '24px',
-                    padding: '32px',
-                    boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)'
-                }}>
-                    <div style={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between', 
-                        alignItems: 'center', 
-                        marginBottom: '32px',
-                        flexWrap: 'wrap',
-                        gap: '16px'
-                    }}>
-                        <h2 style={{ 
-                            margin: '0', 
-                            fontSize: '2rem',
-                            fontWeight: '700',
-                            color: '#1e293b'
-                        }}>
-                            {selectedEnvironment === 'functional' ? 'Fonksiyonel (OMNI4)' : 'Regresyon (OMNI2)'}
-                        </h2>
-                        <div style={{ display: 'flex', gap: '12px' }}>
-                                <button 
-                                onClick={refreshData}
-                                    disabled={loading}
-                                style={{
-                                    padding: '12px 24px',
-                                    background: loading 
-                                        ? 'linear-gradient(135deg, #94a3b8, #64748b)' 
-                                        : 'linear-gradient(135deg, #22c55e, #16a34a)',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '50px',
-                                    cursor: loading ? 'not-allowed' : 'pointer',
-                                    fontWeight: '600',
-                                    fontSize: '14px',
-                                    boxShadow: '0 4px 16px rgba(34, 197, 94, 0.3)',
-                                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '8px'
-                                }}
-                                onMouseEnter={(e) => {
-                                    if (!loading) {
-                                        e.target.style.transform = 'translateY(-2px)'
-                                        e.target.style.boxShadow = '0 8px 24px rgba(34, 197, 94, 0.4)'
-                                    }
-                                }}
-                                onMouseLeave={(e) => {
-                                    if (!loading) {
-                                        e.target.style.transform = 'translateY(0)'
-                                        e.target.style.boxShadow = '0 4px 16px rgba(34, 197, 94, 0.3)'
-                                    }
-                                }}
-                            >
-                                {loading ? 'Yenileniyor...' : 'Yenile'}
-                                </button>
+                        <div className="card-actions">
                             <button 
-                                onClick={() => {
-                                    setSelectedEnvironment(null)
-                                    setSmsData([])
-                                    setDecryptedResults({})
-                                }}
-                                style={{
-                                    padding: '12px 24px',
-                                    background: 'linear-gradient(135deg, #64748b, #475569)',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '50px',
-                                    cursor: 'pointer',
-                                    fontWeight: '600',
-                                    fontSize: '14px',
-                                    boxShadow: '0 4px 16px rgba(100, 116, 139, 0.3)',
-                                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '8px'
-                                }}
-                                onMouseEnter={(e) => {
-                                    e.target.style.transform = 'translateY(-2px)'
-                                    e.target.style.boxShadow = '0 8px 24px rgba(100, 116, 139, 0.4)'
-                                }}
-                                onMouseLeave={(e) => {
-                                    e.target.style.transform = 'translateY(0)'
-                                    e.target.style.boxShadow = '0 4px 16px rgba(100, 116, 139, 0.3)'
-                                }}
+                                className="action-btn secondary"
+                                onClick={clearAll}
+                                disabled={!inputValue && !result && apiLogs.length === 0}
                             >
-                                ← Geri Dön
+                                <i className="bi bi-trash"></i>
+                                Temizle
                             </button>
                         </div>
                     </div>
-
-                    {loading ? (
-                        <div style={{ 
-                            textAlign: 'center', 
-                            padding: '80px 20px',
-                            background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
-                            borderRadius: '20px',
-                            border: '1px solid rgba(0, 0, 0, 0.05)'
-                        }}>
-                                                    <div style={{ 
-                            width: '60px',
-                            height: '60px',
-                            border: '4px solid #e5e7eb',
-                            borderTop: '4px solid #3b82f6',
-                            borderRadius: '50%',
-                            animation: 'spin 1s linear infinite',
-                            margin: '0 auto 24px auto'
-                        }}>
-                </div>
-                            <h3 style={{ 
-                                margin: '0 0 16px 0',
-                                fontSize: '1.75rem',
-                                fontWeight: '700',
-                                color: '#1e293b'
-                            }}>
-                                Veriler İşleniyor
-                            </h3>
-                            <p style={{ 
-                                margin: '0',
-                                fontSize: '1.1rem',
-                                color: '#64748b',
-                                fontWeight: '500'
-                            }}>
-                                Şifrelenmiş SMS'ler getiriliyor ve çözülüyor...
-                            </p>
-                        </div>
-                    ) : (
-                        <div style={{ display: 'grid', gap: '16px', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))' }}>
-                            {smsData.map((sms, index) => {
-                                const result = decryptedResults[sms.msisdn]
-                                
-                                return (
-                                    <div 
-                                        key={index} 
-                                        style={{
-                                            background: 'linear-gradient(135deg, #ffffff, #f8fafc)',
-                                            border: '1px solid rgba(0, 0, 0, 0.05)',
-                                            borderRadius: '16px',
-                                            padding: '20px',
-                                            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)',
-                                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                            position: 'relative',
-                                            overflow: 'hidden'
-                                        }}
-                                        onMouseEnter={(e) => {
-                                            e.target.style.transform = 'translateY(-4px)'
-                                            e.target.style.boxShadow = '0 16px 40px rgba(0, 0, 0, 0.15)'
-                                        }}
-                                        onMouseLeave={(e) => {
-                                            e.target.style.transform = 'translateY(0)'
-                                            e.target.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.1)'
-                                        }}
-                                    >
-                                        <div style={{ 
-                                            display: 'flex', 
-                                            justifyContent: 'space-between', 
-                                            alignItems: 'center',
-                                            marginBottom: '16px',
-                                            flexWrap: 'wrap',
-                                            gap: '12px'
-                                        }}>
-                                            <div>
-                                                <h4 style={{ 
-                                                    margin: '0 0 8px 0', 
-                                                    fontFamily: "'JetBrains Mono', 'Monaco', monospace", 
-                                                    fontSize: '1.2rem',
-                                                    fontWeight: '700',
-                                                    color: '#1e293b'
-                                                }}>
-                                                    {sms.msisdn}
-                                                </h4>
-                                                <span style={{
-                                                    padding: '6px 12px',
-                                                    borderRadius: '50px',
-                                                    fontSize: '12px',
-                                                    fontWeight: '600',
-                                                    background: result?.status === 'success' 
-                                                        ? 'linear-gradient(135deg, #d1fae5, #a7f3d0)' 
-                                                        : result?.status === 'error' 
-                                                            ? 'linear-gradient(135deg, #fee2e2, #fecaca)' 
-                                                            : 'linear-gradient(135deg, #fef3c7, #fde68a)',
-                                                    color: result?.status === 'success' 
-                                                        ? '#065f46' 
-                                                        : result?.status === 'error' 
-                                                            ? '#991b1b' 
-                                                            : '#92400e',
-                                                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
-                                                }}>
-                                                    {result ? 
-                                                        (result.status === 'success' ? 'Çözüldü' : 'Hata') : 
-                                                        'Çözülüyor...'
-                                                    }
-                                                </span>
-                                            </div>
-                                            {result?.status === 'success' && (
+                    <div className="card-body">
+                        {/* Token Status Alert */}
+                        {tokenError && (
+                            <div className="status-alert error">
+                                <div className="alert-content">
+                                    <i className="bi bi-exclamation-triangle-fill"></i>
+                                    <div>
+                                        <strong>Token Hatası:</strong>
+                                        <p>{tokenError}</p>
+                                    </div>
+                                </div>
                                 <button 
-                                                    onClick={() => copyResult(JSON.stringify(result.data, null, 2))}
-                                                    style={{
-                                                        padding: '8px 16px',
-                                                        background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
-                                                        color: 'white',
-                                                        border: 'none',
-                                                        borderRadius: '50px',
-                                                        cursor: 'pointer',
-                                                        fontWeight: '600',
-                                                        fontSize: '12px',
-                                                        boxShadow: '0 4px 16px rgba(59, 130, 246, 0.3)',
-                                                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        gap: '8px'
-                                                    }}
-                                                    onMouseEnter={(e) => {
-                                                        e.target.style.transform = 'translateY(-2px) scale(1.05)'
-                                                        e.target.style.boxShadow = '0 8px 24px rgba(59, 130, 246, 0.4)'
-                                                    }}
-                                                    onMouseLeave={(e) => {
-                                                        e.target.style.transform = 'translateY(0) scale(1)'
-                                                        e.target.style.boxShadow = '0 4px 16px rgba(59, 130, 246, 0.3)'
-                                                    }}
-                                                >
+                                    className="action-btn danger small"
+                                    onClick={refreshToken}
+                                    disabled={loading}
+                                >
+                                    <i className="bi bi-arrow-clockwise"></i>
+                                    Yenile
+                                </button>
+                            </div>
+                        )}
+                        
+                        {!tokenError && !authToken && (
+                            <div className="status-alert warning">
+                                <div className="alert-content">
+                                    <i className="bi bi-hourglass-split"></i>
+                                    <div>
+                                        <strong>Token Bekleniyor...</strong>
+                                        <p>Lütfen bekleyin</p>
+                                    </div>
+                                </div>
+                                <button 
+                                    className="action-btn warning small"
+                                    onClick={refreshToken}
+                                    disabled={loading}
+                                >
+                                    <i className="bi bi-arrow-clockwise"></i>
+                                    Yeniden Dene
+                                </button>
+                            </div>
+                        )}
+
+                        <form onSubmit={sendRequest}>
+                            <div className="form-group">
+                                <input
+                                    type="text"
+                                    className="modern-input"
+                                    value={inputValue}
+                                    onChange={(e) => setInputValue(e.target.value)}
+                                    placeholder="Şifrelenmiş değeri buraya yapıştırın..."
+                                    disabled={!authToken}
+                                />
+                            </div>
+                            <button 
+                                type="submit"
+                                className={`decrypt-btn ${loading ? 'loading' : ''} ${!authToken ? 'disabled' : ''}`}
+                                disabled={loading || !authToken || !inputValue.trim()}
+                            >
+                                {loading ? (
+                                    <>
+                                        <i className="bi bi-arrow-repeat spin"></i>
+                                        Şifre Çözülüyor...
+                                    </>
+                                ) : (
+                                    <>
+                                        <i className="bi bi-unlock-fill"></i>
+                                        Şifreyi Çöz
+                                    </>
+                                )}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                {/* Results Section */}
+                <div className="output-card">
+                    <div className="card-header">
+                        <div className="card-title">
+                            <i className="bi bi-file-earmark-text text-green-500"></i>
+                            <span>Sonuçlar</span>
+                        </div>
+                        <div className="card-actions">
+                            {result && (
+                                <button 
+                                    className="action-btn success"
+                                    onClick={copyResult}
+                                >
+                                    <i className="bi bi-clipboard"></i>
                                     Kopyala
                                 </button>
                             )}
                         </div>
-                                        
-                                        <div style={{ display: 'grid', gap: '16px' }}>
-                                            <div>
-                                                <label style={{ 
-                                                    display: 'block', 
-                                                    marginBottom: '8px', 
-                                                    fontSize: '1rem',
-                                                    fontWeight: '700',
-                                                    color: '#1e293b'
-                                                }}>
-                                                    Şifrelenmiş Kod
-                                                </label>
-                                                <div style={{
-                                                    background: 'linear-gradient(135deg, #fffbeb, #fef3c7)',
-                                                    border: '2px solid #f59e0b',
-                                                    padding: '12px',
-                                                    borderRadius: '12px',
-                                                    fontFamily: "'JetBrains Mono', 'Monaco', monospace",
-                                                    fontSize: '13px',
-                                                    wordBreak: 'break-all',
-                                                    color: '#92400e',
-                                                    lineHeight: '1.4',
-                                                    boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.05)'
-                                                }}>
-                                                    {sms.encryptedValue}
+                    </div>
+                    <div className="card-body">
+                        {error && (
+                            <div className="result-alert error">
+                                <div className="alert-icon">
+                                    <i className="bi bi-x-circle-fill"></i>
+                                </div>
+                                <div className="alert-content">
+                                    <strong>Hata Oluştu</strong>
+                                    <p>{error}</p>
                                 </div>
                             </div>
-                                            
-                                                                        <div style={{ 
-                                textAlign: 'center', 
-                                fontSize: '1.2rem',
-                                color: '#94a3b8',
-                                fontWeight: '600',
-                                margin: '8px 0'
-                            }}>
-                                ↓
+                        )}
+                        
+                        {result && (
+                            <div className="result-alert success">
+                                <div className="alert-icon">
+                                    <i className="bi bi-check-circle-fill"></i>
+                                </div>
+                                <div className="alert-content">
+                                    <strong>Şifre Çözüldü!</strong>
+                                    <div className="result-box">
+                                        <pre>{JSON.stringify(result, null, 2)}</pre>
+                                    </div>
+                                </div>
                             </div>
-                                            
-                                            <div>
-                                                <label style={{ 
-                                                    display: 'block', 
-                                                    marginBottom: '8px', 
-                                                    fontSize: '1rem',
-                                                    fontWeight: '700',
-                                                    color: '#1e293b'
-                                                }}>
-                                                    Çözülmüş Kod
-                                                </label>
-                                                <div style={{
-                                                    background: result?.status === 'success' 
-                                                        ? 'linear-gradient(135deg, #f0fdf4, #dcfce7)' 
-                                                        : result?.status === 'error' 
-                                                            ? 'linear-gradient(135deg, #fef2f2, #fee2e2)' 
-                                                            : 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
-                                                    border: `2px solid ${result?.status === 'success' 
-                                                        ? '#22c55e' 
-                                                        : result?.status === 'error' 
-                                                            ? '#ef4444' 
-                                                            : '#cbd5e1'}`,
-                                                    padding: '12px',
-                                                    borderRadius: '12px',
-                                                    fontFamily: "'JetBrains Mono', 'Monaco', monospace",
-                                                    fontSize: '13px',
-                                                    minHeight: '60px',
-                                                    color: result?.status === 'success' 
-                                                        ? '#14532d' 
-                                                        : result?.status === 'error' 
-                                                            ? '#991b1b' 
-                                                            : '#64748b',
-                                                    lineHeight: '1.4',
-                                                    boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.05)',
-                                                    display: 'flex',
-                                                    alignItems: 'center'
-                                                }}>
-                                                    {result ? (
-                                                        result.status === 'success' ? (
-                                                            <pre style={{ 
-                                                                margin: 0, 
-                                                                whiteSpace: 'pre-wrap',
-                                                                fontFamily: 'inherit',
-                                                                fontSize: 'inherit'
-                                                            }}>
-                                                                {JSON.stringify(result.data, null, 2)}
-                                                            </pre>
-                                                        ) : (
-                                                            <div style={{ 
-                                                                fontStyle: 'italic'
-                                                            }}>
-                                                                Hata: {result.error}
-                                                            </div>
-                                                        )
-                                                    ) : (
-                                                        <div style={{ 
-                                                            fontStyle: 'italic',
-                                                            color: '#94a3b8'
-                                                        }}>
-                                                            Çözülüyor...
+                        )}
+
+                        {!error && !result && (
+                            <div className="empty-state">
+                                <i className="bi bi-file-text"></i>
+                                <p>Şifre çözme sonuçları burada görünecek</p>
                             </div>
                         )}
                     </div>
                 </div>
             </div>
-                                    </div>
-                                )
-                            })}
-                        </div>
-                    )}
+
+            {/* Activity Logs */}
+            <div className="logs-card">
+                <div className="card-header">
+                    <div className="card-title">
+                        <i className="bi bi-list-ul text-cyan-500"></i>
+                        <span>İşlem Detayları</span>
+                    </div>
+                    <div className="logs-count">
+                        {apiLogs.length} işlem
+                    </div>
                 </div>
-            )}
-            
-            <style jsx>{`
-                @keyframes float {
-                    0%, 100% { transform: translateY(0px); }
-                    50% { transform: translateY(-10px); }
-                }
-                
-                @keyframes bounce {
-                    0%, 20%, 53%, 80%, 100% { transform: translateY(0); }
-                    40%, 43% { transform: translateY(-20px); }
-                    70% { transform: translateY(-10px); }
-                    90% { transform: translateY(-4px); }
-                }
-                
-                @keyframes wiggle {
-                    0%, 100% { transform: rotate(0deg); }
-                    25% { transform: rotate(-5deg); }
-                    75% { transform: rotate(5deg); }
-                }
-                
-                @keyframes spin {
-                    0% { transform: rotate(0deg); }
-                    100% { transform: rotate(360deg); }
-                }
-                
-                @keyframes pulse {
-                    0%, 100% { opacity: 1; }
-                    50% { opacity: 0.5; }
-                }
-                
-                @keyframes shake {
-                    0%, 100% { transform: translateX(0); }
-                    25% { transform: translateX(-5px); }
-                    75% { transform: translateX(5px); }
-                }
-                
-                /* Responsive Design */
-                @media (max-width: 768px) {
-                    /* Mobile responsive styles here */
-                }
-            `}</style>
+                <div className="card-body">
+                    <div className="logs-container">
+                        {apiLogs.map((log, index) => (
+                            <div 
+                                key={index} 
+                                className={`log-item ${log.type}`}
+                            >
+                                <div className="log-time">
+                                    {log.timestamp}
+                                </div>
+                                <div className="log-content">
+                                    <div className="log-icon">
+                                        <i className={`bi ${
+                                            log.type === 'error' ? 'bi-x-circle' :
+                                            log.type === 'success' ? 'bi-check-circle' :
+                                            'bi-info-circle'
+                                        }`}></i>
+                                    </div>
+                                    <span>{log.message}</span>
+                                </div>
+                            </div>
+                        ))}
+                        {apiLogs.length === 0 && (
+                            <div className="empty-logs">
+                                <i className="bi bi-journal-text"></i>
+                                <p>Henüz işlem yapılmadı</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {/* Help Section */}
+            <div className="help-card">
+                <div className="help-header">
+                    <i className="bi bi-question-circle text-orange-500"></i>
+                    <span>Nasıl Kullanılır?</span>
+                </div>
+                <div className="help-content">
+                    <div className="help-steps">
+                        <div className="help-step">
+                            <span className="step-number">1</span>
+                            <span>Token'in aktif olduğundan emin olun</span>
+                        </div>
+                        <div className="help-step">
+                            <span className="step-number">2</span>
+                            <span>Şifrelenmiş değeri sol tarafa yapıştırın</span>
+                        </div>
+                        <div className="help-step">
+                            <span className="step-number">3</span>
+                            <span>"Şifreyi Çöz" butonuna tıklayın</span>
+                        </div>
+                        <div className="help-step">
+                            <span className="step-number">4</span>
+                            <span>Çözülen değeri sağ taraftan kopyalayın</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     )
 }
