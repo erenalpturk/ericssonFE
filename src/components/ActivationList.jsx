@@ -32,10 +32,17 @@ const ActivationList = () => {
   const [otherStatusValues, setOtherStatusValues] = useState({});
   const [openStatusMenu, setOpenStatusMenu] = useState({});
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+  const [activationStatuses, setActivationStatuses] = useState({});
 
   useEffect(() => {
     fetchActivations();
   }, []);
+
+  useEffect(() => {
+    if (activations.length > 0) {
+      fetchActivationStatusesForCurrentPage();
+    }
+  }, [activations, page, rowsPerPage, activeFilters, searchText]);
 
   const showSuccess = (message) => {
     setSuccessMessage(message);
@@ -67,18 +74,105 @@ const ActivationList = () => {
     }
   };
 
+  // Aktivasyon tipine göre veritabanı seç
+  const getDatabaseForActivationType = (activationType) => {
+    if (activationType === 'RegPost' || activationType === 'RegPre') {
+      return 'OMNI2';
+    } else if (activationType === 'FonkPost' || activationType === 'FonkPre') {
+      return 'OMNI4';
+    }
+    // Diğer tipler için default
+    return 'OMNI4';
+  };
+
+  const fetchActivationStatusesForCurrentPage = async () => {
+    try {
+      // Sadece mevcut sayfadaki aktivasyonları al
+      const currentPageData = getPaginatedData();
+      
+      if (currentPageData.length === 0) {
+        return;
+      }
+
+      // Aktivasyon tipine göre gruplayarak API çağrıları yap
+      const groupedByDb = currentPageData.reduce((groups, activation) => {
+        const dbName = getDatabaseForActivationType(activation.activationtype);
+        if (!groups[dbName]) {
+          groups[dbName] = [];
+        }
+        groups[dbName].push(activation);
+        return groups;
+      }, {});
+
+      console.log(`Fetching activation status for page ${page + 1}, ${currentPageData.length} items`);
+      console.log('Grouped by database:', Object.keys(groupedByDb).map(db => `${db}: ${groupedByDb[db].length} items`));
+      console.log('Active filters:', activeFilters);
+      console.log('Search text:', searchText);
+
+      // Her veritabanı grubu için ayrı API çağrısı yap
+      const allResults = {};
+      
+      for (const [dbName, activationsForDb] of Object.entries(groupedByDb)) {
+        const msisdns = activationsForDb.map(activation => activation.msisdn);
+        
+        console.log(`Querying ${dbName} for ${msisdns.length} MSISDNs`);
+
+        const response = await fetch(`${baseUrl}/oracle/activation-status-bulk`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            msisdns: msisdns,
+            dbName: dbName
+          })
+        });
+
+        const bulkData = await response.json();
+        
+        if (bulkData.results) {
+          // Results'ı activationId'ye göre map'le
+          activationsForDb.forEach(activation => {
+            const msisdnStatus = bulkData.results[activation.msisdn];
+            if (msisdnStatus) {
+              allResults[activation.activationid] = {
+                activationId: activation.activationid,
+                msisdn: activation.msisdn,
+                database: dbName,
+                ...msisdnStatus
+              };
+            }
+          });
+        }
+      }
+      
+      // Mevcut state'i güncelle (sadece bu sayfadaki veriler için)
+      setActivationStatuses(prevStatuses => ({
+        ...prevStatuses,
+        ...allResults
+      }));
+      
+    } catch (error) {
+      console.error('Aktiflik durumları alınırken hata:', error);
+    }
+  };
+
   const handleFilterApply = (filterType, value) => {
     setActiveFilters(prev => ({
       ...prev,
       [filterType]: value || null
     }));
     setPage(0); // Filtre değiştiğinde ilk sayfaya dön
+    // Aktiflik statuslarını temizle, yeni filtreli veriler için tekrar sorgulanacak
+    setActivationStatuses({});
   };
 
   const clearFilters = () => {
     setActiveFilters({});
     setSearchText('');
     setPage(0);
+    // Filtreler temizlendiğinde aktiflik statuslarını da temizle
+    setActivationStatuses({});
   };
 
   const filterData = (data) => {
@@ -333,7 +427,11 @@ const ActivationList = () => {
                   type="text"
                   placeholder="Ara..."
                   value={searchText}
-                  onChange={(e) => setSearchText(e.target.value)}
+                  onChange={(e) => {
+                    setSearchText(e.target.value);
+                    setPage(0); // Arama değiştiğinde ilk sayfaya dön
+                    setActivationStatuses({}); // Aktiflik statuslarını temizle
+                  }}
                 />
               </div>
               <Select
@@ -512,6 +610,9 @@ const ActivationList = () => {
                       </span>
                     )}
                   </th>
+                  <th>
+                    Aktiflik/Pasiflik
+                  </th>
                   <th onClick={() => handleSort('note')} style={{ cursor: 'pointer' }}>
                     Not
                     {sortConfig.key === 'note' && (
@@ -682,6 +783,67 @@ const ActivationList = () => {
                             } />
                           </MenuItem>
                         </Select>
+                      </div>
+                    </td>
+                    <td>
+                      <div className="flex items-center justify-center">
+                        {(() => {
+                          const activationStatus = activationStatuses[row.activationid];
+                          if (!activationStatus) {
+                            return <span className="text-gray-400 text-sm">Yükleniyor...</span>;
+                          }
+                          
+                          const dbName = activationStatus.database || getDatabaseForActivationType(row.activationtype);
+                          const tooltipTitle = `${activationStatus.status} (${dbName})`;
+                          
+                          switch(activationStatus.statusType) {
+                            case 'active':
+                              return (
+                                <Tooltip title={tooltipTitle} arrow>
+                                  <div className="flex items-center gap-1 cursor-help">
+                                    <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                                    <span className="text-green-600 font-medium text-sm">{activationStatus.status}</span>
+                                  </div>
+                                </Tooltip>
+                              );
+                            case 'passive':
+                              return (
+                                <Tooltip title={tooltipTitle} arrow>
+                                  <div className="flex items-center gap-1 cursor-help">
+                                    <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+                                    <span className="text-red-600 font-medium text-sm">{activationStatus.status}</span>
+                                  </div>
+                                </Tooltip>
+                              );
+                            case 'no-data':
+                              return (
+                                <Tooltip title={`Veri Yok (${dbName})`} arrow>
+                                  <div className="flex items-center gap-1 cursor-help">
+                                    <span className="w-2 h-2 bg-gray-400 rounded-full"></span>
+                                    <span className="text-gray-500 text-sm">Veri Yok</span>
+                                  </div>
+                                </Tooltip>
+                              );
+                            case 'error':
+                              return (
+                                <Tooltip title={`Hata (${dbName})`} arrow>
+                                  <div className="flex items-center gap-1 cursor-help">
+                                    <span className="w-2 h-2 bg-orange-500 rounded-full"></span>
+                                    <span className="text-orange-600 text-sm">Hata</span>
+                                  </div>
+                                </Tooltip>
+                              );
+                            default:
+                              return (
+                                <Tooltip title={tooltipTitle} arrow>
+                                  <div className="flex items-center gap-1 cursor-help">
+                                    <span className="w-2 h-2 bg-yellow-500 rounded-full"></span>
+                                    <span className="text-yellow-600 text-sm">{activationStatus.status}</span>
+                                  </div>
+                                </Tooltip>
+                              );
+                          }
+                        })()}
                       </div>
                     </td>
                     <td style={{ padding: '0px' }}>
