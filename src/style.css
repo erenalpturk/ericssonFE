@@ -371,7 +371,7 @@ body {
 
 /* Modern Page Layout */
 .modern-page {
-  padding: 2rem;
+  padding: 1rem;
   min-height: 100vh;
   max-width: 1400px;
   margin: 0 auto;
@@ -3420,7 +3420,7 @@ body {
   backdrop-filter: blur(25px);
   border-radius: 1.5rem;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.2);
-  max-width: 600px;
+  max-width: 950px;
   width: 90vw;
   max-height: 85vh;
   overflow: hidden;
@@ -3496,7 +3496,6 @@ body {
 }
 
 .modal-body {
-  padding: 2rem;
   overflow-y: auto;
   max-height: calc(85vh - 140px);
 }

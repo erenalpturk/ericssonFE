@@ -1,5 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import IccidManagement from './IccidManagement';
+import {
+  MenuItem,
+  Select,
+  IconButton,
+  TextField,
+  Tooltip,
+  Snackbar,
+  ListItemText
+} from '@mui/material';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CancelIcon from '@mui/icons-material/Cancel';
+import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
+import EditIcon from '@mui/icons-material/Edit';
+import SaveIcon from '@mui/icons-material/Save';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 
 const IccidList = () => {
   const [iccids, setIccids] = useState([]);
@@ -14,6 +30,11 @@ const IccidList = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const statusOptions = ['available', 'reserved', 'sold'];
   const { baseUrl, user } = useAuth();
+  const [showIccidManagement, setShowIccidManagement] = useState(false);
+  const [activeFilters, setActiveFilters] = useState({});
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+  const [copySuccess, setCopySuccess] = useState(false);
+  const [tab, setTab] = useState('iccid-list');
 
   useEffect(() => {
     fetchIccids();
@@ -35,12 +56,12 @@ const IccidList = () => {
       const endpoint = user.role === 'admin' || user.role === 'support'
         ? `${baseUrl}/iccid/getAll`
         : `${baseUrl}/iccid/getAll/${user.sicil_no}`;
-      
+
       const response = await fetch(endpoint, {
         method: 'POST'
       });
       const data = await response.json();
-      
+
       // Eğer admin değilse, data.data içinden ICCID'leri al
       setIccids(user.role === 'admin' || user.role === 'support' ? data : data.data);
     } catch (error) {
@@ -97,7 +118,7 @@ const IccidList = () => {
   };
 
   const handleSelectIccid = (iccid) => {
-    setSelectedIccids(prev => 
+    setSelectedIccids(prev =>
       prev.includes(iccid)
         ? prev.filter(id => id !== iccid)
         : [...prev, iccid]
@@ -123,7 +144,7 @@ const IccidList = () => {
     return data.filter(item => {
       if (searchText) {
         const searchLower = searchText.toLowerCase();
-        const matchesSearch = Object.values(item).some(value => 
+        const matchesSearch = Object.values(item).some(value =>
           String(value).toLowerCase().includes(searchLower)
         );
         if (!matchesSearch) return false;
@@ -138,7 +159,7 @@ const IccidList = () => {
       return true;
     });
   };
-console.log(iccids)
+
   const handleStatusChange = async (iccidid, newStatus) => {
     try {
       setLoading(true);
@@ -150,7 +171,7 @@ console.log(iccids)
         body: JSON.stringify({ iccidid, used_by: user.sicil_no, status: newStatus }),
       });
       const data = await response.json();
-      
+
       if (response.ok) {
         showSuccess('Statü başarıyla güncellendi.');
         fetchIccids();
@@ -165,7 +186,7 @@ console.log(iccids)
   };
 
   const getStatusColor = (status) => {
-    switch(status) {
+    switch (status) {
       case 'available': return 'text-green-500';
       case 'reserved': return 'text-yellow-500';
       case 'sold': return 'text-red-500';
@@ -173,15 +194,45 @@ console.log(iccids)
     }
   };
 
-  const getFilteredData = () => {
-    if (!searchText) return iccids;
-    
-    return iccids.filter(item => {
-      const searchString = searchText.toLowerCase();
-      return item.iccid?.toLowerCase().includes(searchString) ||
-             item.type?.toLowerCase().includes(searchString) ||
-             item.stock?.toLowerCase().includes(searchString);
+  const handleFilterApply = (filterType, value) => {
+    setActiveFilters(prev => ({
+      ...prev,
+      [filterType]: value || null
+    }));
+    setPage(0);
+  };
+
+  const clearFilters = () => {
+    setActiveFilters({});
+    setSearchText('');
+    setPage(0);
+  };
+
+  const handleSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const getSortedData = (data) => {
+    if (!sortConfig.key) return data;
+
+    return [...data].sort((a, b) => {
+      if (a[sortConfig.key] < b[sortConfig.key]) {
+        return sortConfig.direction === 'asc' ? -1 : 1;
+      }
+      if (a[sortConfig.key] > b[sortConfig.key]) {
+        return sortConfig.direction === 'asc' ? 1 : -1;
+      }
+      return 0;
     });
+  };
+
+  const getFilteredData = () => {
+    const filtered = filterData(iccids);
+    return getSortedData(filtered);
   };
 
   const getPaginatedData = () => {
@@ -207,7 +258,7 @@ console.log(iccids)
           </div>
         </div>
       )}
-      
+
       {errorMessage && (
         <div className="fixed top-4 right-4 z-50">
           <div className="result-alert error">
@@ -229,9 +280,15 @@ console.log(iccids)
             <i className="bi bi-credit-card-2-front text-emerald-600"></i>
           </div>
           <div className="header-text">
-            <h1>ICCID Listesi</h1>
-            <p>ICCID verilerini yönetin</p>
+            <h1>ICCIDlerim</h1>
+            <p>Kullandığınız veya rezerve ettiğiniz ICCIDleri yönetin</p>
           </div>
+          {user.role !== 'tester' && (
+            <button className="action-btn primary" onClick={() => setShowIccidManagement(true)}>
+              <i className="bi bi-plus-circle"></i>
+              ICCID Ekle
+            </button>
+          )}
         </div>
         <div className="stats-badge">
           <i className="bi bi-list-ol"></i>
@@ -239,11 +296,28 @@ console.log(iccids)
         </div>
       </div>
 
+      {/* ICCID Management Modal */}
+      {showIccidManagement && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h2>ICCID Yönetimi</h2>
+              <button className="modal-close" onClick={() => setShowIccidManagement(false)}>
+                <i className="bi bi-x"></i>
+              </button>
+            </div>
+            <div className="modal-body">
+              <IccidManagement onClose={() => setShowIccidManagement(false)} />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Table Section */}
       <div className="output-card">
-        <div className="card-header">
+        {/* <div className="card-header">
           <div className="card-actions">
-            <button 
+            <button
               className="action-btn primary"
               onClick={() => {
                 navigator.clipboard.writeText(JSON.stringify(iccids, null, 2));
@@ -254,18 +328,155 @@ console.log(iccids)
               Verileri Kopyala
             </button>
           </div>
-        </div>
+        </div> */}
         <div className="card-body">
           {/* Search and Controls */}
           <div className="table-controls">
-            <div className="search-box">
-              <i className="bi bi-search"></i>
-              <input
-                type="text"
-                placeholder="Ara..."
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-              />
+            <div className="flex items-center gap-2">
+              <div className="search-box">
+                <i className="bi bi-search"></i>
+                <input
+                  type="text"
+                  placeholder="Ara..."
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                />
+              </div>
+              <Select
+                size="small"
+                value={activeFilters.stock || ''}
+                onChange={(e) => handleFilterApply('stock', e.target.value)}
+                displayEmpty
+                sx={{
+                  minWidth: 90,
+                  fontSize: '0.95rem',
+                  '& .MuiSelect-select': {
+                    fontSize: '0.95rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                  },
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'rgba(0, 0, 0, 0.1)',
+                  },
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'rgba(0, 0, 0, 0.2)',
+                  },
+                }}
+                startAdornment={
+                  <i className="bi bi-funnel text-gray-500 mr-1"></i>
+                }
+              >
+                <MenuItem value="">
+                  <span className="text-gray-500">Durum</span>
+                </MenuItem>
+                <MenuItem value="available">
+                  <div className="flex items-center gap-2">
+                    <CheckCircleIcon fontSize="small" color="success" />
+                    <span>Müsait</span>
+                  </div>
+                </MenuItem>
+                <MenuItem value="reserved">
+                  <div className="flex items-center gap-2">
+                    <CancelIcon fontSize="small" color="warning" />
+                    <span>Rezerve</span>
+                  </div>
+                </MenuItem>
+                <MenuItem value="sold">
+                  <div className="flex items-center gap-2">
+                    <CancelIcon fontSize="small" color="error" />
+                    <span>Satıldı</span>
+                  </div>
+                </MenuItem>
+              </Select>
+              {user.role !== 'tester' && (
+                <Select
+                  size="small"
+                  value={activeFilters.used_by || ''}
+                  onChange={(e) => handleFilterApply('used_by', e.target.value)}
+                  displayEmpty
+                  sx={{
+                    minWidth: 90,
+                    fontSize: '0.95rem',
+                    '& .MuiSelect-select': {
+                      py: 0.5,
+                      px: 1,
+                      fontSize: '0.95rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                    },
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'rgba(0, 0, 0, 0.1)',
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'rgba(0, 0, 0, 0.2)',
+                    },
+                  }}
+                  startAdornment={
+                    <i className="bi bi-person text-gray-500 mr-1"></i>
+                  }
+                >
+                  <MenuItem value="">
+                    <span className="text-gray-500">Kullanıcı</span>
+                  </MenuItem>
+                  {Array.from(new Set(iccids.map(a => a.used_by))).map(user => (
+                    <MenuItem key={user} value={user}>
+                      <span className="truncate">{user}</span>
+                    </MenuItem>
+                  ))}
+                </Select>
+              )}
+              <Select
+                size="small"
+                value={activeFilters.type || ''}
+                onChange={(e) => handleFilterApply('type', e.target.value)}
+                displayEmpty
+                sx={{
+                  minWidth: 90,
+                  fontSize: '0.95rem',
+                  '& .MuiSelect-select': {
+                    py: 0.5,
+                    px: 1,
+                    fontSize: '0.95rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                  },
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'rgba(0, 0, 0, 0.1)',
+                  },
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'rgba(0, 0, 0, 0.2)',
+                  },
+                }}
+                startAdornment={
+                  <i className="bi bi-credit-card text-gray-500 mr-1"></i>
+                }
+              >
+                <MenuItem value="">
+                  <span className="text-gray-500">Tip</span>
+                </MenuItem>
+                {Array.from(new Set(iccids.map(a => a.type))).map(type => (
+                  <MenuItem key={type} value={type}>
+                    <span className="truncate">{type}</span>
+                  </MenuItem>
+                ))}
+              </Select>
+              {(activeFilters.stock || activeFilters.type || (user.role !== 'tester' && activeFilters.used_by) || searchText) && (
+                <IconButton
+                  size="small"
+                  onClick={clearFilters}
+                  sx={{
+                    color: 'rgba(0, 0, 0, 0.5)',
+                    '&:hover': {
+                      color: 'rgba(0, 0, 0, 0.7)',
+                    },
+                  }}
+                >
+                  <i className="bi bi-x-circle"></i>
+                </IconButton>
+              )}
             </div>
             {selectedIccids.length > 0 && (
               <button
@@ -284,19 +495,70 @@ console.log(iccids)
             <table className="modern-table">
               <thead>
                 <tr>
-                  <th>
-                    <input
-                      type="checkbox"
-                      checked={selectedIccids.length > 0 && getFilteredData() && selectedIccids.length === getFilteredData().length}
-                      onChange={handleSelectAllIccids}
-                    />
+                  {user.role !== 'tester' && (
+                    <th>
+                      <input
+                        type="checkbox"
+                        checked={selectedIccids.length > 0 && getFilteredData() && selectedIccids.length === getFilteredData().length}
+                        onChange={handleSelectAllIccids}
+                      />
+                    </th>
+                  )}
+                  <th onClick={() => handleSort('iccid')} style={{ cursor: 'pointer' }}>
+                    ICCID
+                    {sortConfig.key === 'iccid' && (
+                      <span className="ml-1">
+                        {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                      </span>
+                    )}
                   </th>
-                  <th>ICCID</th>
-                  <th>Durum</th>
-                  <th>Tip</th>
-                  <th>Oluşturulma</th>
-                  <th>Güncellenme</th>
-                  <th>Kullanıcı</th>
+                  <th onClick={() => handleSort('stock')} style={{ cursor: 'pointer' }}>
+                    Durum
+                    {sortConfig.key === 'stock' && (
+                      <span className="ml-1">
+                        {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                      </span>
+                    )}
+                  </th>
+                  <th onClick={() => handleSort('type')} style={{ cursor: 'pointer' }}>
+                    Tip
+                    {sortConfig.key === 'type' && (
+                      <span className="ml-1">
+                        {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                      </span>
+                    )}
+                  </th>
+                  <th onClick={() => handleSort('cdate')} style={{ cursor: 'pointer' }}>
+                    Oluşturulma
+                    {sortConfig.key === 'cdate' && (
+                      <span className="ml-1">
+                        {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                      </span>
+                    )}
+                  </th>
+                  <th onClick={() => handleSort('updated_at')} style={{ cursor: 'pointer' }}>
+                    Güncellenme
+                    {sortConfig.key === 'updated_at' && (
+                      <span className="ml-1">
+                        {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                      </span>
+                    )}
+                  </th>
+                  <th onClick={() => handleSort('used_by')} style={{ cursor: 'pointer' }}>
+                    Kullanan
+                    {sortConfig.key === 'used_by' && (
+                      <span className="ml-1">
+                        {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                      </span>
+                    )}
+                  </th>
+                  {user.role !== 'tester' && (
+                    <th>
+                      <span className="text-sm font-medium">
+                        Ekleyen
+                      </span>
+                    </th>
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -326,14 +588,46 @@ console.log(iccids)
                       <span className="type-badge">{row.type}</span>
                     </td>
                     <td className="text-gray-600">
-                      {new Date(row.cdate).toLocaleString('tr-TR')}
+                      <span className="text-sm font-medium">
+                          {new Date(row.cdate).toLocaleString('tr-TR', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </span>
+                        <br />
+                        <span className="text-xs text-gray-500">
+                          {new Date(row.cdate).toLocaleString('tr-TR', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric'
+                          })}
+                        </span>
                     </td>
                     <td className="text-gray-600">
-                      {new Date(row.updated_at).toLocaleString('tr-TR')}
+                      <span className="text-sm font-medium">
+                          {new Date(row.updated_at).toLocaleString('tr-TR', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </span>
+                        <br />
+                        <span className="text-xs text-gray-500">
+                          {new Date(row.updated_at).toLocaleString('tr-TR', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric'
+                          })}
+                        </span>
                     </td>
+                    
                     <td className="text-gray-600">
-                      {row.used_by}
+                      {row.used_by_name}
                     </td>
+                    {user.role !== 'tester' && (
+                      <td className="text-gray-600">
+                        {row.added_by_name}
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -374,6 +668,14 @@ console.log(iccids)
           </div>
         </div>
       </div>
+
+      <Snackbar
+        open={copySuccess}
+        autoHideDuration={1500}
+        onClose={() => setCopySuccess(false)}
+        message="Kopyalandı!"
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      />
     </div>
   );
 };
