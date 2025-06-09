@@ -564,13 +564,15 @@ const IccidList = () => {
               <tbody>
                 {getPaginatedData().map((row) => (
                   <tr key={row.iccidid}>
-                    <td>
-                      <input
-                        type="checkbox"
+                    {user.role !== 'tester' && (
+                      <td>
+                        <input
+                          type="checkbox"
                         checked={selectedIccids.includes(row.iccid)}
                         onChange={() => handleSelectIccid(row.iccid)}
                       />
-                    </td>
+                      </td>
+                    )}
                     <td className="font-mono text-sm">{row.iccid}</td>
                     <td>
                       <select
