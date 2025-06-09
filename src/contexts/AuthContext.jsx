@@ -7,8 +7,8 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [needsPasswordChange, setNeedsPasswordChange] = useState(false);
-     //const baseUrl = 'https://iccid.vercel.app';
-    const baseUrl = 'http://localhost:5432';
+     const baseUrl = 'https://iccid.vercel.app';
+    // const baseUrl = 'http://localhost:5432';
     useEffect(() => {
         // Local storage'dan kullanıcı bilgisini al
         const storedUser = localStorage.getItem('user');
