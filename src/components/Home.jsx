@@ -27,7 +27,7 @@ function Home() {
         {
             path: '/iccid-list',
             icon: 'bi-credit-card-2-front',
-            title: 'ICCID List',
+            title: 'ICCID',
             description: 'ICCID verilerini görüntüle ve yönet',
             color: 'text-emerald-500',
             bgGradient: 'from-emerald-500 to-teal-600',
@@ -52,7 +52,8 @@ function Home() {
             color: 'text-cyan-500',
             bgGradient: 'from-cyan-500 to-blue-600',
             category: 'Otomasyon',
-            roles: ['admin', 'support', 'tester']
+            roles: ['admin', 'support', 'tester'],
+            disabled: true
         },
 
         {

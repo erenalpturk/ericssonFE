@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import IccidList from './IccidList';
 import ActivationList from './ActivationList';
 
-const IccidManagement = () => {
+const IccidManagement = ({ onClose }) => {
   const [activeTab, setActiveTab] = useState(0);
   const [iccidText, setIccidText] = useState('');
   const [selectedType, setSelectedType] = useState('fonkpos');
@@ -53,6 +53,11 @@ const IccidManagement = () => {
       setIccidText('');
       setCustomType('');
       setSelectedType('fonkpos');
+      if (onClose) {
+        setTimeout(() => {
+          onClose();
+        }, 1500);
+      }
     } catch (error) {
       showError('ICCID\'ler eklenirken bir hata oluştu.');
     } finally {
@@ -99,18 +104,6 @@ const IccidManagement = () => {
         </div>
       )}
 
-      {/* Header Section */}
-      <div className="page-header">
-        <div className="header-content">
-          <div className="header-icon">
-            <i className="bi bi-credit-card-2-front text-emerald-600"></i>
-          </div>
-          <div className="header-text">
-            <h1>ICCID Management</h1>
-            <p>ICCID ve aktivasyon verilerini yönetin</p>
-          </div>
-        </div>
-      </div>
 
       {/* Add ICCID Section */}
       <div className="input-card">
@@ -199,7 +192,7 @@ const IccidManagement = () => {
       </div>
 
       {/* Tabs and Table Section */}
-      <div className="output-card">
+      {/* <div className="output-card">
         <div className="card-header">
           <div className="tabs-container">
             <button
@@ -221,10 +214,10 @@ const IccidManagement = () => {
         <div className="card-body">
           {activeTab === 0 ? <IccidList /> : <ActivationList />}
         </div>
-      </div>
+      </div> */}
 
       {/* Help Section */}
-      <div className="help-card">
+      {/* <div className="help-card">
         <div className="help-header">
           <i className="bi bi-question-circle text-orange-500"></i>
           <span>Nasıl Kullanılır?</span>
@@ -256,7 +249,7 @@ const IccidManagement = () => {
             <p>Durum renkleri: Yeşil (Müsait), Sarı (Rezerve), Kırmızı (Satıldı). Arama ile tabloda filtreleme yapabilirsiniz.</p>
           </div>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };

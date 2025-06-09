@@ -46,17 +46,17 @@ function Sidebar({ isCollapsed, onToggle }) {
         {
             path: '/iccid-list',
             icon: 'bi-credit-card-2-front',
-            label: 'ICCID List',
+            label: 'ICCID',
             color: 'text-emerald-500',
             roles: ['admin', 'support', 'tester']
         },
-        {
-            path: '/iccid-management',
-            icon: 'bi-gear-wide-connected',
-            label: 'ICCID Management',
-            color: 'text-emerald-500',
-            roles: ['admin', 'support']
-        },
+        // {
+        //     path: '/iccid-management',
+        //     icon: 'bi-gear-wide-connected',
+        //     label: 'Yeni ICCID Ekle',
+        //     color: 'text-emerald-500',
+        //     roles: ['admin', 'support']
+        // },
         {
             path: '/sms-decrypt',
             icon: 'bi-shield-lock-fill',
@@ -76,7 +76,8 @@ function Sidebar({ isCollapsed, onToggle }) {
             icon: 'bi-truck',
             label: 'Kurye Tetikleme',
             color: 'text-cyan-500',
-            roles: ['admin', 'support', 'tester']
+            roles: ['admin', 'support', 'tester'],
+            disabled: true
         },
 
     ]
