@@ -59,8 +59,11 @@ function SmsDecrypt() {
     const fetchEncryptedSms = async (dbName) => {
         try {
             setLoading(true)
-            const response = await fetch(`${baseUrl}/oracle/encrypted-sms/${dbName}`)
-            
+            const response = await fetch(`${baseUrl}/oracle/encrypted-sms/${dbName}`, {
+                timeout: 30000, // 30 second timeout
+                signal: AbortSignal.timeout(30000)
+            })
+
             if (!response.ok) {
                 throw new Error('Şifrelenmiş SMS verileri alınamadı')
             }
@@ -107,9 +110,9 @@ function SmsDecrypt() {
                 results[sms.msisdn] = {
                     status: 'error',
                     error: error.message
-                }
             }
         }
+    }
 
         setDecryptedResults(results)
     }
@@ -356,7 +359,7 @@ function SmsDecrypt() {
                                     e.target.style.boxShadow = '0 10px 30px rgba(245, 158, 11, 0.2)'
                                 }
                             }}
-                        >
+                            >
                             <div style={{ 
                                 fontSize: '64px', 
                                 marginBottom: '24px',
@@ -386,9 +389,9 @@ function SmsDecrypt() {
                             fontWeight: '500'
                         }}>
                             Token alınırken bekleyin...
-                        </div>
-                    )}
-                </div>
+                            </div>
+                        )}
+                                    </div>
             ) : (
                 /* Results Section */
                 <div style={{ 
@@ -416,9 +419,9 @@ function SmsDecrypt() {
                             {selectedEnvironment === 'functional' ? 'Fonksiyonel (OMNI4)' : 'Regresyon (OMNI2)'}
                         </h2>
                         <div style={{ display: 'flex', gap: '12px' }}>
-                            <button 
+                                <button 
                                 onClick={refreshData}
-                                disabled={loading}
+                                    disabled={loading}
                                 style={{
                                     padding: '12px 24px',
                                     background: loading 
@@ -450,7 +453,7 @@ function SmsDecrypt() {
                                 }}
                             >
                                 {loading ? 'Yenileniyor...' : 'Yenile'}
-                            </button>
+                                </button>
                             <button 
                                 onClick={() => {
                                     setSelectedEnvironment(null)
@@ -503,7 +506,7 @@ function SmsDecrypt() {
                             animation: 'spin 1s linear infinite',
                             margin: '0 auto 24px auto'
                         }}>
-                        </div>
+                </div>
                             <h3 style={{ 
                                 margin: '0 0 16px 0',
                                 fontSize: '1.75rem',
@@ -590,7 +593,7 @@ function SmsDecrypt() {
                                                 </span>
                                             </div>
                                             {result?.status === 'success' && (
-                                                <button 
+                                <button 
                                                     onClick={() => copyResult(JSON.stringify(result.data, null, 2))}
                                                     style={{
                                                         padding: '8px 16px',
@@ -616,10 +619,10 @@ function SmsDecrypt() {
                                                         e.target.style.boxShadow = '0 4px 16px rgba(59, 130, 246, 0.3)'
                                                     }}
                                                 >
-                                                    Kopyala
-                                                </button>
-                                            )}
-                                        </div>
+                                    Kopyala
+                                </button>
+                            )}
+                        </div>
                                         
                                         <div style={{ display: 'grid', gap: '16px' }}>
                                             <div>
@@ -645,8 +648,8 @@ function SmsDecrypt() {
                                                     boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.05)'
                                                 }}>
                                                     {sms.encryptedValue}
-                                                </div>
-                                            </div>
+                                </div>
+                            </div>
                                             
                                                                         <div style={{ 
                                 textAlign: 'center', 
@@ -717,11 +720,11 @@ function SmsDecrypt() {
                                                             color: '#94a3b8'
                                                         }}>
                                                             Çözülüyor...
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
                                     </div>
                                 )
                             })}

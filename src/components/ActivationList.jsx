@@ -125,7 +125,9 @@ const ActivationList = () => {
           body: JSON.stringify({
             msisdns: msisdns,
             dbName: dbName
-          })
+          }),
+          timeout: 60000, // 60 second timeout
+          signal: AbortSignal.timeout(60000)
         });
 
         const bulkData = await response.json();
