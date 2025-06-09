@@ -54,8 +54,6 @@ const ActivationList = () => {
     setTimeout(() => setErrorMessage(''), 3000);
   };
 
-  
-
   const fetchActivations = async () => {
     try {
       setLoading(true);
