@@ -659,14 +659,22 @@ export default function WorkflowBuilder() {
     console.log('[WorkflowBuilder] Global variables:', globalVariables)
 
     try {
-      const processedUrl = replaceVariables(step.url, variables)
-      const processedBody = replaceVariables(step.body, variables)
+      // Runtime variables'ları da ekle
+      const allVariables = {
+        ...variables,
+        ...globalVariables,
+        user: localStorage.getItem('currentUserSicilNo'), // user değişkenini sicil_no ile değiştirdik
+        sicil_no: localStorage.getItem('currentUserSicilNo')
+      }
+
+      const processedUrl = replaceVariables(step.url, allVariables)
+      const processedBody = replaceVariables(step.body, allVariables)
 
       console.log('[WorkflowBuilder] Processed URL:', processedUrl)
 
       const processedHeaders = {}
       Object.entries(step.headers || {}).forEach(([key, value]) => {
-        processedHeaders[key] = replaceVariables(value, variables)
+        processedHeaders[key] = replaceVariables(value, allVariables)
       })
 
       // Content-Type yoksa default olarak application/json ekle
@@ -1460,17 +1468,30 @@ export default function WorkflowBuilder() {
       // Doğum tarihi için birthDateReg veya birthDateFonk'u kontrol et
       const birthDateValue = runtimeVars.birthDateReg?.value || runtimeVars.birthDateFonk?.value || ''
       
-      // Tarife mapping - prod_ofr_id değerine göre tarife adını belirle
-      const prodOfrId = runtimeVars.prod_ofr_id?.value || ''
+      // Tarife mapping - değişken adına göre tarife adını belirle
       let tarifeValue = ''
-      if (prodOfrId === '400041110') {
-        tarifeValue = 'Ailece 15GB'
-      } else if (prodOfrId === '400079751') {
-        tarifeValue = 'Uygun 10GB'
-      } else if (prodOfrId === '100000071879') {
+      
+      // Önce değişken adlarına göre tarife belirle
+      if (runtimeVars.kral_prod_ofr_id?.value) {
         tarifeValue = 'Kral Tarife'
-      } else if (prodOfrId) {
-        tarifeValue = prodOfrId // Bilinmeyen ID'ler için ID'yi göster
+      } else if (runtimeVars.uygun_prod_ofr_id?.value) {
+        tarifeValue = 'Uygun 10GB'
+      } else if (runtimeVars.prod_ofr_id?.value) {
+        // Geriye uyumluluk için eski prod_ofr_id değişkeni
+        tarifeValue = 'Ailece 15GB'
+      } else {
+        // Diğer _prod_ofr_id ile biten değişkenleri otomatik algıla
+        const prodOfrVariables = Object.keys(runtimeVars).filter(key => 
+          key.endsWith('_prod_ofr_id') && runtimeVars[key]?.value
+        )
+        
+        if (prodOfrVariables.length > 0) {
+          // İlk bulunan değişkenin adından tarife adını çıkar
+          const variableName = prodOfrVariables[0]
+          const tariffeName = variableName.replace('_prod_ofr_id', '')
+          // İlk harfi büyük yap ve "Tarife" ekle
+          tarifeValue = tariffeName.charAt(0).toUpperCase() + tariffeName.slice(1) + ' Tarife'
+        }
       }
 
       // Ortam belirleme - localStorage key'lerine göre
