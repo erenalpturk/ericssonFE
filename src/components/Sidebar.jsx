@@ -1,10 +1,11 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { toast } from 'react-toastify'
 
 function Sidebar({ isCollapsed, onToggle }) {
     const location = useLocation()
     const navigate = useNavigate()
-    const { logout, user } = useAuth()
+    const { logout, user, isWorkflowRunning } = useAuth()
 
     const handleLogout = async () => {
         const result = await logout()
@@ -13,6 +14,17 @@ function Sidebar({ isCollapsed, onToggle }) {
         }
     }
 
+    const handleNavigation = (path) => {
+        if (isWorkflowRunning) {
+            const userConfirmed = window.confirm('Dikkat! Aktif bir iş akışı çalışıyor. Sayfadan ayrılırsanız işleminiz sonlanacaktır. Devam etmek istiyor musunuz?')
+            if (!userConfirmed) {
+                return
+            }
+        }
+        navigate(path)
+    }
+
+    console.log(isWorkflowRunning)
     const menuItems = [
 
         {
@@ -131,6 +143,12 @@ function Sidebar({ isCollapsed, onToggle }) {
                                     to={item.path}
                                     className={`nav-link group ${location.pathname === item.path ? 'active' : ''}`}
                                     title={isCollapsed ? item.label : ''}
+                                    onClick={(e) => {
+                                        if (isWorkflowRunning) {
+                                            e.preventDefault()
+                                            handleNavigation(item.path)
+                                        }
+                                    }}
                                 >
                                     <div className={`nav-icon ${item.color} group-hover:scale-110 transition-transform duration-200`}>
                                         <i className={item.icon}></i>

@@ -10,6 +10,7 @@ export const AuthProvider = ({ children }) => {
      const baseUrl = 'https://iccid.vercel.app';
     //  const baseUrl = 'https://ericssonbe-production.up.railway.app';
     // const baseUrl = 'http://localhost:5432';
+    const [isWorkflowRunning, setIsWorkflowRunning] = useState(false);
     useEffect(() => {
         // Local storage'dan kullanıcı bilgisini al
         const storedUser = localStorage.getItem('user');
@@ -133,7 +134,9 @@ export const AuthProvider = ({ children }) => {
         needsPasswordChange,
         updatePassword,
         setNeedsPasswordChange,
-        baseUrl
+        baseUrl,
+        isWorkflowRunning,
+        setIsWorkflowRunning
     };
 
     return (

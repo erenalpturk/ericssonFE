@@ -9,7 +9,7 @@ import { VariablesService } from '../../lib/variables-service'
 import { useAuth } from '../../contexts/AuthContext'
 
 export default function WorkflowBuilder() {
-  const { user } = useAuth()
+  const { user, setIsWorkflowRunning, isWorkflowRunning } = useAuth()
   const isAdmin = user?.role === 'admin'
   const [steps, setSteps] = useState([])
   const [isRunning, setIsRunning] = useState(false)
@@ -67,6 +67,15 @@ export default function WorkflowBuilder() {
       }
     }
 
+    // Sayfa yenilendiğinde isWorkflowRunning kontrolü
+    const handleBeforeUnload = (e) => {
+      if (isWorkflowRunning) {
+        e.preventDefault()
+        e.returnValue = 'Dikkat! Aktif bir iş akışı çalışıyor. Sayfadan ayrılırsanız işleminiz sonlanacaktır. Devam etmek istiyor musunuz?'
+        return e.returnValue
+      }
+    }
+
     // Dropdown'ları kapatmak için global click listener
     const handleClickOutside = (event) => {
       if (!event.target.closest('.dropdown')) {
@@ -78,13 +87,15 @@ export default function WorkflowBuilder() {
     window.addEventListener('focus', handleFocus)
     document.addEventListener('visibilitychange', handleVisibilityChange)
     document.addEventListener('click', handleClickOutside)
+    window.addEventListener('beforeunload', handleBeforeUnload)
 
     return () => {
       window.removeEventListener('focus', handleFocus)
       document.removeEventListener('visibilitychange', handleVisibilityChange)
       document.removeEventListener('click', handleClickOutside)
+      window.removeEventListener('beforeunload', handleBeforeUnload)
     }
-  }, [])
+  }, [isWorkflowRunning]) // isWorkflowRunning'i dependency olarak ekledik
 
   // Global variables'ı güncelle
   useEffect(() => {
@@ -312,6 +323,7 @@ export default function WorkflowBuilder() {
     const controller = new AbortController()
     setAbortController(controller)
 
+    setIsWorkflowRunning(true)
     setIsRunning(true)
     setIsRepeating(repeatCount > 1)
     setCurrentRun(0)
@@ -647,9 +659,9 @@ export default function WorkflowBuilder() {
       setIsRepeating(false)
       setCurrentRun(0)
       setAbortController(null)
+      setIsWorkflowRunning(false)
     }
   }
-
   const runSingleStep = async (step, variables = {}, signal) => {
     const startTime = Date.now()
 
