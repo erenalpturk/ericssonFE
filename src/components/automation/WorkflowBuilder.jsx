@@ -278,6 +278,36 @@ export default function WorkflowBuilder() {
       return
     }
 
+    // LocalStorage'da user bilgisi yoksa yeniden set et
+    try {
+      const currentUsername = localStorage.getItem('currentUsername')
+      const currentUserSicilNo = localStorage.getItem('currentUserSicilNo')
+      
+      if (!currentUsername || !currentUserSicilNo) {
+        console.log('[WorkflowBuilder] User bilgisi localStorage\'da bulunamadı, yeniden setleniyor...')
+        
+        if (user?.full_name && user?.sicil_no) {
+          localStorage.setItem('currentUsername', user.full_name)
+          localStorage.setItem('currentUserSicilNo', user.sicil_no)
+          console.log('[WorkflowBuilder] User bilgisi localStorage\'a setlendi:', {
+            username: user.full_name,
+            sicil_no: user.sicil_no
+          })
+          
+          // Variables'ları yenile
+          await loadVariables()
+          
+          toast.success('Kullanıcı bilgisi yenilendi', { duration: 2000 })
+        } else {
+          console.error('[WorkflowBuilder] User context\'inde bilgi bulunamadı')
+          toast.error('Kullanıcı bilgisi bulunamadı. Lütfen tekrar giriş yapın.')
+          return
+        }
+      }
+    } catch (error) {
+      console.error('[WorkflowBuilder] User bilgisi kontrol hatası:', error)
+    }
+
     // Create new AbortController for this workflow run
     const controller = new AbortController()
     setAbortController(controller)

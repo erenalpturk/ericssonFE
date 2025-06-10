@@ -85,13 +85,16 @@ export class VariablesService {
       // Otomatik olarak currentUsername'i user variable'ı olarak ekle
       const currentUsername = localStorage.getItem('currentUsername')
       const currentUserSicilNo = localStorage.getItem('currentUserSicilNo')
-      if (currentUsername) {
+      if (currentUsername && currentUserSicilNo) {
         variables['user'] = {
           key: 'user',
           value: currentUserSicilNo,
           source: 'auth',
           timestamp: Date.now()
         }
+      } else {
+        // User bilgisi yoksa console'da uyarı ver ama hata fırlatma
+        console.warn('[VariablesService] User bilgisi localStorage\'da bulunamadı. Otomasyonda ayarlanacak.')
       }
       
       return variables
