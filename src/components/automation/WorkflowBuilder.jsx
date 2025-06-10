@@ -1507,10 +1507,10 @@ export default function WorkflowBuilder() {
   const loadAvailableWorkflows = async () => {
     if (!isAdmin) {
       try {
-        const workflows = await WorkflowService.getAllWorkflows()
+        const workflows = await WorkflowService.getActiveWorkflows()
         setAvailableWorkflows(workflows)
       } catch (error) {
-        console.error('[WorkflowBuilder] Error loading workflows:', error)
+        console.error('[WorkflowBuilder] Error loading active workflows:', error)
       }
     }
   }
@@ -1560,7 +1560,7 @@ export default function WorkflowBuilder() {
               <div className="action-divider"></div>
               
               <button
-                className="action-btn secondary"
+                className="action-btn secondary refresh-variables-btn"
                 onClick={() => loadVariables()}
                 title="Değişkenleri yenile"
               >

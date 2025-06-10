@@ -13,7 +13,9 @@ export default function WorkflowManager({ onClose, onLoadWorkflow, user }) {
 
   const loadWorkflows = async () => {
     try {
-      const data = await WorkflowService.getAllWorkflows()
+      const data = user.role === 'admin' 
+        ? await WorkflowService.getAllWorkflowsForAdmin()
+        : await WorkflowService.getActiveWorkflows()
       setWorkflows(data)
     } catch (error) {
       console.error('Error loading workflows:', error)
@@ -59,6 +61,29 @@ export default function WorkflowManager({ onClose, onLoadWorkflow, user }) {
     } catch (error) {
       console.error('Error duplicating workflow:', error)
       toast.error('Workflow kopyalanırken hata oluştu')
+    }
+  }
+
+  const handleToggleWorkflowStatus = async (workflowId, currentStatus) => {
+    if (user.role !== 'admin') {
+      toast.error('Bu işlem için admin yetkisi gerekli')
+      return
+    }
+
+    const newStatus = !currentStatus
+    const statusText = newStatus ? 'aktif' : 'pasif'
+    
+    if (!confirm(`Bu workflow'u ${statusText} yapmak istediğinizden emin misiniz?`)) {
+      return
+    }
+
+    try {
+      await WorkflowService.toggleWorkflowStatus(workflowId, newStatus)
+      toast.success(`Workflow ${statusText} yapıldı`)
+      loadWorkflows() // Listeyi yenile
+    } catch (error) {
+      console.error('Error toggling workflow status:', error)
+      toast.error('Workflow durumu değiştirilirken hata oluştu')
     }
   }
 
@@ -132,6 +157,15 @@ export default function WorkflowManager({ onClose, onLoadWorkflow, user }) {
                         >
                           <i className="bi bi-upload"></i>
                         </button>
+                        {user.role === 'admin' && (
+                          <button
+                            className={`workflow-action-btn ${(workflow.active ?? true) ? 'toggle-active' : 'toggle-inactive'}`}
+                            onClick={() => handleToggleWorkflowStatus(workflow.id, workflow.active ?? true)}
+                            title={(workflow.active ?? true) ? 'Pasif Yap' : 'Aktif Yap'}
+                          >
+                            <i className={`bi ${(workflow.active ?? true) ? 'bi-toggle-on' : 'bi-toggle-off'}`}></i>
+                          </button>
+                        )}
                         <button
                           className="workflow-action-btn copy"
                           onClick={() => handleDuplicateWorkflow(workflow.id)}
@@ -285,6 +319,9 @@ export default function WorkflowManager({ onClose, onLoadWorkflow, user }) {
                     <tr>
                       <th>Workflow Adı</th>
                       <th style={{ width: '300px' }}>Açıklama</th>
+                      {user.role === 'admin' && (
+                        <th style={{ width: '100px' }}>Durum</th>
+                      )}
                       <th style={{ width: '180px' }}>Son Güncelleme</th>
                       <th style={{ width: '150px' }}>İşlemler</th>
                     </tr>
@@ -313,6 +350,18 @@ export default function WorkflowManager({ onClose, onLoadWorkflow, user }) {
                             {workflow.description || 'Açıklama yok'}
                           </span>
                         </td>
+                        {user.role === 'admin' && (
+                          <td>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                           <span className={`status-indicator ${(workflow.active ?? true) ? 'active' : 'inactive'}`}>
+                               <i className={`bi ${(workflow.active ?? true) ? 'bi-check-circle-fill' : 'bi-x-circle-fill'}`}></i>
+                             </span>
+                             <span className="status-text">
+                               {(workflow.active ?? true) ? 'Aktif' : 'Pasif'}
+                             </span>
+                            </div>
+                          </td>
+                        )}
                         <td>
                           <span className="workflow-date">
                             {formatDate(workflow.updated_at)}
@@ -327,6 +376,15 @@ export default function WorkflowManager({ onClose, onLoadWorkflow, user }) {
                             >
                               <i className="bi bi-upload"></i>
                             </button>
+                            {user.role === 'admin' && (
+                              <button
+                                className={`workflow-action-btn ${(workflow.active ?? true) ? 'toggle-active' : 'toggle-inactive'}`}
+                                onClick={() => handleToggleWorkflowStatus(workflow.id, workflow.active ?? true)}
+                                title={(workflow.active ?? true) ? 'Pasif Yap' : 'Aktif Yap'}
+                              >
+                                <i className={`bi ${(workflow.active ?? true) ? 'bi-toggle-on' : 'bi-toggle-off'}`}></i>
+                              </button>
+                            )}
                             <button
                               className="workflow-action-btn copy"
                               onClick={() => handleDuplicateWorkflow(workflow.id)}

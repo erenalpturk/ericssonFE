@@ -25,19 +25,120 @@ export class WorkflowService {
     return data || []
   }
 
-  static async createWorkflow(name, description) {
+  // Admin için tüm workflow'ları getir (aktif/pasif fark etmeksizin)
+  static async getAllWorkflowsForAdmin() {
+    WorkflowService.checkSupabaseConfig()
+    
     const { data, error } = await supabase
       .from('workflows')
-      .insert([{ name, description }])
-      .select()
-      .single()
+      .select('*')
+      .order('updated_at', { ascending: false })
 
     if (error) {
-      console.error('Error creating workflow:', error)
+      console.error('Error fetching workflows for admin:', error)
       throw error
     }
 
-    return data
+    return data || []
+  }
+
+  // Normal kullanıcılar için sadece aktif workflow'ları getir
+  static async getActiveWorkflows() {
+    WorkflowService.checkSupabaseConfig()
+    
+    try {
+      const { data, error } = await supabase
+        .from('workflows')
+        .select('*')
+        .eq('active', true)
+        .order('updated_at', { ascending: false })
+
+      if (error) {
+        // Eğer active kolonu yoksa, tüm workflow'ları döndür
+        if (error.code === 'PGRST204' && error.message.includes('active')) {
+          console.warn('[WorkflowService] Active column not found, returning all workflows')
+          return await WorkflowService.getAllWorkflows()
+        }
+        console.error('Error fetching active workflows:', error)
+        throw error
+      }
+
+      return data || []
+    } catch (error) {
+      // Fallback: active kolonu yoksa tüm workflow'ları döndür
+      console.warn('[WorkflowService] Falling back to all workflows due to:', error.message)
+      return await WorkflowService.getAllWorkflows()
+    }
+  }
+
+  // Workflow aktif/pasif toggle
+  static async toggleWorkflowStatus(id, isActive) {
+    WorkflowService.checkSupabaseConfig()
+
+    try {
+      const { data, error } = await supabase
+        .from('workflows')
+        .update({ 
+          active: isActive,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select()
+        .single()
+
+      if (error) {
+        // Eğer active kolonu yoksa hata mesajı ver
+        if (error.code === 'PGRST204' && error.message.includes('active')) {
+          throw new Error('Active kolonu veritabanında bulunamadı. Lütfen önce "ALTER TABLE workflows ADD COLUMN active BOOLEAN DEFAULT true;" komutunu çalıştırın.')
+        }
+        console.error('Error toggling workflow status:', error)
+        throw error
+      }
+
+      return data
+    } catch (error) {
+      console.error('Error in toggleWorkflowStatus:', error)
+      throw error
+    }
+  }
+
+  static async createWorkflow(name, description) {
+    try {
+      const { data, error } = await supabase
+        .from('workflows')
+        .insert([{ 
+          name, 
+          description,
+          active: true // Yeni workflow'lar varsayılan olarak aktif
+        }])
+        .select()
+        .single()
+
+      if (error) {
+        // Eğer active kolonu yoksa, active olmadan oluştur
+        if (error.code === 'PGRST204' && error.message.includes('active')) {
+          console.warn('[WorkflowService] Active column not found, creating workflow without active field')
+          const { data: fallbackData, error: fallbackError } = await supabase
+            .from('workflows')
+            .insert([{ name, description }])
+            .select()
+            .single()
+
+          if (fallbackError) {
+            console.error('Error creating workflow (fallback):', fallbackError)
+            throw fallbackError
+          }
+          return fallbackData
+        }
+        console.error('Error creating workflow:', error)
+        throw error
+      }
+
+      return data
+    } catch (error) {
+      console.error('Error in createWorkflow:', error)
+      throw error
+    }
   }
 
   static async updateWorkflow(id, updates) {
