@@ -589,7 +589,7 @@ const ActivationList = () => {
                       </span>
                     )}
                   </th>
-                  {user.type === 'admin' && (
+                  {user.role === 'admin' && (
                     <th onClick={() => handleSort('user')} style={{ cursor: 'pointer' }}>
                       Kullanıcı
                       {sortConfig.key === 'user' && (
@@ -673,7 +673,7 @@ const ActivationList = () => {
                         </Tooltip>
                       </div>
                     </td>
-                    {user.type === 'admin' && (
+                    {user.role === 'admin' && (
                       <td>
                         <span className="user-badge">{row.user}</span>
                       </td>
