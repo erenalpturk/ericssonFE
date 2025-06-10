@@ -675,7 +675,7 @@ const ActivationList = () => {
                     </td>
                     {user.role === 'admin' && (
                       <td>
-                        <span className="user-badge">{row.user}</span>
+                        <span className="user-badge">{row.full_name}</span>
                       </td>
                     )}
                     <td>
