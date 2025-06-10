@@ -38,11 +38,11 @@ const ActivationList = () => {
     fetchActivations();
   }, []);
 
-  // useEffect(() => {
-  //   if (activations.length > 0) {
-  //     fetchActivationStatusesForCurrentPage();
-  //   }
-  // }, [activations, page, rowsPerPage, activeFilters, searchText]);
+  useEffect(() => {
+    if (activations.length > 0) {
+      fetchActivationStatusesForCurrentPage();
+    }
+  }, [activations, page, rowsPerPage, activeFilters, searchText]);
 
   const showSuccess = (message) => {
     setSuccessMessage(message);
@@ -190,8 +190,12 @@ const ActivationList = () => {
 
       // Diğer filtreler
       for (const [key, value] of Object.entries(activeFilters)) {
-        if (value && item[key] !== value) {
-          return false;
+        if (value) {
+          if (key === 'user') {
+            if (item.full_name !== value) return false;
+          } else if (item[key] !== value) {
+            return false;
+          }
         }
       }
 
@@ -245,7 +249,7 @@ const ActivationList = () => {
     }
     setOpenStatusMenu(prev => ({ ...prev, [activationId]: false }));
     try {
-      const response = await fetch(`${baseUrl}/iccid/update-status`, {
+      const response = await fetch(`${baseUrl}/iccid/update-activation`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -256,6 +260,8 @@ const ActivationList = () => {
         }),
       });
 
+      const data = await response.json();
+
       if (response.ok) {
         setActivations(prev => prev.map(activation =>
           activation.activationid === activationId
@@ -264,9 +270,10 @@ const ActivationList = () => {
         ));
         showSuccess('Statü başarıyla güncellendi');
       } else {
-        showError('Statü güncellenirken bir hata oluştu');
+        showError(data.error || 'Statü güncellenirken bir hata oluştu');
       }
     } catch (error) {
+      console.error('Statü güncelleme hatası:', error);
       showError('Statü güncellenirken bir hata oluştu');
     }
   };
@@ -278,7 +285,7 @@ const ActivationList = () => {
 
   const handleOtherStatusSubmit = async (activationId, value) => {
     try {
-      const response = await fetch(`${baseUrl}/iccid/update-status`, {
+      const response = await fetch(`${baseUrl}/iccid/update-activation`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -300,7 +307,7 @@ const ActivationList = () => {
         showSuccess('Statü başarıyla güncellendi');
         setOpenStatusMenu(prev => ({ ...prev, [activationId]: false }));
       } else {
-        showError(data.message || 'Statü güncellenirken bir hata oluştu');
+        showError(data.error || 'Statü güncellenirken bir hata oluştu');
       }
     } catch (error) {
       console.error('Statü güncelleme hatası:', error);
@@ -556,7 +563,45 @@ const ActivationList = () => {
                   </MenuItem>
                 ))}
               </Select>
-              {(activeFilters.status || activeFilters.tariff_name || activeFilters.activationtype || searchText) && (
+              {user.role === 'admin' && (
+                <Select
+                  size="small"
+                  value={activeFilters.user || ''}
+                  onChange={(e) => handleFilterApply('user', e.target.value)}
+                  displayEmpty
+                  sx={{
+                    minWidth: 90,
+                    fontSize: '0.95rem',
+                    '& .MuiSelect-select': {
+                      py: 0.5,
+                      px: 1,
+                      fontSize: '0.95rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                    },
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'rgba(0, 0, 0, 0.1)',
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'rgba(0, 0, 0, 0.2)',
+                    },
+                  }}
+                  startAdornment={
+                    <i className="bi bi-person text-gray-500 mr-1"></i>
+                  }
+                >
+                  <MenuItem value="">
+                    <span className="text-gray-500">Kullanıcı</span>
+                  </MenuItem>
+                  {Array.from(new Set(activations.map(a => a.full_name))).map(name => (
+                    <MenuItem key={name} value={name}>
+                      <span className="truncate">{name}</span>
+                    </MenuItem>
+                  ))}
+                </Select>
+              )}
+              {(activeFilters.status || activeFilters.tariff_name || activeFilters.activationtype || (user.role === 'admin' && activeFilters.user) || searchText) && (
                 <IconButton
                   size="small"
                   onClick={clearFilters}
@@ -586,7 +631,7 @@ const ActivationList = () => {
                       </span>
                     )}
                   </th>
-                  {user.type === 'admin' && (
+                  {user.role === 'admin' && (
                     <th onClick={() => handleSort('user')} style={{ cursor: 'pointer' }}>
                       Kullanıcı
                       {sortConfig.key === 'user' && (
@@ -670,9 +715,9 @@ const ActivationList = () => {
                         </Tooltip>
                       </div>
                     </td>
-                    {user.type === 'admin' && (
+                    {user.role === 'admin' && (
                       <td>
-                        <span className="user-badge">{row.user}</span>
+                        <span className="user-badge">{row.full_name}</span>
                       </td>
                     )}
                     <td>
