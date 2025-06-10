@@ -38,11 +38,11 @@ const ActivationList = () => {
     fetchActivations();
   }, []);
 
-  // useEffect(() => {
-  //   if (activations.length > 0) {
-  //     fetchActivationStatusesForCurrentPage();
-  //   }
-  // }, [activations, page, rowsPerPage, activeFilters, searchText]);
+  useEffect(() => {
+    if (activations.length > 0) {
+      fetchActivationStatusesForCurrentPage();
+    }
+  }, [activations, page, rowsPerPage, activeFilters, searchText]);
 
   const showSuccess = (message) => {
     setSuccessMessage(message);
@@ -245,7 +245,7 @@ const ActivationList = () => {
     }
     setOpenStatusMenu(prev => ({ ...prev, [activationId]: false }));
     try {
-      const response = await fetch(`${baseUrl}/iccid/update-status`, {
+      const response = await fetch(`${baseUrl}/iccid/update-activation`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -256,6 +256,8 @@ const ActivationList = () => {
         }),
       });
 
+      const data = await response.json();
+
       if (response.ok) {
         setActivations(prev => prev.map(activation =>
           activation.activationid === activationId
@@ -264,9 +266,10 @@ const ActivationList = () => {
         ));
         showSuccess('Statü başarıyla güncellendi');
       } else {
-        showError('Statü güncellenirken bir hata oluştu');
+        showError(data.error || 'Statü güncellenirken bir hata oluştu');
       }
     } catch (error) {
+      console.error('Statü güncelleme hatası:', error);
       showError('Statü güncellenirken bir hata oluştu');
     }
   };
@@ -278,7 +281,7 @@ const ActivationList = () => {
 
   const handleOtherStatusSubmit = async (activationId, value) => {
     try {
-      const response = await fetch(`${baseUrl}/iccid/update-status`, {
+      const response = await fetch(`${baseUrl}/iccid/update-activation`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -300,7 +303,7 @@ const ActivationList = () => {
         showSuccess('Statü başarıyla güncellendi');
         setOpenStatusMenu(prev => ({ ...prev, [activationId]: false }));
       } else {
-        showError(data.message || 'Statü güncellenirken bir hata oluştu');
+        showError(data.error || 'Statü güncellenirken bir hata oluştu');
       }
     } catch (error) {
       console.error('Statü güncelleme hatası:', error);
