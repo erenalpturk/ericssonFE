@@ -190,8 +190,12 @@ const ActivationList = () => {
 
       // Diğer filtreler
       for (const [key, value] of Object.entries(activeFilters)) {
-        if (value && item[key] !== value) {
-          return false;
+        if (value) {
+          if (key === 'user') {
+            if (item.full_name !== value) return false;
+          } else if (item[key] !== value) {
+            return false;
+          }
         }
       }
 
@@ -559,7 +563,45 @@ const ActivationList = () => {
                   </MenuItem>
                 ))}
               </Select>
-              {(activeFilters.status || activeFilters.tariff_name || activeFilters.activationtype || searchText) && (
+              {user.role === 'admin' && (
+                <Select
+                  size="small"
+                  value={activeFilters.user || ''}
+                  onChange={(e) => handleFilterApply('user', e.target.value)}
+                  displayEmpty
+                  sx={{
+                    minWidth: 90,
+                    fontSize: '0.95rem',
+                    '& .MuiSelect-select': {
+                      py: 0.5,
+                      px: 1,
+                      fontSize: '0.95rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                    },
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'rgba(0, 0, 0, 0.1)',
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'rgba(0, 0, 0, 0.2)',
+                    },
+                  }}
+                  startAdornment={
+                    <i className="bi bi-person text-gray-500 mr-1"></i>
+                  }
+                >
+                  <MenuItem value="">
+                    <span className="text-gray-500">Kullanıcı</span>
+                  </MenuItem>
+                  {Array.from(new Set(activations.map(a => a.full_name))).map(name => (
+                    <MenuItem key={name} value={name}>
+                      <span className="truncate">{name}</span>
+                    </MenuItem>
+                  ))}
+                </Select>
+              )}
+              {(activeFilters.status || activeFilters.tariff_name || activeFilters.activationtype || (user.role === 'admin' && activeFilters.user) || searchText) && (
                 <IconButton
                   size="small"
                   onClick={clearFilters}
