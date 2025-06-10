@@ -17,6 +17,7 @@ import SingleApiTester from './components/automation/SingleApiTester'
 import IccidList from './components/IccidList'
 import ActivationList from './components/ActivationList'
 import ChangePassword from './components/ChangePassword'
+import Stats from './components/Stats'
 
 function PrivateRoute({ children }) {
     const { user, loading, needsPasswordChange } = useAuth();
@@ -178,6 +179,16 @@ function AppRoutes() {
                         <PrivateRoute>
                             <Layout>
                                 <SingleApiTester />
+                            </Layout>
+                        </PrivateRoute>
+                    }
+                />
+                <Route
+                    path="/stats"
+                    element={
+                        <PrivateRoute>
+                            <Layout>
+                                <Stats />
                             </Layout>
                         </PrivateRoute>
                     }

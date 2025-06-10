@@ -26,13 +26,19 @@ function Sidebar({ isCollapsed, onToggle }) {
 
     console.log(isWorkflowRunning)
     const menuItems = [
-
         {
             path: '/',
             icon: 'bi-house-door-fill',
             label: 'Ana Sayfa',
             color: 'text-blue-500',
             roles: ['admin', 'support', 'tester']
+        },
+        {
+            path: '/stats',
+            icon: 'bi-graph-up',
+            label: 'İstatistikler',
+            color: 'text-purple-500',
+            roles: ['admin']
         },
         {
             path: '/activation-list',
