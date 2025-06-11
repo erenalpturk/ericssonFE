@@ -38,13 +38,9 @@ const AdminFeedbackPanel = () => {
 
     const loadDashboardStats = async () => {
         try {
-            console.log('Dashboard stats yükleniyor...');
             const response = await axios.get('/feedback/admin/dashboard');
             
-            console.log('Dashboard stats response:', response.data);
-            
             if (response.data.success) {
-                console.log('Dashboard stats data:', response.data.data);
                 setDashboardStats(response.data.data);
             } else {
                 console.error('Dashboard stats başarısız:', response.data.error);

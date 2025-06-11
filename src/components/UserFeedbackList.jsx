@@ -24,10 +24,6 @@ const UserFeedbackList = () => {
         try {
             setLoading(true);
             
-            // Debug userInfo
-            console.log('UserInfo:', userInfo);
-            console.log('Sicil No:', userInfo.sicil_no);
-            
             if (!userInfo.sicil_no) {
                 showError('Kullanıcı bilgileri bulunamadı. Lütfen tekrar giriş yapın.');
                 return;

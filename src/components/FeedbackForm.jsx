@@ -52,10 +52,6 @@ const FeedbackForm = ({ onSuccess, onClose }) => {
             return;
         }
         
-        // Debug userInfo
-        console.log('UserInfo:', userInfo);
-        console.log('Sicil No:', userInfo.sicil_no);
-        
         if (!userInfo.sicil_no) {
             alert('Kullanıcı bilgileri bulunamadı. Lütfen tekrar giriş yapın.');
             return;

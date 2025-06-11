@@ -1,12 +1,6 @@
 import axios from 'axios';
 
-// Backend URL'ini belirle
-const baseURL = process.env.NODE_ENV === 'production' 
-  ? 'https://iccid.vercel.app' // Production URL'inizi buraya yazın
-  : 'http://localhost:5432'; // Development URL
-
 // Axios varsayılan konfigürasyonu
-axios.defaults.baseURL = baseURL;
 axios.defaults.headers.common['Content-Type'] = 'application/json';
 
 // Request interceptor - tüm isteklere '/api' prefix'i ekle

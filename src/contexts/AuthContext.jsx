@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../services/supabase';
+import axios from 'axios';
 
 const AuthContext = createContext({});
 
@@ -7,9 +8,15 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [needsPasswordChange, setNeedsPasswordChange] = useState(false);
-     const baseUrl = 'https://iccid.vercel.app';
-    //  const baseUrl = 'https://ericssonbe-production.up.railway.app';
-    // const baseUrl = 'http://localhost:5432';
+    
+    // Base URL'i ortam değişkenine göre belirle
+    const baseUrl = process.env.NODE_ENV === 'production' 
+        ? 'https://iccid.vercel.app'
+        : 'http://localhost:5432';
+    
+    // Axios baseURL'ini ayarla
+    axios.defaults.baseURL = baseUrl;
+    
     const [isWorkflowRunning, setIsWorkflowRunning] = useState(false);
     useEffect(() => {
         // Local storage'dan kullanıcı bilgisini al
@@ -46,7 +53,6 @@ export const AuthProvider = ({ children }) => {
                 
                 // Kullanıcı adını localStorage'e user değişkeni olarak kaydet
                 localStorage.setItem('currentUsername', userData.full_name);
-                console.log('[AuthContext] User logged in:', userData.full_name);
                 
                 return { 
                     success: true, 
@@ -55,13 +61,10 @@ export const AuthProvider = ({ children }) => {
                 };
             }
 
-            // Normal giriş işlemi
             setUser(userData);
             localStorage.setItem('user', JSON.stringify(userData));
             localStorage.setItem('currentUserSicilNo', userData.sicil_no);
-            // Kullanıcı adını localStorage'e user değişkeni olarak kaydet
             localStorage.setItem('currentUsername', userData.full_name);
-            console.log('[AuthContext] User logged in:', userData.full_name);
             
             // Son giriş zamanını güncelle
             const { error: updateError } = await supabase

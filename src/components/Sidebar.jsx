@@ -24,7 +24,6 @@ function Sidebar({ isCollapsed, onToggle }) {
         navigate(path)
     }
 
-    console.log(isWorkflowRunning)
     const menuItems = [
         {
             path: '/',

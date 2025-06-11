@@ -8,7 +8,8 @@ import {
   TextField,
   Tooltip,
   Snackbar,
-  ListItemText
+  ListItemText,
+  CircularProgress
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
@@ -492,148 +493,160 @@ const IccidList = () => {
 
           {/* Table */}
           <div className="table-container">
-            <table className="modern-table">
-              <thead>
-                <tr>
-                  {user.role !== 'tester' && (
-                    <th>
-                      <input
-                        type="checkbox"
-                        checked={selectedIccids.length > 0 && getFilteredData() && selectedIccids.length === getFilteredData().length}
-                        onChange={handleSelectAllIccids}
-                      />
-                    </th>
-                  )}
-                  <th onClick={() => handleSort('iccid')} style={{ cursor: 'pointer' }}>
-                    ICCID
-                    {sortConfig.key === 'iccid' && (
-                      <span className="ml-1">
-                        {sortConfig.direction === 'asc' ? '↑' : '↓'}
-                      </span>
-                    )}
-                  </th>
-                  <th onClick={() => handleSort('stock')} style={{ cursor: 'pointer' }}>
-                    Durum
-                    {sortConfig.key === 'stock' && (
-                      <span className="ml-1">
-                        {sortConfig.direction === 'asc' ? '↑' : '↓'}
-                      </span>
-                    )}
-                  </th>
-                  <th onClick={() => handleSort('type')} style={{ cursor: 'pointer' }}>
-                    Tip
-                    {sortConfig.key === 'type' && (
-                      <span className="ml-1">
-                        {sortConfig.direction === 'asc' ? '↑' : '↓'}
-                      </span>
-                    )}
-                  </th>
-                  <th onClick={() => handleSort('cdate')} style={{ cursor: 'pointer' }}>
-                    Oluşturulma
-                    {sortConfig.key === 'cdate' && (
-                      <span className="ml-1">
-                        {sortConfig.direction === 'asc' ? '↑' : '↓'}
-                      </span>
-                    )}
-                  </th>
-                  <th onClick={() => handleSort('updated_at')} style={{ cursor: 'pointer' }}>
-                    Güncellenme
-                    {sortConfig.key === 'updated_at' && (
-                      <span className="ml-1">
-                        {sortConfig.direction === 'asc' ? '↑' : '↓'}
-                      </span>
-                    )}
-                  </th>
-                  <th onClick={() => handleSort('used_by')} style={{ cursor: 'pointer' }}>
-                    Kullanan
-                    {sortConfig.key === 'used_by' && (
-                      <span className="ml-1">
-                        {sortConfig.direction === 'asc' ? '↑' : '↓'}
-                      </span>
-                    )}
-                  </th>
-                  {user.role !== 'tester' && (
-                    <th>
-                      <span className="text-sm font-medium">
-                        Ekleyen
-                      </span>
-                    </th>
-                  )}
-                </tr>
-              </thead>
-              <tbody>
-                {getPaginatedData().map((row) => (
-                  <tr key={row.iccidid}>
+            {loading ? (
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'center', 
+                alignItems: 'center', 
+                padding: '2rem',
+                background: 'rgba(255, 255, 255, 0.9)'
+              }}>
+                <CircularProgress size={40} />
+              </div>
+            ) : (
+              <table className="modern-table">
+                <thead>
+                  <tr>
                     {user.role !== 'tester' && (
-                      <td>
+                      <th>
                         <input
                           type="checkbox"
-                        checked={selectedIccids.includes(row.iccid)}
-                        onChange={() => handleSelectIccid(row.iccid)}
-                      />
-                      </td>
+                          checked={selectedIccids.length > 0 && getFilteredData() && selectedIccids.length === getFilteredData().length}
+                          onChange={handleSelectAllIccids}
+                        />
+                      </th>
                     )}
-                    <td className="font-mono text-sm">{row.iccid}</td>
-                    <td>
-                      <select
-                        className={`status-select ${getStatusColor(row.stock)}`}
-                        value={row.stock}
-                        onChange={(e) => handleStatusChange(row.iccidid, e.target.value)}
-                        disabled={loading}
-                      >
-                        {statusOptions.map(option => (
-                          <option key={option} value={option}>{option}</option>
-                        ))}
-                      </select>
-                    </td>
-                    <td>
-                      <span className="type-badge">{row.type}</span>
-                    </td>
-                    <td className="text-gray-600">
-                      <span className="text-sm font-medium">
-                          {new Date(row.cdate).toLocaleString('tr-TR', {
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
+                    <th onClick={() => handleSort('iccid')} style={{ cursor: 'pointer' }}>
+                      ICCID
+                      {sortConfig.key === 'iccid' && (
+                        <span className="ml-1">
+                          {sortConfig.direction === 'asc' ? '↑' : '↓'}
                         </span>
-                        <br />
-                        <span className="text-xs text-gray-500">
-                          {new Date(row.cdate).toLocaleString('tr-TR', {
-                            day: '2-digit',
-                            month: '2-digit',
-                            year: 'numeric'
-                          })}
+                      )}
+                    </th>
+                    <th onClick={() => handleSort('stock')} style={{ cursor: 'pointer' }}>
+                      Durum
+                      {sortConfig.key === 'stock' && (
+                        <span className="ml-1">
+                          {sortConfig.direction === 'asc' ? '↑' : '↓'}
                         </span>
-                    </td>
-                    <td className="text-gray-600">
-                      <span className="text-sm font-medium">
-                          {new Date(row.updated_at).toLocaleString('tr-TR', {
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
+                      )}
+                    </th>
+                    <th onClick={() => handleSort('type')} style={{ cursor: 'pointer' }}>
+                      Tip
+                      {sortConfig.key === 'type' && (
+                        <span className="ml-1">
+                          {sortConfig.direction === 'asc' ? '↑' : '↓'}
                         </span>
-                        <br />
-                        <span className="text-xs text-gray-500">
-                          {new Date(row.updated_at).toLocaleString('tr-TR', {
-                            day: '2-digit',
-                            month: '2-digit',
-                            year: 'numeric'
-                          })}
+                      )}
+                    </th>
+                    <th onClick={() => handleSort('cdate')} style={{ cursor: 'pointer' }}>
+                      Oluşturulma
+                      {sortConfig.key === 'cdate' && (
+                        <span className="ml-1">
+                          {sortConfig.direction === 'asc' ? '↑' : '↓'}
                         </span>
-                    </td>
-                    
-                    <td className="text-gray-600">
-                      {row.used_by_name}
-                    </td>
+                      )}
+                    </th>
+                    <th onClick={() => handleSort('updated_at')} style={{ cursor: 'pointer' }}>
+                      Güncellenme
+                      {sortConfig.key === 'updated_at' && (
+                        <span className="ml-1">
+                          {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                        </span>
+                      )}
+                    </th>
+                    <th onClick={() => handleSort('used_by')} style={{ cursor: 'pointer' }}>
+                      Kullanan
+                      {sortConfig.key === 'used_by' && (
+                        <span className="ml-1">
+                          {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                        </span>
+                      )}
+                    </th>
                     {user.role !== 'tester' && (
-                      <td className="text-gray-600">
-                        {row.added_by_name}
-                      </td>
+                      <th>
+                        <span className="text-sm font-medium">
+                          Ekleyen
+                        </span>
+                      </th>
                     )}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {getPaginatedData().map((row) => (
+                    <tr key={row.iccidid}>
+                      {user.role !== 'tester' && (
+                        <td>
+                          <input
+                            type="checkbox"
+                          checked={selectedIccids.includes(row.iccid)}
+                          onChange={() => handleSelectIccid(row.iccid)}
+                        />
+                        </td>
+                      )}
+                      <td className="font-mono text-sm">{row.iccid}</td>
+                      <td>
+                        <select
+                          className={`status-select ${getStatusColor(row.stock)}`}
+                          value={row.stock}
+                          onChange={(e) => handleStatusChange(row.iccidid, e.target.value)}
+                          disabled={loading}
+                        >
+                          {statusOptions.map(option => (
+                            <option key={option} value={option}>{option}</option>
+                          ))}
+                        </select>
+                      </td>
+                      <td>
+                        <span className="type-badge">{row.type}</span>
+                      </td>
+                      <td className="text-gray-600">
+                        <span className="text-sm font-medium">
+                            {new Date(row.cdate).toLocaleString('tr-TR', {
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </span>
+                          <br />
+                          <span className="text-xs text-gray-500">
+                            {new Date(row.cdate).toLocaleString('tr-TR', {
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: 'numeric'
+                            })}
+                          </span>
+                      </td>
+                      <td className="text-gray-600">
+                        <span className="text-sm font-medium">
+                            {new Date(row.updated_at).toLocaleString('tr-TR', {
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </span>
+                          <br />
+                          <span className="text-xs text-gray-500">
+                            {new Date(row.updated_at).toLocaleString('tr-TR', {
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: 'numeric'
+                            })}
+                          </span>
+                      </td>
+                      
+                      <td className="text-gray-600">
+                        {row.used_by_name}
+                      </td>
+                      {user.role !== 'tester' && (
+                        <td className="text-gray-600">
+                          {row.added_by_name}
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
 
           {/* Pagination */}

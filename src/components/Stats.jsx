@@ -42,7 +42,17 @@ const Stats = () => {
   }, [baseUrl]);
 
   if (loading) {
-    return <Spin size="large" />;
+    return (
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        minHeight: '100vh',
+        background: 'rgba(255, 255, 255, 0.9)'
+      }}>
+        <Spin size="large" tip="Yükleniyor..." />
+      </div>
+    );
   }
 
   if (!statsData) {
