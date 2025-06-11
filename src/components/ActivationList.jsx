@@ -34,9 +34,9 @@ const ActivationList = () => {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [activationStatuses, setActivationStatuses] = useState({});
 
-  useEffect(() => {
-    fetchActivations();
-  }, []);
+  // useEffect(() => {
+  //   fetchActivations();
+  // }, []);
 
   useEffect(() => {
     if (activations.length > 0) {
