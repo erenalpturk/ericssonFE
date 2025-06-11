@@ -34,15 +34,15 @@ const ActivationList = () => {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [activationStatuses, setActivationStatuses] = useState({});
 
-  // useEffect(() => {
-  //   fetchActivations();
-  // }, []);
-
   useEffect(() => {
-    if (activations.length > 0) {
-      fetchActivationStatusesForCurrentPage();
-    }
-  }, [activations, page, rowsPerPage, activeFilters, searchText]);
+    fetchActivations();
+  }, []);
+
+  // useEffect(() => {
+  //   if (activations.length > 0) {
+  //     fetchActivationStatusesForCurrentPage();
+  //   }
+  // }, [activations, page, rowsPerPage, activeFilters, searchText]);
 
   const showSuccess = (message) => {
     setSuccessMessage(message);
