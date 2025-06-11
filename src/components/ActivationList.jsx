@@ -7,7 +7,8 @@ import {
   Tooltip,
   Snackbar,
   ListItemText,
-  CircularProgress
+  CircularProgress,
+  Button
 } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
@@ -16,10 +17,13 @@ import MoreHorizOutlinedIcon from '@mui/icons-material/MoreHorizOutlined';
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import AddIcon from '@mui/icons-material/Add';
+import { startOfDay, endOfDay } from 'date-fns';
+import AddActivationModal from './AddActivationModal';
 
 const ActivationList = () => {
   const [activations, setActivations] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [activeFilters, setActiveFilters] = useState({});
   const [searchText, setSearchText] = useState('');
   const [page, setPage] = useState(0);
@@ -36,16 +40,16 @@ const ActivationList = () => {
   const noteInputRef = useRef(null);
   const [noteLoading, setNoteLoading] = useState(null);
   const [statusLoading, setStatusLoading] = useState(null);
+  const [dateFilter, setDateFilter] = useState({
+    startDate: null,
+    endDate: null
+  });
+  const [isTodayFilterActive, setIsTodayFilterActive] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   useEffect(() => {
     fetchActivations();
   }, []);
-
-  // useEffect(() => {
-  //   if (activations.length > 0) {
-  //     fetchActivationStatusesForCurrentPage();
-  //   }
-  // }, [activations, page, rowsPerPage, activeFilters, searchText]);
 
   const showError = (message) => {
     setErrorMessage(message);
@@ -72,112 +76,50 @@ const ActivationList = () => {
     }
   };
 
-  // Aktivasyon tipine göre veritabanı seç
   const getDatabaseForActivationType = (activationType) => {
     if (activationType === 'RegPost' || activationType === 'RegPre') {
       return 'OMNI2';
     } else if (activationType === 'FonkPost' || activationType === 'FonkPre') {
       return 'OMNI4';
     }
-    // Diğer tipler için default
     return 'OMNI4';
   };
-
-  // const fetchActivationStatusesForCurrentPage = async () => {
-  //   try {
-  //     // Sadece mevcut sayfadaki aktivasyonları al
-  //     const currentPageData = getPaginatedData();
-      
-  //     if (currentPageData.length === 0) {
-  //       return;
-  //     }
-
-  //     // Aktivasyon tipine göre gruplayarak API çağrıları yap
-  //     const groupedByDb = currentPageData.reduce((groups, activation) => {
-  //       const dbName = getDatabaseForActivationType(activation.activationtype);
-  //       if (!groups[dbName]) {
-  //         groups[dbName] = [];
-  //       }
-  //       groups[dbName].push(activation);
-  //       return groups;
-  //     }, {});
-
-  //     console.log(`Fetching activation status for page ${page + 1}, ${currentPageData.length} items`);
-  //     console.log('Grouped by database:', Object.keys(groupedByDb).map(db => `${db}: ${groupedByDb[db].length} items`));
-  //     console.log('Active filters:', activeFilters);
-  //     console.log('Search text:', searchText);
-
-  //     // Her veritabanı grubu için ayrı API çağrısı yap
-  //     const allResults = {};
-      
-  //     for (const [dbName, activationsForDb] of Object.entries(groupedByDb)) {
-  //       const msisdns = activationsForDb.map(activation => activation.msisdn);
-        
-  //       console.log(`Querying ${dbName} for ${msisdns.length} MSISDNs`);
-
-  //       const response = await fetch(`${baseUrl}/oracle/activation-status-bulk`, {
-  //         method: 'POST',
-  //         headers: {
-  //           'Content-Type': 'application/json',
-  //         },
-  //         body: JSON.stringify({
-  //           msisdns: msisdns,
-  //           dbName: dbName
-  //         }),
-  //         timeout: 60000, // 60 second timeout
-  //         signal: AbortSignal.timeout(60000)
-  //       });
-
-  //       const bulkData = await response.json();
-        
-  //       if (bulkData.results) {
-  //         // Results'ı activationId'ye göre map'le
-  //         activationsForDb.forEach(activation => {
-  //           const msisdnStatus = bulkData.results[activation.msisdn];
-  //           if (msisdnStatus) {
-  //             allResults[activation.activationid] = {
-  //               activationId: activation.activationid,
-  //               msisdn: activation.msisdn,
-  //               database: dbName,
-  //               ...msisdnStatus
-  //             };
-  //           }
-  //         });
-  //       }
-  //     }
-      
-  //     // Mevcut state'i güncelle (sadece bu sayfadaki veriler için)
-  //     setActivationStatuses(prevStatuses => ({
-  //       ...prevStatuses,
-  //       ...allResults
-  //     }));
-      
-  //   } catch (error) {
-  //     console.error('Aktiflik durumları alınırken hata:', error);
-  //   }
-  // };
 
   const handleFilterApply = (filterType, value) => {
     setActiveFilters(prev => ({
       ...prev,
       [filterType]: value || null
     }));
-    setPage(0); // Filtre değiştiğinde ilk sayfaya dön
-    // Aktiflik statuslarını temizle, yeni filtreli veriler için tekrar sorgulanacak
+    setPage(0);
     setActivationStatuses({});
+  };
+
+  const handleTodayFilter = () => {
+    if (isTodayFilterActive) {
+      setDateFilter({ startDate: null, endDate: null });
+      setIsTodayFilterActive(false);
+    } else {
+      const today = new Date();
+      setDateFilter({
+        startDate: startOfDay(today),
+        endDate: endOfDay(today)
+      });
+      setIsTodayFilterActive(true);
+    }
+    setPage(0);
   };
 
   const clearFilters = () => {
     setActiveFilters({});
     setSearchText('');
+    setDateFilter({ startDate: null, endDate: null });
+    setIsTodayFilterActive(false);
     setPage(0);
-    // Filtreler temizlendiğinde aktiflik statuslarını da temizle
     setActivationStatuses({});
   };
 
   const filterData = (data) => {
     return data.filter(item => {
-      // Arama filtresi
       if (searchText) {
         const searchLower = searchText.toLowerCase();
         const matchesSearch = Object.values(item).some(value =>
@@ -186,7 +128,16 @@ const ActivationList = () => {
         if (!matchesSearch) return false;
       }
 
-      // Diğer filtreler
+      if (dateFilter.startDate || dateFilter.endDate) {
+        const itemDate = new Date(item.created_at);
+        if (dateFilter.startDate && itemDate < dateFilter.startDate) return false;
+        if (dateFilter.endDate) {
+          const endDate = new Date(dateFilter.endDate);
+          endDate.setHours(23, 59, 59, 999);
+          if (itemDate > endDate) return false;
+        }
+      }
+
       for (const [key, value] of Object.entries(activeFilters)) {
         if (value) {
           if (key === 'user') {
@@ -349,7 +300,6 @@ const ActivationList = () => {
     }
   };
 
-  // Dışarı tıklama kontrolü için useEffect
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (editingNote && noteInputRef.current && !noteInputRef.current.contains(event.target)) {
@@ -382,21 +332,6 @@ const ActivationList = () => {
 
   return (
     <div className="modern-page">
-      {/* Success/Error Messages
-      {successMessage && (
-        <div className="fixed top-4 right-4 z-50">
-          <div className="result-alert success">
-            <div className="alert-icon">
-              <i className="bi bi-check-circle-fill"></i>
-            </div>
-            <div className="alert-content">
-              <strong>Başarılı!</strong>
-              <p>{successMessage}</p>
-            </div>
-          </div>
-        </div>
-      )} */}
-
       {errorMessage && (
         <div className="fixed top-4 right-4 z-50">
           <div className="result-alert error">
@@ -411,7 +346,6 @@ const ActivationList = () => {
         </div>
       )}
 
-      {/* Header Section */}
       <div className="page-header">
         <div className="header-content">
           <div className="header-icon">
@@ -422,30 +356,44 @@ const ActivationList = () => {
             <p>Aktivasyonlarınızı görüntüleyin</p>
           </div>
         </div>
-        <div className="stats-badge">
-          <i className="bi bi-list-ol"></i>
-          <span>{activations.length} Aktivasyon</span>
+        <div className="flex items-center gap-4">
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => setIsAddModalOpen(true)}
+            sx={{
+              textTransform: 'none',
+              borderRadius: '8px',
+              boxShadow: 'none',
+              '&:hover': {
+                boxShadow: 'none'
+              }
+            }}
+          >
+            Yeni Aktivasyon
+          </Button>
+          <div className="stats-badge">
+            <i className="bi bi-list-ol"></i>
+            <span>{activations.length} Aktivasyon</span>
+          </div>
         </div>
       </div>
 
-      {/* Table Section */}
+      <AddActivationModal
+        open={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSuccess={() => {
+          fetchActivations();
+          setErrorMessage('');
+        }}
+      />
+
       <div className="output-card">
         <div className="card-header">
           <div className="card-actions">
-            {/* <button
-              className="action-btn primary"
-              onClick={() => {
-                navigator.clipboard.writeText(JSON.stringify(activations, null, 2));
-                showSuccess('Veriler kopyalandı!');
-              }}
-            >
-              <i className="bi bi-clipboard"></i>
-              Verileri Kopyala
-            </button> */}
           </div>
         </div>
         <div className="card-body">
-          {/* Search and Controls */}
           <div className="table-controls">
             <div className="flex items-center gap-2">
               <div className="search-box">
@@ -456,11 +404,29 @@ const ActivationList = () => {
                   value={searchText}
                   onChange={(e) => {
                     setSearchText(e.target.value);
-                    setPage(0); // Arama değiştiğinde ilk sayfaya dön
-                    setActivationStatuses({}); // Aktiflik statuslarını temizle
+                    setPage(0);
+                    setActivationStatuses({});
                   }}
                 />
               </div>
+              <Button
+                variant={isTodayFilterActive ? "contained" : "outlined"}
+                size="small"
+                onClick={handleTodayFilter}
+                sx={{
+                  fontSize: '0.95rem',
+                  textTransform: 'none',
+                  borderColor: 'rgba(0, 0, 0, 0.1)',
+                  color: isTodayFilterActive ? 'white' : 'rgba(0, 0, 0, 0.7)',
+                  backgroundColor: isTodayFilterActive ? '#1976d2' : 'transparent',
+                  '&:hover': {
+                    borderColor: isTodayFilterActive ? '#1976d2' : 'rgba(0, 0, 0, 0.2)',
+                    backgroundColor: isTodayFilterActive ? '#1565c0' : 'rgba(0, 0, 0, 0.02)',
+                  }
+                }}
+              >
+                Bugün
+              </Button>
               <Select
                 size="small"
                 value={activeFilters.status || ''}
@@ -619,7 +585,7 @@ const ActivationList = () => {
                   ))}
                 </Select>
               )}
-              {(activeFilters.status || activeFilters.tariff_name || activeFilters.activationtype || (user.role === 'admin' && activeFilters.user) || searchText) && (
+              {(activeFilters.status || activeFilters.tariff_name || activeFilters.activationtype || (user.role === 'admin' && activeFilters.user) || searchText || dateFilter.startDate || dateFilter.endDate) && (
                 <IconButton
                   size="small"
                   onClick={clearFilters}
@@ -636,7 +602,6 @@ const ActivationList = () => {
             </div>
           </div>
 
-          {/* Table */}
           <div className="table-container">
             {loading ? (
               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '2rem' }}>
@@ -726,6 +691,11 @@ const ActivationList = () => {
                               <span className="text-gray-500 text-sm">DT:</span>
                               <span className="text-sm">{row.birth_date}</span>
                             </div>
+                            {row.isAutomation === false && (
+                              <div className="flex items-center gap-2">
+                                <span className="font-mono text-sm">Manuel</span>
+                              </div>
+                            )}
                           </div>
                           <Tooltip title="Kopyala" arrow>
                             <IconButton
@@ -1032,7 +1002,6 @@ const ActivationList = () => {
             )}
           </div>
 
-          {/* Pagination */}
           <div className="pagination">
             <div className="pagination-info">
               Toplam {getFilteredData().length} kayıt
