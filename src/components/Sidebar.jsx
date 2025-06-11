@@ -97,6 +97,20 @@ function Sidebar({ isCollapsed, onToggle }) {
             roles: ['admin', 'support', 'tester'],
             disabled: true
         },
+        {
+            path: '/feedback',
+            icon: 'bi-bug-fill',
+            label: 'Hata & Öneri',
+            color: 'text-red-500',
+            roles: ['support', 'tester']
+        },
+        {
+            path: '/admin/feedback',
+            icon: 'bi-gear-fill',
+            label: 'Feedback Yönetimi',
+            color: 'text-indigo-500',
+            roles: ['admin']
+        },
 
     ]
     return (
