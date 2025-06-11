@@ -12,7 +12,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
-import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
+import MoreHorizOutlinedIcon from '@mui/icons-material/MoreHorizOutlined';
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
@@ -24,7 +24,6 @@ const ActivationList = () => {
   const [searchText, setSearchText] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const { baseUrl, user } = useAuth();
   const [editingNote, setEditingNote] = useState(null);
@@ -47,11 +46,6 @@ const ActivationList = () => {
   //     fetchActivationStatusesForCurrentPage();
   //   }
   // }, [activations, page, rowsPerPage, activeFilters, searchText]);
-
-  const showSuccess = (message) => {
-    setSuccessMessage(message);
-    setTimeout(() => setSuccessMessage(''), 3000);
-  };
 
   const showError = (message) => {
     setErrorMessage(message);
@@ -273,7 +267,6 @@ const ActivationList = () => {
             ? { ...activation, status: newStatus }
             : activation
         ));
-        showSuccess('Statü başarıyla güncellendi');
       } else {
         showError(data.error || 'Statü güncellenirken bir hata oluştu');
       }
@@ -312,7 +305,6 @@ const ActivationList = () => {
             ? { ...activation, status: value }
             : activation
         ));
-        showSuccess('Statü başarıyla güncellendi');
         setOpenStatusMenu(prev => ({ ...prev, [activationId]: false }));
       } else {
         showError(data.error || 'Statü güncellenirken bir hata oluştu');
@@ -347,7 +339,6 @@ const ActivationList = () => {
         ));
         setEditingNote(null);
         setNoteText('');
-        showSuccess('Not başarıyla güncellendi');
       } else {
         showError('Not güncellenirken bir hata oluştu');
       }
@@ -391,7 +382,7 @@ const ActivationList = () => {
 
   return (
     <div className="modern-page">
-      {/* Success/Error Messages */}
+      {/* Success/Error Messages
       {successMessage && (
         <div className="fixed top-4 right-4 z-50">
           <div className="result-alert success">
@@ -404,7 +395,7 @@ const ActivationList = () => {
             </div>
           </div>
         </div>
-      )}
+      )} */}
 
       {errorMessage && (
         <div className="fixed top-4 right-4 z-50">
@@ -654,7 +645,12 @@ const ActivationList = () => {
             ) : (
               <table className="modern-table">
                 <thead>
-                  <tr>
+                  <tr style={{ 
+                    display: 'grid',
+                    gridTemplateColumns: user.role === 'admin' 
+                      ? '1fr 1fr 1fr 1fr 3fr 1fr'
+                      : '1fr 1fr 1fr 3fr 1fr'
+                  }}>
                     <th onClick={() => handleSort('msisdn')} style={{ cursor: 'pointer' }}>
                       Data Bilgileri
                       {sortConfig.key === 'msisdn' && (
@@ -689,11 +685,6 @@ const ActivationList = () => {
                         </span>
                       )}
                     </th>
-                    {/*
-                    <th>
-                      Aktiflik/Pasiflik
-                    </th>
-                    */}
                     <th onClick={() => handleSort('note')} style={{ cursor: 'pointer' }}>
                       Not
                       {sortConfig.key === 'note' && (
@@ -714,8 +705,13 @@ const ActivationList = () => {
                 </thead>
                 <tbody>
                   {getPaginatedData().map((row) => (
-                    <tr key={row.activationid}>
-                      <td >
+                    <tr key={row.activationid} style={{ 
+                      display: 'grid',
+                      gridTemplateColumns: user.role === 'admin' 
+                        ? '1fr 1fr 1fr 1fr 3fr 1fr'
+                        : '1fr 1fr 1fr 3fr 1fr'
+                    }}>
+                      <td>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                           <div className="flex flex-col gap-1 pr-6">
                             <div className="flex items-center gap-2">
@@ -752,12 +748,12 @@ const ActivationList = () => {
                           <span className="user-badge">{row.full_name}</span>
                         </td>
                       )}
-                      <td>
+                      <td className="text-center">
                         <div className="flex flex-col gap-1">
                           <div className="flex items-center gap-2">
-                            <span onClick={() => console.log(row.status)} className="font-mono text-sm">{row.tariff_name}</span>
+                            <span className="font-mono text-sm">{row.tariff_name}</span>
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 mt-1">
                             <span className="type-badge">{row.activationtype}</span>
                           </div>
                         </div>
@@ -765,6 +761,7 @@ const ActivationList = () => {
                       <td>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                           <Select
+                            style={{ width: '100%' }}
                             size="small"
                             value={row.status}
                             onChange={e => {
@@ -794,8 +791,7 @@ const ActivationList = () => {
                               if (statusLoading === row.activationid) {
                                 return (
                                   <div className="flex items-center gap-2">
-                                    <CircularProgress size={16} sx={{ color: 'primary.main' }} />
-                                    {/* <span>Güncelleniyor...</span> */}
+                                    <CircularProgress size={16} sx={{ color: 'primary' }} />
                                   </div>
                                 );
                               }
@@ -816,7 +812,7 @@ const ActivationList = () => {
                               } else {
                                 return (
                                   <div className="flex items-center gap-2">
-                                    <MoreHorizIcon fontSize="small" color="disabled" />
+                                    <MoreHorizOutlinedIcon style={{ backgroundColor: 'darkorange', color: 'white', borderRadius: '50%', padding: '2px' }}  fontSize="small" color="orange" />
                                     <span className="font-mono text-sm">{row.status}</span>
                                   </div>
                                 );
@@ -839,7 +835,10 @@ const ActivationList = () => {
                               .filter(status => status !== 'clean' && status !== 'dirty')
                               .map(status => (
                                 <MenuItem key={status} value={status} disabled={statusLoading === row.activationid}>
-                                  <span className="font-mono text-sm">{status}</span>
+                                  <div className="flex items-center gap-2">
+                                    <MoreHorizOutlinedIcon style={{ backgroundColor: 'darkorange', color: 'white', borderRadius: '50%', padding: '2px' }}  fontSize="small" color="orange" />
+                                    <span className="font-mono text-sm">{status}</span>
+                                  </div>
                                 </MenuItem>
                               ))}
                             <MenuItem onKeyDown={e => e.stopPropagation()} value="other" disableGutters disableRipple style={{ padding: 0, minHeight: 0 }} onClick={e => e.stopPropagation()} tabIndex={-1}>
@@ -868,7 +867,7 @@ const ActivationList = () => {
                                     }}
                                   >
                                     {statusLoading === row.activationid ? (
-                                      <CircularProgress size={16} sx={{ color: 'primary.main' }} />
+                                      <CircularProgress size={16} sx={{ color: 'primary' }} />
                                     ) : (
                                       <SaveIcon sx={{ fontSize: '1rem' }} />
                                     )}
@@ -879,67 +878,6 @@ const ActivationList = () => {
                           </Select>
                         </div>
                       </td>
-                      {/* <td>
-                        <div className="flex items-center justify-center">
-                          {(() => {
-                            const activationStatus = activationStatuses[row.activationid];
-                            if (!activationStatus) {
-                              return <span className="text-gray-400 text-sm">Yükleniyor...</span>;
-                            }
-                            
-                            const dbName = activationStatus.database || getDatabaseForActivationType(row.activationtype);
-                            const tooltipTitle = `${activationStatus.status} (${dbName})`;
-                            
-                            switch(activationStatus.statusType) {
-                              case 'active':
-                                return (
-                                  <Tooltip title={tooltipTitle} arrow>
-                                    <div className="flex items-center gap-1 cursor-help">
-                                      <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                                      <span className="text-green-600 font-medium text-sm">{activationStatus.status}</span>
-                                    </div>
-                                  </Tooltip>
-                                );
-                              case 'passive':
-                                return (
-                                  <Tooltip title={tooltipTitle} arrow>
-                                    <div className="flex items-center gap-1 cursor-help">
-                                      <span className="w-2 h-2 bg-red-500 rounded-full"></span>
-                                      <span className="text-red-600 font-medium text-sm">{activationStatus.status}</span>
-                                    </div>
-                                  </Tooltip>
-                                );
-                              case 'no-data':
-                                return (
-                                  <Tooltip title={`Veri Yok (${dbName})`} arrow>
-                                    <div className="flex items-center gap-1 cursor-help">
-                                      <span className="w-2 h-2 bg-gray-400 rounded-full"></span>
-                                      <span className="text-gray-500 text-sm">Veri Yok</span>
-                                    </div>
-                                  </Tooltip>
-                                );
-                              case 'error':
-                                return (
-                                  <Tooltip title={`Hata (${dbName})`} arrow>
-                                    <div className="flex items-center gap-1 cursor-help">
-                                      <span className="w-2 h-2 bg-orange-500 rounded-full"></span>
-                                      <span className="text-orange-600 text-sm">Hata</span>
-                                    </div>
-                                  </Tooltip>
-                                );
-                              default:
-                                return (
-                                  <Tooltip title={tooltipTitle} arrow>
-                                    <div className="flex items-center gap-1 cursor-help">
-                                      <span className="w-2 h-2 bg-yellow-500 rounded-full"></span>
-                                      <span className="text-yellow-600 text-sm">{activationStatus.status}</span>
-                                    </div>
-                                  </Tooltip>
-                                );
-                            }
-                          })()}
-                        </div>
-                      </td> */}
                       <td style={{ padding: '0px', minHeight: '40px', maxHeight: '120px', overflow: 'hidden' }}>
                         <div >
                           {editingNote === row.activationid ? (

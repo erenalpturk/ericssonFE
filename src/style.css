@@ -1447,7 +1447,7 @@ body {
 }
 
 .modern-table td {
-  padding: 1rem;
+  padding: 1rem 0.5rem;
   border-bottom: 1px solid rgba(229, 231, 235, 0.3);
   font-size: 0.875rem;
   color: #1f2937;
