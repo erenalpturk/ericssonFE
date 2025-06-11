@@ -7,9 +7,9 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [needsPasswordChange, setNeedsPasswordChange] = useState(false);
-     //const baseUrl = 'https://iccid.vercel.app';
+     const baseUrl = 'https://iccid.vercel.app';
     //  const baseUrl = 'https://ericssonbe-production.up.railway.app';
-    const baseUrl = 'http://localhost:5432';
+    // const baseUrl = 'http://localhost:5432';
     const [isWorkflowRunning, setIsWorkflowRunning] = useState(false);
     useEffect(() => {
         // Local storage'dan kullanıcı bilgisini al

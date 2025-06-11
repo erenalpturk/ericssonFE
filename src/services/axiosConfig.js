@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Backend URL'ini belirle
 const baseURL = process.env.NODE_ENV === 'production' 
-  ? 'https://your-backend-url.com' // Production URL'inizi buraya yazın
+  ? 'https://iccid.vercel.app' // Production URL'inizi buraya yazın
   : 'http://localhost:5432'; // Development URL
 
 // Axios varsayılan konfigürasyonu
