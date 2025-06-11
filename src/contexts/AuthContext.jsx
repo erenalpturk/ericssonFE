@@ -128,7 +128,7 @@ export const AuthProvider = ({ children }) => {
             return { success: false, error: error.message };
         }
     };
-
+    console.log(user);
     const value = {
         user,
         loading,

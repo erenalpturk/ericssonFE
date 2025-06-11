@@ -20,6 +20,7 @@ import ChangePassword from './components/ChangePassword'
 import Stats from './components/Stats'
 import UserFeedbackList from './components/UserFeedbackList'
 import AdminFeedbackPanel from './components/AdminFeedbackPanel'
+import NotificationCreator from './components/Admin/NotificationCreator'
 
 function PrivateRoute({ children }) {
     const { user, loading, needsPasswordChange } = useAuth();
@@ -211,6 +212,16 @@ function AppRoutes() {
                         <PrivateRoute>
                             <Layout>
                                 <AdminFeedbackPanel />
+                            </Layout>
+                        </PrivateRoute>
+                    }
+                />
+                <Route
+                    path="/admin/notifications"
+                    element={
+                        <PrivateRoute>
+                            <Layout>
+                                <NotificationCreator />
                             </Layout>
                         </PrivateRoute>
                     }

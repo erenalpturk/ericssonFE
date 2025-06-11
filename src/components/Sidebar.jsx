@@ -1,6 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { toast } from 'react-toastify'
+import NotificationBell from './Notifications/NotificationBell'
 
 function Sidebar({ isCollapsed, onToggle }) {
     const location = useLocation()
@@ -110,7 +111,13 @@ function Sidebar({ isCollapsed, onToggle }) {
             color: 'text-indigo-500',
             roles: ['admin']
         },
-
+        {
+            path: '/admin/notifications',
+            icon: 'bi-bell-fill',
+            label: 'Bildirim Oluştur',
+            color: 'text-amber-500',
+            roles: ['admin']
+        },
     ]
     return (
         <aside className={`modern-sidebar ${isCollapsed ? 'collapsed' : ''}`}>
@@ -127,13 +134,16 @@ function Sidebar({ isCollapsed, onToggle }) {
                         </div>
                     )}
                 </div>
-                <button
-                    className="toggle-btn"
-                    onClick={() => onToggle(!isCollapsed)}
-                    title={isCollapsed ? "Menüyü Genişlet" : "Menüyü Daralt"}
-                >
-                    <i className={`bi ${isCollapsed ? 'bi-chevron-right' : 'bi-chevron-left'}`}></i>
-                </button>
+                <div className="header-actions">
+                    {!isCollapsed && <NotificationBell />}
+                    <button
+                        className="toggle-btn"
+                        onClick={() => onToggle(!isCollapsed)}
+                        title={isCollapsed ? "Menüyü Genişlet" : "Menüyü Daralt"}
+                    >
+                        <i className={`bi ${isCollapsed ? 'bi-chevron-right' : 'bi-chevron-left'}`}></i>
+                    </button>
+                </div>
             </div>
 
             {/* Navigation */}

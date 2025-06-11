@@ -55,7 +55,6 @@ function Home() {
             roles: ['admin', 'support', 'tester'],
             disabled: true
         },
-
         {
             path: '/api-automation',
             icon: 'bi-cpu-fill',
@@ -75,27 +74,17 @@ function Home() {
             bgGradient: 'from-yellow-500 to-orange-600',
             category: 'Test Araçları',
             roles: ['admin', 'support', 'tester']
+        },
+        {
+            path: '/admin/notifications',
+            icon: 'bi-bell-fill',
+            title: 'Bildirim Oluştur',
+            description: 'Kullanıcılara bildirim gönderin',
+            color: 'text-amber-500',
+            bgGradient: 'from-amber-500 to-orange-600',
+            category: 'Yönetim',
+            roles: ['admin']
         }
-        // {
-        //     path: '/api-automation-management',
-        //     icon: 'bi-cpu-fill',
-        //     title: 'API Otomasyon Management',
-        //     description: 'Çoklu API workflow\'larını yönetin',
-        //     color: 'text-orange-500',
-        //     bgGradient: 'from-orange-500 to-red-600',
-        //     category: 'Yönetim',
-        //     roles: ['admin', 'support']
-        // },
-        // {
-        //     path: '/iccid-management',
-        //     icon: 'bi-gear-wide-connected',
-        //     title: 'ICCID Management',
-        //     description: 'ICCID ve aktivasyon yönetimi ana sayfası',
-        //     color: 'text-emerald-500',
-        //     bgGradient: 'from-emerald-500 to-teal-600',
-        //     category: 'Yönetim',
-        //     roles: ['admin', 'support']
-        // },
     ];
 
     const categories = [...new Set(tools.map(tool => tool.category))];
