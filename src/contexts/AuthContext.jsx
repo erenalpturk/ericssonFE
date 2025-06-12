@@ -11,8 +11,8 @@ export const AuthProvider = ({ children }) => {
     
     // Base URL'i ortam değişkenine göre belirle
     const baseUrl = process.env.NODE_ENV === 'production' 
-        ? 'https://iccid.vercel.app'
-        : 'http://localhost:5432';
+        ? 'http://localhost:5432'
+        :'https://iccid.vercel.app' ;
     
     // Axios baseURL'ini ayarla
     axios.defaults.baseURL = baseUrl;

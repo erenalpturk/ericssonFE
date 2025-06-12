@@ -678,9 +678,9 @@ const ActivationList = () => {
             ) : (
               <table className="modern-table">
                 <thead>
-                  <tr style={{ 
+                  <tr style={{
                     display: 'grid',
-                    gridTemplateColumns: user.role === 'admin' 
+                    gridTemplateColumns: user.role === 'admin'
                       ? '1fr 1fr 1fr 1fr 3fr 1fr'
                       : '1fr 1fr 1fr 3fr 1fr'
                   }}>
@@ -702,7 +702,7 @@ const ActivationList = () => {
                         )}
                       </th>
                     )}
-                    <th onClick={() => handleSort('tariff_name')} style={{ cursor: 'pointer' }}>
+                    <th onClick={() => handleSort('tariff_name')} style={{ cursor: 'pointer', textAlign: 'center' }}>
                       Tarife Bilgileri
                       {sortConfig.key === 'tariff_name' && (
                         <span className="ml-1">
@@ -738,9 +738,9 @@ const ActivationList = () => {
                 </thead>
                 <tbody>
                   {getPaginatedData().map((row) => (
-                    <tr key={row.activationid} style={{ 
+                    <tr key={row.activationid} style={{
                       display: 'grid',
-                      gridTemplateColumns: user.role === 'admin' 
+                      gridTemplateColumns: user.role === 'admin'
                         ? '1fr 1fr 1fr 1fr 3fr 1fr'
                         : '1fr 1fr 1fr 3fr 1fr'
                     }}>
@@ -761,19 +761,19 @@ const ActivationList = () => {
                             </div>
                             <div className="flex items-center gap-2 flex-wrap">
                               {row.isAutomation === false && (
-                                <Chip 
-                                  label="Manuel" 
-                                  size="small" 
-                                  sx={{ 
+                                <Chip
+                                  label="Manuel"
+                                  size="small"
+                                  sx={{
                                     fontSize: '11px',
                                     height: '20px',
                                     backgroundColor: '#f3f4f6',
                                     color: '#374151'
-                                  }} 
+                                  }}
                                 />
                               )}
                               {row.transfer_user && (
-                                <Tooltip 
+                                <Tooltip
                                   title={
                                     <div style={{ padding: '8px' }}>
                                       <div style={{ fontWeight: 'bold', marginBottom: '8px', fontSize: '14px' }}>
@@ -790,19 +790,19 @@ const ActivationList = () => {
                                           <div style={{ marginTop: '8px' }}>
                                             <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>Transfer Detayları:</div>
                                             {row.transfer_user.transfers.map((transfer, index) => (
-                                              <div key={index} style={{ 
-                                                marginBottom: '2px', 
+                                              <div key={index} style={{
+                                                marginBottom: '2px',
                                                 paddingLeft: '8px',
                                                 fontSize: '11px',
                                                 opacity: transfer.active ? 1 : 0.7
                                               }}>
                                                 {index + 1}. {new Date(transfer.date).toLocaleString('tr-TR', {
                                                   day: '2-digit',
-                                                  month: '2-digit', 
+                                                  month: '2-digit',
                                                   year: 'numeric',
                                                   hour: '2-digit',
                                                   minute: '2-digit'
-                                                                                                 })} → {transfer.from_name || transfer.from} → {transfer.to_name || transfer.to}
+                                                })} → {transfer.from_name || transfer.from} → {transfer.to_name || transfer.to}
                                                 {transfer.active && <span style={{ color: '#4ade80' }}> (Aktif)</span>}
                                               </div>
                                             ))}
@@ -836,70 +836,73 @@ const ActivationList = () => {
                                     }
                                   }}
                                 >
-                                  <Chip 
+                                  <Chip
                                     label="Transfer"
                                     size="small"
                                     icon={<SwapHorizIcon style={{ fontSize: 12 }} />}
-                                    sx={{ 
+                                    sx={{
                                       fontSize: '11px',
                                       height: '20px',
                                       backgroundColor: 'rgba(102, 126, 234, 0.1)',
                                       color: 'rgb(102, 126, 234)',
                                       border: '1px solid rgba(102, 126, 234, 0.2)',
                                       cursor: 'help'
-                                    }} 
+                                    }}
                                   />
                                 </Tooltip>
                               )}
                             </div>
                           </div>
-                          <Tooltip title="Kopyala" arrow>
-                            <IconButton
-                              size="small"
-                              onClick={() => handleCopyDataInfo(row)}
-                              sx={{
-                                background: 'rgba(255,255,255,0.7)',
-                                borderRadius: '6px',
-                                boxShadow: 1,
-                                '&:hover': { background: 'rgba(230,230,230,0.9)' }
-                              }}
-                            >
-                              <ContentCopyIcon fontSize="inherit" style={{ fontSize: 16 }} />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title={
-                            // Eğer kullanıcı orijinal sahip ve data transfer edilmişse
-                            row.transfer_user && row.original_owner === user.sicil_no && row.original_owner !== (row.current_owner || row.user)
-                              ? "Orijinal sahip olarak bu datayı zaten transfer ettiniz"
-                              : "Transfer Et"
-                          } arrow>
-                            <IconButton
-                              size="small"
-                              onClick={() => handleTransferClick(row)}
-                              disabled={
-                                // Eğer kullanıcı orijinal sahip ve data transfer edilmişse disabled yap
-                                row.transfer_user && row.original_owner === user.sicil_no && row.original_owner !== (row.current_owner || row.user)
-                              }
-                              sx={{
-                                background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1))',
-                                borderRadius: '6px',
-                                boxShadow: 1,
-                                color: 'rgb(102, 126, 234)',
-                                ml: 1,
-                                '&:hover': { 
-                                  background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2))',
-                                  color: 'rgb(90, 112, 220)'
-                                },
-                                '&:disabled': {
-                                  background: 'rgba(128, 128, 128, 0.1)',
-                                  color: 'rgba(128, 128, 128, 0.5)',
-                                  cursor: 'not-allowed'
+                          <div className="flex flex-col items-center gap-1">
+                            <Tooltip title="Kopyala" arrow>
+                              <IconButton
+                                size="small"
+                                onClick={() => handleCopyDataInfo(row)}
+                                sx={{
+                                  background: 'rgba(255,255,255,0.7)',
+                                  borderRadius: '6px',
+                                  boxShadow: 1,
+                                  '&:hover': { background: 'rgba(230,230,230,0.9)' }
+                                }}
+                              >
+                                <ContentCopyIcon fontSize="inherit" style={{ fontSize: 16 }} />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title={
+                              // Eğer kullanıcı orijinal sahip ve data transfer edilmişse
+                              row.transfer_user && row.original_owner === user.sicil_no && row.original_owner !== (row.current_owner || row.user)
+                                ? "Orijinal sahip olarak bu datayı zaten transfer ettiniz"
+                                : "Transfer Et"
+                            } arrow>
+                              <IconButton
+                                size="small"
+                                onClick={() => handleTransferClick(row)}
+                                disabled={
+                                  // Eğer kullanıcı orijinal sahip ve data transfer edilmişse disabled yap
+                                  row.transfer_user && row.original_owner === user.sicil_no && row.original_owner !== (row.current_owner || row.user)
                                 }
-                              }}
-                            >
-                              <SwapHorizIcon fontSize="inherit" style={{ fontSize: 16 }} />
-                            </IconButton>
-                          </Tooltip>
+                                sx={{
+                                  background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1))',
+                                  borderRadius: '6px',
+                                  boxShadow: 1,
+                                  color: 'rgb(102, 126, 234)',
+                                  mt: 1,
+                                  '&:hover': {
+                                    background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2))',
+                                    color: 'rgb(90, 112, 220)'
+                                  },
+                                  '&:disabled': {
+                                    background: 'rgba(128, 128, 128, 0.1)',
+                                    color: 'rgba(128, 128, 128, 0.5)',
+                                    cursor: 'not-allowed'
+                                  }
+                                }}
+                              >
+                                <SwapHorizIcon fontSize="inherit" style={{ fontSize: 16 }} />
+                              </IconButton>
+                            </Tooltip>
+                          </div>
+
                         </div>
                       </td>
                       {user.role === 'admin' && (
@@ -907,16 +910,16 @@ const ActivationList = () => {
                           <div className="flex flex-col items-center gap-1">
                             <span className="user-badge">{row.full_name}</span>
                             {row.transfer_user && row.original_owner !== (row.current_owner || row.user) && (
-                              <Chip 
+                              <Chip
                                 label={`Orijinal: ${row.original_owner_name || row.original_owner}`}
                                 size="small"
-                                sx={{ 
+                                sx={{
                                   fontSize: '10px',
                                   height: '18px',
                                   backgroundColor: 'rgba(255, 152, 0, 0.1)',
                                   color: 'rgba(255, 152, 0, 0.8)',
                                   border: '1px solid rgba(255, 152, 0, 0.2)'
-                                }} 
+                                }}
                               />
                             )}
                           </div>
@@ -986,7 +989,7 @@ const ActivationList = () => {
                               } else {
                                 return (
                                   <div className="flex items-center gap-2">
-                                    <MoreHorizOutlinedIcon style={{ backgroundColor: 'darkorange', color: 'white', borderRadius: '50%', padding: '2px' }}  fontSize="small" color="orange" />
+                                    <MoreHorizOutlinedIcon style={{ backgroundColor: 'darkorange', color: 'white', borderRadius: '50%', padding: '2px' }} fontSize="small" color="orange" />
                                     <span className="font-mono text-sm">{row.status}</span>
                                   </div>
                                 );
@@ -1010,7 +1013,7 @@ const ActivationList = () => {
                               .map(status => (
                                 <MenuItem key={status} value={status} disabled={statusLoading === row.activationid}>
                                   <div className="flex items-center gap-2">
-                                    <MoreHorizOutlinedIcon style={{ backgroundColor: 'darkorange', color: 'white', borderRadius: '50%', padding: '2px' }}  fontSize="small" color="orange" />
+                                    <MoreHorizOutlinedIcon style={{ backgroundColor: 'darkorange', color: 'white', borderRadius: '50%', padding: '2px' }} fontSize="small" color="orange" />
                                     <span className="font-mono text-sm">{status}</span>
                                   </div>
                                 </MenuItem>
@@ -1064,9 +1067,9 @@ const ActivationList = () => {
                                 multiline
                                 maxRows={3}
                                 disabled={noteLoading === row.activationid}
-                                sx={{ 
-                                  fontSize: '0.92rem', 
-                                  width: '100%', 
+                                sx={{
+                                  fontSize: '0.92rem',
+                                  width: '100%',
                                   padding: '0px',
                                   '& .MuiOutlinedInput-root': {
                                     '&:hover fieldset': {
@@ -1104,7 +1107,7 @@ const ActivationList = () => {
                                       size="small"
                                       color="primary"
                                       onClick={() => handleNoteSubmit(row.activationid)}
-                                      sx={{ 
+                                      sx={{
                                         backgroundColor: 'rgba(255,255,255,0.9)',
                                         '&:hover': {
                                           backgroundColor: 'rgba(255,255,255,1)',
@@ -1120,7 +1123,7 @@ const ActivationList = () => {
                                         setEditingNote(null);
                                         setNoteText('');
                                       }}
-                                      sx={{ 
+                                      sx={{
                                         backgroundColor: 'rgba(255,255,255,0.9)',
                                         '&:hover': {
                                           backgroundColor: 'rgba(255,255,255,1)',
@@ -1134,10 +1137,10 @@ const ActivationList = () => {
                               </div>
                             </div>
                           ) : (
-                            <div 
-                              className="flex items-center gap-2 group cursor-pointer hover:bg-gray-50 rounded-md transition-colors duration-200" 
-                              style={{ 
-                                width: '100%', 
+                            <div
+                              className="flex items-center gap-2 group cursor-pointer hover:bg-gray-50 rounded-md transition-colors duration-200"
+                              style={{
+                                width: '100%',
                                 padding: '4px 8px',
                                 minHeight: '40px',
                                 maxHeight: '120px',
@@ -1148,9 +1151,9 @@ const ActivationList = () => {
                                 setNoteText(row.note || '');
                               }}
                             >
-                              <span 
-                                className="text-sm flex-grow whitespace-pre-wrap break-words" 
-                                style={{ 
+                              <span
+                                className="text-sm flex-grow whitespace-pre-wrap break-words"
+                                style={{
                                   fontSize: '0.92rem',
                                   color: row.note ? 'inherit' : '#9CA3AF',
                                   fontStyle: row.note ? 'normal' : 'italic',
