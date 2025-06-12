@@ -8,7 +8,8 @@ import {
   Snackbar,
   ListItemText,
   CircularProgress,
-  Button
+  Button,
+  Chip
 } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
@@ -18,8 +19,10 @@ import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import AddIcon from '@mui/icons-material/Add';
+import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import { startOfDay, endOfDay } from 'date-fns';
 import AddActivationModal from './AddActivationModal';
+import TransferModal from './TransferModal';
 
 const ActivationList = () => {
   const [activations, setActivations] = useState([]);
@@ -33,6 +36,7 @@ const ActivationList = () => {
   const [editingNote, setEditingNote] = useState(null);
   const [noteText, setNoteText] = useState('');
   const [copySuccess, setCopySuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
   const [otherStatusValues, setOtherStatusValues] = useState({});
   const [openStatusMenu, setOpenStatusMenu] = useState({});
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
@@ -46,6 +50,8 @@ const ActivationList = () => {
   });
   const [isTodayFilterActive, setIsTodayFilterActive] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
+  const [selectedActivationForTransfer, setSelectedActivationForTransfer] = useState(null);
 
   useEffect(() => {
     fetchActivations();
@@ -319,6 +325,19 @@ const ActivationList = () => {
     setCopySuccess(true);
   };
 
+  const handleTransferClick = (activation) => {
+    setSelectedActivationForTransfer(activation);
+    setIsTransferModalOpen(true);
+  };
+
+  const handleTransferSuccess = (message) => {
+    setSuccessMessage(message);
+    setTimeout(() => {
+      setSuccessMessage('');
+    }, 5000);
+    fetchActivations();
+  };
+
   const handleStatusMenuClose = (activationId) => {
     setOpenStatusMenu(prev => ({ ...prev, [activationId]: false }));
   };
@@ -346,6 +365,20 @@ const ActivationList = () => {
         </div>
       )}
 
+      {successMessage && (
+        <div className="fixed top-4 right-4 z-50">
+          <div className="result-alert success">
+            <div className="alert-icon">
+              <i className="bi bi-check-circle-fill"></i>
+            </div>
+            <div className="alert-content">
+              <strong>Başarılı!</strong>
+              <p>{successMessage}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="page-header">
         <div className="header-content">
           <div className="header-icon">
@@ -356,7 +389,7 @@ const ActivationList = () => {
             <p>Aktivasyonlarınızı görüntüleyin</p>
           </div>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           <Button
             variant="contained"
             startIcon={<AddIcon />}
@@ -365,15 +398,40 @@ const ActivationList = () => {
               textTransform: 'none',
               borderRadius: '8px',
               boxShadow: 'none',
+              height: '40px',
+              minWidth: '160px',
+              fontSize: '0.95rem',
+              fontWeight: 500,
+              paddingX: 2,
+              background: 'linear-gradient(135deg, rgb(102, 126, 234), rgb(118, 75, 162))',
               '&:hover': {
-                boxShadow: 'none'
+                boxShadow: 'none',
+                background: 'linear-gradient(135deg, rgb(90, 112, 220), rgb(105, 65, 150))',
+                transform: 'translateY(-1px)',
               }
             }}
           >
             Yeni Aktivasyon
           </Button>
-          <div className="stats-badge">
-            <i className="bi bi-list-ol"></i>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            height: '40px',
+            paddingLeft: '16px',
+            paddingRight: '16px',
+            background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1))',
+            border: '1px solid rgba(102, 126, 234, 0.2)',
+            borderRadius: '8px',
+            minWidth: '140px',
+            justifyContent: 'center',
+            color: 'rgb(102, 126, 234)',
+            fontWeight: 500,
+            fontSize: '0.95rem',
+            backdropFilter: 'blur(10px)',
+            transition: 'all 0.2s ease'
+          }}>
+            <i className="bi bi-list-ol" style={{ fontSize: '16px' }}></i>
             <span>{activations.length} Aktivasyon</span>
           </div>
         </div>
@@ -386,6 +444,16 @@ const ActivationList = () => {
           fetchActivations();
           setErrorMessage('');
         }}
+      />
+
+      <TransferModal
+        open={isTransferModalOpen}
+        onClose={() => {
+          setIsTransferModalOpen(false);
+          setSelectedActivationForTransfer(null);
+        }}
+        activation={selectedActivationForTransfer}
+        onSuccess={handleTransferSuccess}
       />
 
       <div className="output-card">
@@ -691,11 +759,99 @@ const ActivationList = () => {
                               <span className="text-gray-500 text-sm">DT:</span>
                               <span className="text-sm">{row.birth_date}</span>
                             </div>
-                            {row.isAutomation === false && (
-                              <div className="flex items-center gap-2">
-                                <span className="font-mono text-sm">Manuel</span>
-                              </div>
-                            )}
+                            <div className="flex items-center gap-2 flex-wrap">
+                              {row.isAutomation === false && (
+                                <Chip 
+                                  label="Manuel" 
+                                  size="small" 
+                                  sx={{ 
+                                    fontSize: '11px',
+                                    height: '20px',
+                                    backgroundColor: '#f3f4f6',
+                                    color: '#374151'
+                                  }} 
+                                />
+                              )}
+                              {row.transfer_user && (
+                                <Tooltip 
+                                  title={
+                                    <div style={{ padding: '8px' }}>
+                                      <div style={{ fontWeight: 'bold', marginBottom: '8px', fontSize: '14px' }}>
+                                        Transfer Geçmişi
+                                      </div>
+                                      <div style={{ fontSize: '12px', lineHeight: '1.4' }}>
+                                        <div style={{ marginBottom: '4px' }}>
+                                          <strong>Orijinal Sahip:</strong> {row.original_owner_name || row.original_owner}
+                                        </div>
+                                        <div style={{ marginBottom: '4px' }}>
+                                          <strong>Mevcut Sahip:</strong> {row.full_name}
+                                        </div>
+                                        {row.transfer_user?.transfers && row.transfer_user.transfers.length > 0 && (
+                                          <div style={{ marginTop: '8px' }}>
+                                            <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>Transfer Detayları:</div>
+                                            {row.transfer_user.transfers.map((transfer, index) => (
+                                              <div key={index} style={{ 
+                                                marginBottom: '2px', 
+                                                paddingLeft: '8px',
+                                                fontSize: '11px',
+                                                opacity: transfer.active ? 1 : 0.7
+                                              }}>
+                                                {index + 1}. {new Date(transfer.date).toLocaleString('tr-TR', {
+                                                  day: '2-digit',
+                                                  month: '2-digit', 
+                                                  year: 'numeric',
+                                                  hour: '2-digit',
+                                                  minute: '2-digit'
+                                                                                                 })} → {transfer.from_name || transfer.from} → {transfer.to_name || transfer.to}
+                                                {transfer.active && <span style={{ color: '#4ade80' }}> (Aktif)</span>}
+                                              </div>
+                                            ))}
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  }
+                                  arrow
+                                  placement="top"
+                                  componentsProps={{
+                                    tooltip: {
+                                      sx: {
+                                        backgroundColor: 'rgba(255, 255, 255, 0.98)',
+                                        color: '#1a1a1a',
+                                        border: '1px solid rgba(102, 126, 234, 0.2)',
+                                        borderRadius: '12px',
+                                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)',
+                                        backdropFilter: 'blur(20px)',
+                                        maxWidth: '320px',
+                                        fontSize: '13px'
+                                      }
+                                    },
+                                    arrow: {
+                                      sx: {
+                                        color: 'rgba(255, 255, 255, 0.98)',
+                                        '&::before': {
+                                          border: '1px solid rgba(102, 126, 234, 0.2)'
+                                        }
+                                      }
+                                    }
+                                  }}
+                                >
+                                  <Chip 
+                                    label="Transfer"
+                                    size="small"
+                                    icon={<SwapHorizIcon style={{ fontSize: 12 }} />}
+                                    sx={{ 
+                                      fontSize: '11px',
+                                      height: '20px',
+                                      backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                                      color: 'rgb(102, 126, 234)',
+                                      border: '1px solid rgba(102, 126, 234, 0.2)',
+                                      cursor: 'help'
+                                    }} 
+                                  />
+                                </Tooltip>
+                              )}
+                            </div>
                           </div>
                           <Tooltip title="Kopyala" arrow>
                             <IconButton
@@ -711,11 +867,59 @@ const ActivationList = () => {
                               <ContentCopyIcon fontSize="inherit" style={{ fontSize: 16 }} />
                             </IconButton>
                           </Tooltip>
+                          <Tooltip title={
+                            // Eğer kullanıcı orijinal sahip ve data transfer edilmişse
+                            row.transfer_user && row.original_owner === user.sicil_no && row.original_owner !== (row.current_owner || row.user)
+                              ? "Orijinal sahip olarak bu datayı zaten transfer ettiniz"
+                              : "Transfer Et"
+                          } arrow>
+                            <IconButton
+                              size="small"
+                              onClick={() => handleTransferClick(row)}
+                              disabled={
+                                // Eğer kullanıcı orijinal sahip ve data transfer edilmişse disabled yap
+                                row.transfer_user && row.original_owner === user.sicil_no && row.original_owner !== (row.current_owner || row.user)
+                              }
+                              sx={{
+                                background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1))',
+                                borderRadius: '6px',
+                                boxShadow: 1,
+                                color: 'rgb(102, 126, 234)',
+                                ml: 1,
+                                '&:hover': { 
+                                  background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2))',
+                                  color: 'rgb(90, 112, 220)'
+                                },
+                                '&:disabled': {
+                                  background: 'rgba(128, 128, 128, 0.1)',
+                                  color: 'rgba(128, 128, 128, 0.5)',
+                                  cursor: 'not-allowed'
+                                }
+                              }}
+                            >
+                              <SwapHorizIcon fontSize="inherit" style={{ fontSize: 16 }} />
+                            </IconButton>
+                          </Tooltip>
                         </div>
                       </td>
                       {user.role === 'admin' && (
                         <td>
-                          <span className="user-badge">{row.full_name}</span>
+                          <div className="flex flex-col items-center gap-1">
+                            <span className="user-badge">{row.full_name}</span>
+                            {row.transfer_user && row.original_owner !== (row.current_owner || row.user) && (
+                              <Chip 
+                                label={`Orijinal: ${row.original_owner_name || row.original_owner}`}
+                                size="small"
+                                sx={{ 
+                                  fontSize: '10px',
+                                  height: '18px',
+                                  backgroundColor: 'rgba(255, 152, 0, 0.1)',
+                                  color: 'rgba(255, 152, 0, 0.8)',
+                                  border: '1px solid rgba(255, 152, 0, 0.2)'
+                                }} 
+                              />
+                            )}
+                          </div>
                         </td>
                       )}
                       <td className="text-center">

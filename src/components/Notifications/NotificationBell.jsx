@@ -17,10 +17,25 @@ import {
     DialogActions,
     Card,
     CardMedia,
-    useTheme
+    useTheme,
+    Tooltip,
+    keyframes
 } from '@mui/material';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
+
+// Animasyon keyframes
+const bellShake = keyframes`
+  0%, 100% { transform: rotate(0deg); }
+  10%, 30%, 50%, 70%, 90% { transform: rotate(-10deg); }
+  20%, 40%, 60%, 80% { transform: rotate(10deg); }
+`;
+
+const pulseGlow = keyframes`
+  0% { box-shadow: 0 0 5px rgba(102, 126, 234, 0.4); }
+  50% { box-shadow: 0 0 20px rgba(118, 75, 162, 0.8); }
+  100% { box-shadow: 0 0 5px rgba(102, 126, 234, 0.4); }
+`;
 
 const NotificationBell = () => {
     const theme = useTheme();
@@ -29,14 +44,24 @@ const NotificationBell = () => {
     const [unreadCount, setUnreadCount] = useState(0);
     const [anchorEl, setAnchorEl] = useState(null);
     const [selectedNotification, setSelectedNotification] = useState(null);
+    const [isAnimating, setIsAnimating] = useState(false);
 
     const fetchNotifications = async () => {
         try {
             const response = await fetch(`${baseUrl}/user/getUserNotifications/${user.sicil_no}`);
             const data = await response.json();
             if (response.ok) {
+                const previousUnreadCount = unreadCount;
+                const newUnreadCount = data.data.filter(n => n.statu === 'UNREAD').length;
+                
                 setNotifications(data.data);
-                setUnreadCount(data.data.filter(n => n.statu === 'UNREAD').length);
+                setUnreadCount(newUnreadCount);
+                
+                // Yeni bildirim geldiğinde animasyon tetikle
+                if (newUnreadCount > previousUnreadCount) {
+                    setIsAnimating(true);
+                    setTimeout(() => setIsAnimating(false), 1000);
+                }
             }
         } catch (error) {
             console.error('Bildirimler yüklenirken hata:', error);
@@ -76,13 +101,13 @@ const NotificationBell = () => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ statu: 'READ' })
+                body: JSON.stringify({ statu: 'read' })
             });
 
             if (response.ok) {
                 setNotifications(notifications.map(notification =>
                     notification.id === notificationId
-                        ? { ...notification, statu: 'READ' }
+                        ? { ...notification, statu: 'read' }
                         : notification
                 ));
                 setUnreadCount(prev => Math.max(0, prev - 1));
@@ -102,11 +127,11 @@ const NotificationBell = () => {
                         headers: {
                             'Content-Type': 'application/json',
                         },
-                        body: JSON.stringify({ statu: 'READ' })
+                        body: JSON.stringify({ statu: 'read' })
                     })
                 )
             );
-            setNotifications(notifications.map(notification => ({ ...notification, statu: 'READ' })));
+            setNotifications(notifications.map(notification => ({ ...notification, statu: 'read' })));
             setUnreadCount(0);
         } catch (error) {
             console.error('Tüm bildirimler güncellenirken hata:', error);
@@ -163,13 +188,20 @@ const NotificationBell = () => {
 
     return (
         <>
+            <Tooltip title="Bildirimler" arrow placement="bottom">
             <IconButton
                 color="inherit"
                 onClick={handleClick}
                 sx={{ 
                     position: 'relative',
+                        padding: '8px',
+                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                        animation: isAnimating ? `${bellShake} 0.8s ease-in-out` : unreadCount > 0 ? `${bellShake} 1.5s ease-in-out infinite` : 'none',
                     '&:hover': {
-                        backgroundColor: theme.palette.action.hover
+                            transform: 'translateY(-2px)',
+                        },
+                        '&:active': {
+                            transform: 'translateY(0px)',
                     }
                 }}
             >
@@ -178,14 +210,41 @@ const NotificationBell = () => {
                     color="error"
                     sx={{
                         '& .MuiBadge-badge': {
-                            backgroundColor: theme.palette.error.main,
-                            color: theme.palette.error.contrastText
+                                backgroundColor: 'linear-gradient(135deg, rgb(102, 126, 234), rgb(118, 75, 162))',
+                                background: 'linear-gradient(135deg, rgb(102, 126, 234), rgb(118, 75, 162))',
+                                color: '#ffffff',
+                                fontWeight: 'bold',
+                                fontSize: '0.75rem',
+                                minWidth: '20px',
+                                height: '20px',
+                                borderRadius: '10px',
+                                border: '2px solid #ffffff',
+                                boxShadow: '0 2px 8px rgba(118, 75, 162, 0.4)',
+                                transform: 'scale(1) translate(50%, -50%)',
+                                '&::after': {
+                                    content: '""',
+                                    position: 'absolute',
+                                    top: 0,
+                                    left: 0,
+                                    width: '100%',
+                                    height: '100%',
+                                    borderRadius: '50%',
+                                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.3), transparent)',
+                                }
                         }
                     }}
                 >
-                    <i className="bi bi-bell-fill"></i>
+                        <i 
+                            className="bi bi-bell-fill" 
+                            style={{ 
+                                fontSize: '22px',
+                                color: 'rgb(102, 126, 234)',
+                                transition: 'all 0.3s ease'
+                            }}
+                        />
                 </Badge>
             </IconButton>
+            </Tooltip>
             <Popover
                 open={open}
                 anchorEl={anchorEl}
@@ -200,174 +259,468 @@ const NotificationBell = () => {
                 }}
                 PaperProps={{
                     sx: {
-                        width: 360,
-                        maxHeight: 480,
+                        width: 380,
+                        maxHeight: 500,
                         mt: 1,
-                        borderRadius: 2,
-                        boxShadow: theme.shadows[4],
-                        border: `1px solid ${theme.palette.divider}`
+                        borderRadius: '16px',
+                        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.98))',
+                        backdropFilter: 'blur(20px)',
+                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
+                        border: '1px solid rgba(102, 126, 234, 0.1)',
+                        overflow: 'hidden'
                     }
                 }}
             >
                 <Box sx={{ 
-                    p: 2, 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'center',
-                    borderBottom: `1px solid ${theme.palette.divider}`
+                    p: 2.5,
+                    background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05))',
+                    borderBottom: '1px solid rgba(102, 126, 234, 0.1)'
                 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: unreadCount > 0 ? 1.5 : 0 }}>
+                        <Box sx={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: '8px',
+                            background: 'linear-gradient(135deg, rgb(102, 126, 234), rgb(118, 75, 162))',
+                            display: 'flex',
+                    alignItems: 'center',
+                            justifyContent: 'center',
+                            boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)'
+                        }}>
+                            <i className="bi bi-bell-fill" style={{ color: 'white', fontSize: '16px' }}></i>
+                        </Box>
+                        <Box sx={{ flex: 1 }}>
                     <Typography variant="h6" sx={{ 
                         fontSize: '1.1rem',
-                        fontWeight: 600,
-                        color: theme.palette.text.primary
+                                fontWeight: 700,
+                                color: '#1a1a1a',
+                                lineHeight: 1.2
                     }}>
                         Bildirimler
                     </Typography>
+                            {unreadCount > 0 && (
+                                <Typography variant="caption" sx={{ 
+                                    color: 'rgb(102, 126, 234)',
+                                    fontWeight: 600,
+                                    fontSize: '0.75rem'
+                                }}>
+                                    {unreadCount} okunmamış bildirim
+                                </Typography>
+                            )}
+                        </Box>
+                    </Box>
+                    
                     {unreadCount > 0 && (
                         <Button 
                             size="small" 
                             onClick={markAllAsRead}
                             sx={{
                                 textTransform: 'none',
-                                color: theme.palette.primary.main,
+                                fontSize: '0.8rem',
+                                fontWeight: 600,
+                                borderRadius: '8px',
+                                background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1))',
+                                border: '1px solid rgba(102, 126, 234, 0.2)',
+                                color: 'rgb(102, 126, 234)',
+                                px: 2,
+                                py: 0.5,
                                 '&:hover': {
-                                    backgroundColor: theme.palette.primary.light + '20'
+                                    background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(118, 75, 162, 0.15))',
+                                    border: '1px solid rgba(102, 126, 234, 0.3)',
+                                    transform: 'translateY(-1px)'
                                 }
                             }}
                         >
+                            <i className="bi bi-check-all" style={{ marginRight: '6px', fontSize: '14px' }}></i>
                             Tümünü Okundu İşaretle
                         </Button>
                     )}
                 </Box>
-                <List sx={{ p: 0 }}>
+                <Box sx={{ p: 1, maxHeight: 400, overflowY: 'auto' }}>
                     {notifications.length === 0 ? (
-                        <ListItem>
-                            <ListItemText
-                                primary="Bildirim bulunmuyor"
-                                sx={{ 
+                        <Box sx={{ 
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            gap: 2,
+                            py: 4,
+                            px: 2
+                        }}>
+                            <Box sx={{
+                                width: 64,
+                                height: 64,
+                                borderRadius: '50%',
+                                background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1))',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }}>
+                                <i className="bi bi-bell-slash" style={{ 
+                                    fontSize: '24px',
+                                    color: 'rgba(102, 126, 234, 0.6)'
+                                }}></i>
+                            </Box>
+                            <Typography variant="body2" sx={{ 
+                                color: theme.palette.text.secondary,
                                     textAlign: 'center', 
-                                    color: theme.palette.text.secondary,
-                                    py: 2
-                                }}
-                            />
-                        </ListItem>
+                                fontWeight: 500
+                            }}>
+                                Henüz bildirim bulunmuyor
+                            </Typography>
+                        </Box>
                     ) : (
-                        notifications.map((notification) => (
-                            <React.Fragment key={notification.id}>
-                                <ListItem
+                        notifications.map((notification, index) => (
+                            <Box key={notification.id} sx={{ mb: index < notifications.length - 1 ? 1 : 0 }}>
+                                <Box
                                     sx={{
-                                        bgcolor: notification.statu === 'UNREAD' 
-                                            ? theme.palette.action.hover 
-                                            : 'inherit',
+                                        p: 2,
+                                        borderRadius: '12px',
+                                        background: notification.statu === 'UNREAD' 
+                                            ? 'linear-gradient(135deg, rgba(102, 126, 234, 0.08), rgba(118, 75, 162, 0.08))'
+                                            : 'linear-gradient(135deg, rgba(102, 126, 234, 0.02), rgba(118, 75, 162, 0.02))',
+                                        border: notification.statu === 'UNREAD' 
+                                            ? '1px solid rgba(102, 126, 234, 0.15)'
+                                            : '1px solid rgba(102, 126, 234, 0.05)',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s ease',
+                                        position: 'relative',
                                         '&:hover': {
-                                            bgcolor: theme.palette.action.selected,
-                                            cursor: 'pointer'
-                                        },
-                                        py: 1.5
+                                            background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.12), rgba(118, 75, 162, 0.12))',
+                                            border: '1px solid rgba(102, 126, 234, 0.2)',
+                                            transform: 'translateY(-1px)',
+                                            boxShadow: '0 4px 12px rgba(102, 126, 234, 0.1)'
+                                        }
                                     }}
                                     onClick={() => handleNotificationClick(notification)}
                                 >
-                                    <ListItemText
-                                        primary={
+                                    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
+                                        {/* Bildirim İkonu */}
+                                        <Box sx={{
+                                            width: 32,
+                                            height: 32,
+                                            borderRadius: '8px',
+                                            background: notification.statu === 'UNREAD' 
+                                                ? 'linear-gradient(135deg, rgb(102, 126, 234), rgb(118, 75, 162))'
+                                                : 'linear-gradient(135deg, rgba(102, 126, 234, 0.6), rgba(118, 75, 162, 0.6))',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            flexShrink: 0,
+                                            boxShadow: notification.statu === 'UNREAD' 
+                                                ? '0 4px 12px rgba(102, 126, 234, 0.3)'
+                                                : '0 2px 8px rgba(102, 126, 234, 0.15)'
+                                        }}>
+                                            <i className="bi bi-bell-fill" style={{ 
+                                                color: 'white', 
+                                                fontSize: '14px' 
+                                            }}></i>
+                                        </Box>
+
+                                        {/* Bildirim İçeriği */}
+                                        <Box sx={{ flex: 1, minWidth: 0 }}>
                                             <Typography
                                                 variant="subtitle2"
                                                 sx={{
                                                     color: theme.palette.text.primary,
-                                                    fontWeight: notification.statu === 'UNREAD' ? 600 : 400,
-                                                    mb: 0.5
+                                                    fontWeight: notification.statu === 'UNREAD' ? 600 : 500,
+                                                    mb: 0.5,
+                                                    lineHeight: 1.3,
+                                                    fontSize: '0.9rem'
                                                 }}
                                             >
                                                 {notification.title}
                                             </Typography>
-                                        }
-                                        secondary={
-                                            <>
                                                 <Typography
-                                                    component="span"
                                                     variant="body2"
                                                     sx={{ 
-                                                        display: 'block',
                                                         color: theme.palette.text.secondary,
-                                                        fontSize: '0.85rem',
-                                                        mb: 0.5
+                                                    fontSize: '0.8rem',
+                                                    lineHeight: 1.4,
+                                                    mb: 1,
+                                                    display: '-webkit-box',
+                                                    WebkitLineClamp: 2,
+                                                    WebkitBoxOrient: 'vertical',
+                                                    overflow: 'hidden'
                                                     }}
                                                 >
-                                                    {notification.message.length > 50 
-                                                        ? notification.message.substring(0, 50) + '...' 
-                                                        : notification.message}
+                                                {notification.message}
                                                 </Typography>
+                                            
+                                            {/* Alt Bilgiler */}
+                                            <Box sx={{ 
+                                                display: 'flex', 
+                                                alignItems: 'center', 
+                                                justifyContent: 'space-between',
+                                                gap: 1
+                                            }}>
                                                 <Typography
-                                                    component="span"
                                                     variant="caption"
                                                     sx={{
                                                         color: theme.palette.text.disabled,
-                                                        fontSize: '0.75rem'
+                                                        fontSize: '0.7rem',
+                                                        fontWeight: 500
                                                     }}
                                                 >
-                                                    {format(new Date(notification.cdate), 'dd MMMM yyyy HH:mm', { locale: tr })}
+                                                    {format(new Date(notification.cdate), 'dd MMM HH:mm', { locale: tr })}
                                                 </Typography>
-                                            </>
-                                        }
-                                    />
-                                </ListItem>
-                                <Divider sx={{ my: 0 }} />
-                            </React.Fragment>
+                                                
+                                                {notification.statu === 'UNREAD' && (
+                                                    <Box sx={{
+                                                        width: 6,
+                                                        height: 6,
+                                                        borderRadius: '50%',
+                                                        background: 'linear-gradient(135deg, rgb(102, 126, 234), rgb(118, 75, 162))',
+                                                        flexShrink: 0,
+                                                        boxShadow: '0 0 8px rgba(102, 126, 234, 0.4)'
+                                                    }} />
+                                                )}
+                                            </Box>
+                                        </Box>
+                                    </Box>
+                                </Box>
+                            </Box>
                         ))
                     )}
-                </List>
+                </Box>
             </Popover>
 
             <Dialog
                 open={Boolean(selectedNotification)}
                 onClose={handleCloseDialog}
-                maxWidth="sm"
+                maxWidth="md"
                 fullWidth
                 PaperProps={{
                     sx: {
-                        borderRadius: 2,
-                        boxShadow: theme.shadows[4],
-                        border: `1px solid ${theme.palette.divider}`
+                        borderRadius: '16px',
+                        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.98))',
+                        backdropFilter: 'blur(20px)',
+                        boxShadow: '0 12px 40px rgba(0, 0, 0, 0.15)',
+                        border: '1px solid rgba(102, 126, 234, 0.1)',
+                        overflow: 'hidden',
+                        minHeight: '300px'
+                    }
+                }}
+                BackdropProps={{
+                    sx: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.4)',
+                        backdropFilter: 'blur(4px)'
                     }
                 }}
             >
                 {selectedNotification && (
                     <>
-                        <DialogTitle sx={{ 
-                            pb: 1,
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 1,
-                            borderBottom: `1px solid ${theme.palette.divider}`
+                        {/* Modern Header */}
+                        <Box sx={{ 
+                            background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.08), rgba(118, 75, 162, 0.08))',
+                            borderBottom: '1px solid rgba(102, 126, 234, 0.1)',
+                            p: 3
                         }}>
-                            <i className="bi bi-bell-fill" style={{ color: theme.palette.primary.main }}></i>
-                            <Typography variant="h6" sx={{ 
-                                fontSize: '1.1rem',
+                            <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+                                {/* Bildirim İkonu */}
+                                <Box sx={{
+                                    width: 48,
+                                    height: 48,
+                                    borderRadius: '12px',
+                                    background: 'linear-gradient(135deg, rgb(102, 126, 234), rgb(118, 75, 162))',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    boxShadow: '0 8px 24px rgba(102, 126, 234, 0.3)',
+                                    flexShrink: 0
+                        }}>
+                                    <i className="bi bi-bell-fill" style={{ color: 'white', fontSize: '22px' }}></i>
+                                </Box>
+
+                                {/* Başlık ve Meta Bilgiler */}
+                                <Box sx={{ flex: 1, minWidth: 0 }}>
+                                    <Typography variant="h5" sx={{ 
+                                        fontSize: '1.3rem',
+                                        fontWeight: 700,
+                                        color: '#1a1a1a',
+                                        mb: 1,
+                                        lineHeight: 1.3
+                                    }}>
+                                        {selectedNotification.title}
+                                    </Typography>
+                                    
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+                                        <Box sx={{ 
+                                            display: 'flex', 
+                                            alignItems: 'center', 
+                                            gap: 0.5,
+                                            px: 1.5,
+                                            py: 0.5,
+                                            borderRadius: '8px',
+                                            background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1))',
+                                            border: '1px solid rgba(102, 126, 234, 0.2)'
+                                        }}>
+                                            <i className="bi bi-clock" style={{ fontSize: '12px', color: 'rgb(102, 126, 234)' }}></i>
+                                            <Typography variant="caption" sx={{ 
+                                                color: 'rgb(102, 126, 234)',
                                 fontWeight: 600,
-                                color: theme.palette.text.primary
+                                                fontSize: '0.75rem'
+                                            }}>
+                                                {format(new Date(selectedNotification.cdate), 'dd MMMM yyyy, HH:mm', { locale: tr })}
+                                            </Typography>
+                                        </Box>
+
+                                        {selectedNotification.statu === 'UNREAD' && (
+                                            <Box sx={{ 
+                                                display: 'flex', 
+                                                alignItems: 'center', 
+                                                gap: 0.5,
+                                                px: 1.5,
+                                                py: 0.5,
+                                                borderRadius: '8px',
+                                                background: 'linear-gradient(135deg, rgb(34, 197, 94), rgb(22, 163, 74))',
+                                                boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)'
+                                            }}>
+                                                <Box sx={{
+                                                    width: 6,
+                                                    height: 6,
+                                                    borderRadius: '50%',
+                                                    background: 'white',
+                                                    boxShadow: '0 0 4px rgba(255, 255, 255, 0.5)'
+                                                }} />
+                                                <Typography variant="caption" sx={{ 
+                                                    color: 'white',
+                                                    fontWeight: 700,
+                                                    fontSize: '0.7rem',
+                                                    letterSpacing: '0.5px'
+                                                }}>
+                                                    YENİ
+                                                </Typography>
+                                            </Box>
+                                        )}
+                                    </Box>
+                                </Box>
+
+                                {/* Kapat Butonu */}
+                                <IconButton 
+                                    onClick={handleCloseDialog}
+                                    sx={{
+                                        width: 36,
+                                        height: 36,
+                                        background: 'rgba(255, 255, 255, 0.8)',
+                                        border: '1px solid rgba(102, 126, 234, 0.2)',
+                                        color: 'rgb(102, 126, 234)',
+                                        '&:hover': {
+                                            background: 'rgba(102, 126, 234, 0.1)',
+                                            border: '1px solid rgba(102, 126, 234, 0.3)',
+                                            transform: 'scale(1.05)'
+                                        }
+                                    }}
+                                >
+                                    <i className="bi bi-x" style={{ fontSize: '18px' }}></i>
+                                </IconButton>
+                            </Box>
+                        </Box>
+
+                        {/* İçerik Alanı */}
+                        <Box sx={{ p: 3 }}>
+                            <Box sx={{
+                                background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.02), rgba(118, 75, 162, 0.02))',
+                                border: '1px solid rgba(102, 126, 234, 0.08)',
+                                borderRadius: '12px',
+                                p: 3,
+                                position: 'relative',
+                                '&::before': {
+                                    content: '""',
+                                    position: 'absolute',
+                                    top: 0,
+                                    left: 0,
+                                    width: '4px',
+                                    height: '100%',
+                                    background: 'linear-gradient(135deg, rgb(102, 126, 234), rgb(118, 75, 162))',
+                                    borderRadius: '0 2px 2px 0'
+                                }
                             }}>
-                                {selectedNotification.title}
+                                {selectedNotification.image_url && (
+                                    <Box sx={{ mb: 3 }}>
+                                        <Box sx={{
+                                            borderRadius: '12px',
+                                            overflow: 'hidden',
+                                            border: '1px solid rgba(102, 126, 234, 0.1)',
+                                            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)'
+                                        }}>
+                                            <img
+                                                src={selectedNotification.image_url}
+                                                alt={selectedNotification.title}
+                                                style={{
+                                                    width: '100%',
+                                                    maxHeight: '300px',
+                                                    objectFit: 'contain',
+                                                    backgroundColor: '#f8f9fa'
+                                                }}
+                                            />
+                                        </Box>
+                                    </Box>
+                                )}
+                                
+                                <Typography variant="body1" sx={{ 
+                                    color: '#2d3748',
+                                    lineHeight: 1.7,
+                                    fontSize: '1rem',
+                                    whiteSpace: 'pre-wrap',
+                                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                                }}>
+                                    {selectedNotification.message}
                             </Typography>
-                        </DialogTitle>
-                        <DialogContent sx={{ pt: 2 }}>
-                            {renderNotificationContent(selectedNotification)}
-                        </DialogContent>
-                        <DialogActions sx={{ 
-                            px: 3, 
-                            pb: 2,
-                            borderTop: `1px solid ${theme.palette.divider}`
+                            </Box>
+                        </Box>
+
+                        {/* Footer Actions */}
+                        <Box sx={{ 
+                            p: 3,
+                            pt: 0,
+                            display: 'flex',
+                            justifyContent: 'flex-end',
+                            gap: 2
                         }}>
+                            {selectedNotification.statu === 'UNREAD' && (
+                                <Button 
+                                    variant="outlined"
+                                    startIcon={<i className="bi bi-check" style={{ fontSize: '14px' }}></i>}
+                                    onClick={() => {
+                                        markAsRead(selectedNotification.id);
+                                        handleCloseDialog();
+                                    }}
+                                    sx={{
+                                        borderRadius: '10px',
+                                        textTransform: 'none',
+                                        fontWeight: 600,
+                                        borderColor: 'rgba(34, 197, 94, 0.3)',
+                                        color: 'rgb(34, 197, 94)',
+                                        '&:hover': {
+                                            borderColor: 'rgb(34, 197, 94)',
+                                            background: 'rgba(34, 197, 94, 0.05)'
+                                        }
+                                    }}
+                                >
+                                    Okundu İşaretle
+                                </Button>
+                            )}
+                            
                             <Button 
                                 onClick={handleCloseDialog}
                                 variant="contained"
-                                color="primary"
+                                startIcon={<i className="bi bi-x-circle" style={{ fontSize: '14px' }}></i>}
                                 sx={{
+                                    borderRadius: '10px',
                                     textTransform: 'none',
-                                    borderRadius: 1.5
+                                    fontWeight: 600,
+                                    background: 'linear-gradient(135deg, rgb(102, 126, 234), rgb(118, 75, 162))',
+                                    boxShadow: '0 6px 20px rgba(102, 126, 234, 0.3)',
+                                    '&:hover': {
+                                        background: 'linear-gradient(135deg, rgb(90, 112, 220), rgb(105, 65, 150))',
+                                        transform: 'translateY(-1px)',
+                                        boxShadow: '0 8px 25px rgba(102, 126, 234, 0.4)'
+                                    }
                                 }}
                             >
                                 Kapat
                             </Button>
-                        </DialogActions>
+                        </Box>
                     </>
                 )}
             </Dialog>
