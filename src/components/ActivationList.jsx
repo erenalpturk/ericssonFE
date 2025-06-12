@@ -740,6 +740,7 @@ const ActivationList = () => {
                   {getPaginatedData().map((row) => (
                     <tr key={row.activationid} style={{
                       display: 'grid',
+                      opacity: row.transfer_user && row.original_owner === user.sicil_no && row.original_owner !== (row.current_owner || row.user) ? 0.5 : 1,
                       gridTemplateColumns: user.role === 'admin'
                         ? '1fr 1fr 1fr 1fr 3fr 1fr'
                         : '1fr 1fr 1fr 3fr 1fr'
@@ -946,7 +947,7 @@ const ActivationList = () => {
                             }}
                             open={!!openStatusMenu[row.activationid] || undefined}
                             onClose={() => handleStatusMenuClose(row.activationid)}
-                            disabled={statusLoading === row.activationid}
+                            disabled={statusLoading === row.activationid || (row.transfer_user && row.original_owner === user.sicil_no && row.original_owner !== (row.current_owner || row.user))}
                             sx={{
                               minWidth: 90,
                               fontSize: '0.95rem',
@@ -1066,7 +1067,7 @@ const ActivationList = () => {
                                 placeholder="Not ekleyin..."
                                 multiline
                                 maxRows={3}
-                                disabled={noteLoading === row.activationid}
+                                disabled={noteLoading === row.activationid || (row.transfer_user && row.original_owner === user.sicil_no && row.original_owner !== (row.current_owner || row.user))}
                                 sx={{
                                   fontSize: '0.92rem',
                                   width: '100%',
@@ -1144,7 +1145,8 @@ const ActivationList = () => {
                                 padding: '4px 8px',
                                 minHeight: '40px',
                                 maxHeight: '120px',
-                                overflow: 'auto'
+                                overflow: 'auto',
+                                pointerEvents: row.transfer_user && row.original_owner === user.sicil_no && row.original_owner !== (row.current_owner || row.user) ? 'none' : 'auto'
                               }}
                               onClick={() => {
                                 setEditingNote(row.activationid);
