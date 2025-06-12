@@ -21,6 +21,7 @@ export default function WorkflowBuilder() {
   // Veritabanı işlemleri için state'ler
   const [currentWorkflow, setCurrentWorkflow] = useState(null)
   const [showWorkflowManager, setShowWorkflowManager] = useState(false)
+  const [loading, setLoading] = useState(false)
   const [showVariablesManager, setShowVariablesManager] = useState(false)
   const [saveDialogOpen, setSaveDialogOpen] = useState(false)
   const [workflowName, setWorkflowName] = useState('')
@@ -30,6 +31,7 @@ export default function WorkflowBuilder() {
   const [showToolsDropdown, setShowToolsDropdown] = useState(false)
   const [showSaveDropdown, setShowSaveDropdown] = useState(false)
   const [availableWorkflows, setAvailableWorkflows] = useState([])
+  const [showWorkflowDropdown, setShowWorkflowDropdown] = useState(false)
 
   // AbortController for cancelling workflow
   const [abortController, setAbortController] = useState(null)
@@ -81,6 +83,7 @@ export default function WorkflowBuilder() {
       if (!event.target.closest('.dropdown')) {
         setShowToolsDropdown(false)
         setShowSaveDropdown(false)
+        setShowWorkflowDropdown(false)
       }
     }
 
@@ -1092,6 +1095,7 @@ export default function WorkflowBuilder() {
     setLocalStorageData([]) // Yeni workflow yüklendiğinde localStorage verilerini temizle
     setGlobalVariables({})
     setShowWorkflowManager(false)
+    setLoading(true)
 
     // Workflow yüklendiğinde variables'ları yenile
     console.log('[WorkflowBuilder] Refreshing variables after workflow load...')
@@ -1571,7 +1575,8 @@ export default function WorkflowBuilder() {
     if (!isAdmin) {
       try {
         const workflows = await WorkflowService.getActiveWorkflows()
-        setAvailableWorkflows(workflows)
+        const sortedWorkflows = workflows.sort((a, b) => b.name.localeCompare(a.name))
+        setAvailableWorkflows(sortedWorkflows)
       } catch (error) {
         console.error('[WorkflowBuilder] Error loading active workflows:', error)
       }
@@ -1598,30 +1603,57 @@ export default function WorkflowBuilder() {
                     <span>Henüz workflow bulunamadı</span>
                   </div>
                 ) : (
-                  availableWorkflows.map(workflow => (
+                  <div className="dropdown">
                     <button
-                      key={workflow.id}
-                      className={`workflow-btn ${currentWorkflow?.id === workflow.id ? 'active' : ''}`}
-                      onClick={async () => {
-                        try {
-                          const { workflow: workflowData, steps } = await WorkflowService.loadWorkflow(workflow.id)
-                          await handleLoadWorkflow(workflowData, steps)
-                        } catch (error) {
-                          console.error('Error loading workflow:', error)
-                          toast.error('Workflow yüklenirken hata oluştu')
-                        }
+                      className="action-btn secondary dropdown-toggle"
+                      type="button"
+                      title="Workflow seçin"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setShowToolsDropdown(false)
+                        setShowSaveDropdown(false)
+                        setShowWorkflowDropdown(!showWorkflowDropdown)
                       }}
-                      title={`${workflow.name}${workflow.description ? ' - ' + workflow.description : ''}`}
                     >
                       <i className="bi bi-gear-wide-connected"></i>
-                      <span>{workflow.name}</span>
+                      <span>{currentWorkflow ? currentWorkflow.name : 'Workflow Seç'}</span>
                     </button>
-                  ))
+                    <div className={`dropdown-menu ${showWorkflowDropdown ? 'show' : ''}`}>
+                      {availableWorkflows.map(workflow => (
+                        <button
+                          key={workflow.id}
+                          className={`dropdown-item ${currentWorkflow?.id === workflow.id ? 'active' : ''} ${workflow.name.includes('Fonksiyonel') ? 'FunctionalWorkflow' : 'RegressionWorkflow'}`}
+                          onClick={() => {
+                            setShowWorkflowDropdown(false)
+                            setLoading(true)
+                            try {
+                              WorkflowService.loadWorkflow(workflow.id)
+                                .then(({ workflow: workflowData, steps }) => {
+                                  handleLoadWorkflow(workflowData, steps)
+                                  setLoading(false)
+                                })
+                                .catch(error => {
+                                  console.error('Error loading workflow:', error)
+                                  toast.error('Workflow yüklenirken hata oluştu')
+                                })
+                            } catch (error) {
+                              console.error('Error loading workflow:', error)
+                              toast.error('Workflow yüklenirken hata oluştu') 
+                            }
+                          }}
+                          title={`${workflow.name}${workflow.description ? ' - ' + workflow.description : ''}`}
+                        >
+                          <i className="bi bi-gear-wide-connected"></i>
+                          <span>{workflow.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 )}
               </div>
               
               <div className="action-divider"></div>
-              
+{/*               
               <button
                 className="action-btn secondary refresh-variables-btn"
                 onClick={() => loadVariables()}
@@ -1629,7 +1661,7 @@ export default function WorkflowBuilder() {
               >
                 <i className="bi bi-arrow-clockwise"></i>
                 <span>Yenile</span>
-              </button>
+              </button> */}
             </>
           )}
 
@@ -1823,7 +1855,14 @@ export default function WorkflowBuilder() {
 
       {/* Main Content */}
       <div className="tools-section">
-        {steps.length === 0 && isAdmin ? (
+        {loading ? (
+          <div className="loading-container">
+            <div className="loading-spinner">
+              <i className="bi bi-arrow-repeat"></i>
+            </div>
+            <p>Workflow yükleniyor...</p>
+          </div>
+        ) : steps.length === 0 && isAdmin ? (
           <div className="empty-state">
             <div className="empty-icon">
               <i className="bi bi-plus-circle"></i>
@@ -2056,6 +2095,41 @@ export default function WorkflowBuilder() {
           </div>
         </div>
       )}
+
+      <style jsx>{`
+        .loading-container {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          min-height: 300px;
+          gap: 1rem;
+        }
+
+        .loading-spinner {
+          font-size: 2rem;
+          color: white;
+          animation: spin 1s linear infinite;
+        }
+
+        .loading-spinner i {
+          display: inline-block;
+        }
+
+        @keyframes spin {
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
+          }
+        }
+
+        .loading-container p {
+          color: white;
+          font-size: 1.1rem;
+        }
+      `}</style>
     </div>
   )
 }

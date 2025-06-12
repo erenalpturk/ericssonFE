@@ -677,7 +677,7 @@ const NotificationBell = () => {
                             justifyContent: 'flex-end',
                             gap: 2
                         }}>
-                            {selectedNotification.statu === 'UNREAD' && (
+                            {/* {selectedNotification.statu === 'UNREAD' && (
                                 <Button 
                                     variant="outlined"
                                     startIcon={<i className="bi bi-check" style={{ fontSize: '14px' }}></i>}
@@ -699,7 +699,7 @@ const NotificationBell = () => {
                                 >
                                     Okundu İşaretle
                                 </Button>
-                            )}
+                            )} */}
                             
                             <Button 
                                 onClick={handleCloseDialog}

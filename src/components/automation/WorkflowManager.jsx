@@ -5,7 +5,6 @@ import { WorkflowService } from '../../lib/workflow-service'
 export default function WorkflowManager({ onClose, onLoadWorkflow, user }) {
   const [workflows, setWorkflows] = useState([])
   const [loading, setLoading] = useState(true)
-  const [selectedWorkflow, setSelectedWorkflow] = useState(null)
 
   useEffect(() => {
     loadWorkflows()
