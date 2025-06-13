@@ -4251,13 +4251,13 @@ body {
 }
 
 .dropdown-item.FunctionalWorkflow {
-  background: linear-gradient(135deg, #10b981, #059669) !important;
+  background: linear-gradient(135deg, #667eea, #3b82f6) !important;
   color: white !important;
 }
 
 
 .dropdown-item.RegressionWorkflow {
-  background: linear-gradient(135deg, #ef4444, #ff4b2b) !important;
+  background: linear-gradient(135deg, #764ba2, #9333ea) !important;
   color: white !important;
 }
 
