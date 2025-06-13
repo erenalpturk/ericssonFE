@@ -18,8 +18,8 @@ import {
   Autocomplete,
   CircularProgress
 } from '@mui/material';
-import { 
-  Send as SendIcon, 
+import {
+  Send as SendIcon,
   NotificationsActive as NotificationIcon,
   Person as PersonIcon,
   Title as TitleIcon,
@@ -37,7 +37,8 @@ const NotificationCreator = () => {
     selectedUser: null,
     title: '',
     message: '',
-    sendToAll: false
+    sendToAll: false,
+    image: null,
   });
   const [snackbar, setSnackbar] = useState({
     open: false,
@@ -56,7 +57,7 @@ const NotificationCreator = () => {
       try {
         const response = await fetch(`${baseUrl}/user/getAllUsers`);
         const data = await response.json();
-        
+
         if (response.ok && data.data) {
           // Admin olmayan kullanıcıları filtrele
           const nonAdminUsers = data.data.filter(user => user.role !== 'admin');
@@ -96,68 +97,70 @@ const NotificationCreator = () => {
     setShowPreview(false);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    
-    if (!formData.title || !formData.message) {
-      setSnackbar({
-        open: true,
-        message: 'Başlık ve mesaj alanları zorunludur',
-        severity: 'error'
-      });
-      setIsLoading(false);
-      return;
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setIsLoading(true);
+
+  if (!formData.title || !formData.message) {
+    setSnackbar({
+      open: true,
+      message: 'Başlık ve mesaj alanları zorunludur',
+      severity: 'error'
+    });
+    setIsLoading(false);
+    return;
+  }
+
+  if (!formData.sendToAll && !formData.selectedUser) {
+    setSnackbar({
+      open: true,
+      message: 'Kullanıcı seçiniz veya herkese gönder seçeneğini işaretleyiniz',
+      severity: 'error'
+    });
+    setIsLoading(false);
+    return;
+  }
+
+  try {
+    const payload = new FormData();
+    payload.append("title", formData.title);
+    payload.append("message", formData.message);
+    payload.append("user_sicil_no", formData.sendToAll ? "ALL" : formData.selectedUser?.sicil_no);
+
+    if (formData.image) {
+
+      payload.append("file", formData.image);
     }
 
-    if (!formData.sendToAll && !formData.selectedUser) {
-      setSnackbar({
-        open: true,
-        message: 'Kullanıcı seçiniz veya herkese gönder seçeneğini işaretleyiniz',
-        severity: 'error'
-      });
-      setIsLoading(false);
-      return;
+    const response = await fetch(`${baseUrl}/user/createNotification`, {
+      method: 'POST',
+      body: payload
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Bildirim oluşturulurken bir hata oluştu');
     }
 
-    try {
-      const notificationData = {
-        title: formData.title,
-        message: formData.message,
-        user_sicil_no: formData.sendToAll ? 'ALL' : formData.selectedUser?.sicil_no
-      };
+    setSnackbar({
+      open: true,
+      message: 'Bildirim başarıyla oluşturuldu',
+      severity: 'success'
+    });
 
-      const response = await fetch(`${baseUrl}/user/createNotification`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(notificationData)
-      });
+    handleClear();
+  } catch (error) {
+    setSnackbar({
+      open: true,
+      message: error.message || 'Bildirim oluşturulurken bir hata oluştu',
+      severity: 'error'
+    });
+  } finally {
+    setIsLoading(false);
+  }
+};
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Bildirim oluşturulurken bir hata oluştu');
-      }
-
-      setSnackbar({
-        open: true,
-        message: 'Bildirim başarıyla oluşturuldu',
-        severity: 'success'
-      });
-
-      handleClear();
-    } catch (error) {
-      setSnackbar({
-        open: true,
-        message: error.message || 'Bildirim oluşturulurken bir hata oluştu',
-        severity: 'error'
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   return (
     <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
@@ -173,10 +176,10 @@ const NotificationCreator = () => {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <Chip 
-            icon={<NotificationIcon />} 
-            label="Admin Panel" 
-            color="primary" 
+          <Chip
+            icon={<NotificationIcon />}
+            label="Admin Panel"
+            color="primary"
             variant="filled"
             sx={{
               background: 'linear-gradient(135deg, rgb(102, 126, 234), rgb(118, 75, 162))',
@@ -189,9 +192,9 @@ const NotificationCreator = () => {
 
       <div style={{ display: 'grid', gridTemplateColumns: showPreview ? '1fr 1fr' : '1fr', gap: '24px' }}>
         {/* Bildirim Oluşturma Formu */}
-        <Card 
+        <Card
           elevation={0}
-          sx={{ 
+          sx={{
             borderRadius: '16px',
             background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.95))',
             backdropFilter: 'blur(20px)',
@@ -225,7 +228,7 @@ const NotificationCreator = () => {
 
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
               {/* Gönderim Türü */}
-              <Card sx={{ 
+              <Card sx={{
                 background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05))',
                 border: '1px solid rgba(102, 126, 234, 0.1)',
                 borderRadius: '12px',
@@ -240,13 +243,13 @@ const NotificationCreator = () => {
                       </Typography>
                       <Typography variant="caption" sx={{ color: '#666' }}>
                         Tüm kullanıcılara toplu bildirim gönder
-        </Typography>
+                      </Typography>
                     </div>
                   </div>
                   <Switch
-                checked={formData.sendToAll}
-                onChange={handleChange}
-                name="sendToAll"
+                    checked={formData.sendToAll}
+                    onChange={handleChange}
+                    name="sendToAll"
                     sx={{
                       '& .MuiSwitch-switchBase.Mui-checked': {
                         color: 'rgb(102, 126, 234)',
@@ -261,7 +264,7 @@ const NotificationCreator = () => {
 
               {/* Kullanıcı Seçimi */}
               <Autocomplete
-            fullWidth
+                fullWidth
                 options={users}
                 getOptionLabel={(option) => `${option.full_name} (${option.sicil_no})`}
                 value={formData.selectedUser}
@@ -272,14 +275,14 @@ const NotificationCreator = () => {
                     user_sicil_no: newValue?.sicil_no || ''
                   });
                 }}
-            disabled={formData.sendToAll}
+                disabled={formData.sendToAll}
                 loading={usersLoading}
                 isOptionEqualToValue={(option, value) => option.sicil_no === value?.sicil_no}
                 renderInput={(params) => (
                   <TextField
                     {...params}
                     label="Kullanıcı Seçin"
-            required={!formData.sendToAll}
+                    required={!formData.sendToAll}
                     placeholder={formData.sendToAll ? "Herkese gönderiliyor..." : "Kullanıcı arayın..."}
                     InputProps={{
                       ...params.InputProps,
@@ -343,14 +346,24 @@ const NotificationCreator = () => {
                 }}
               />
 
+
+              <TextField
+                type="file"
+                inputProps={{ accept: 'image/*' }}
+                onChange={(e) => setFormData({ ...formData, image: e.target.files[0] })}
+                label="Resim Ekle (Opsiyonel)"
+                fullWidth
+                InputLabelProps={{ shrink: true }}
+              />
+
               {/* Başlık */}
-          <TextField
-            fullWidth
+              <TextField
+                fullWidth
                 label="Bildirim Başlığı"
-            name="title"
-            value={formData.title}
-            onChange={handleChange}
-            required
+                name="title"
+                value={formData.title}
+                onChange={handleChange}
+                required
                 placeholder="Örn: Yeni Özellik Duyurusu"
                 InputProps={{
                   startAdornment: (
@@ -373,14 +386,14 @@ const NotificationCreator = () => {
               />
 
               {/* Mesaj */}
-          <TextField
-            fullWidth
+              <TextField
+                fullWidth
                 label="Bildirim Mesajı"
-            name="message"
-            value={formData.message}
-            onChange={handleChange}
-            required
-            multiline
+                name="message"
+                value={formData.message}
+                onChange={handleChange}
+                required
+                multiline
                 rows={6}
                 placeholder="Kullanıcılara iletmek istediğiniz mesajı buraya yazın..."
                 InputProps={{
@@ -446,9 +459,9 @@ const NotificationCreator = () => {
                   Temizle
                 </Button>
 
-          <Button
-            type="submit"
-            variant="contained"
+                <Button
+                  type="submit"
+                  variant="contained"
                   startIcon={<SendIcon />}
                   disabled={isLoading || !formData.title || !formData.message || (!formData.sendToAll && !formData.selectedUser)}
                   sx={{
@@ -478,9 +491,9 @@ const NotificationCreator = () => {
 
         {/* Önizleme Paneli */}
         {showPreview && (
-          <Card 
+          <Card
             elevation={0}
-            sx={{ 
+            sx={{
               borderRadius: '16px',
               background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.95))',
               backdropFilter: 'blur(20px)',
@@ -534,23 +547,23 @@ const NotificationCreator = () => {
                     <i className="bi bi-bell-fill" style={{ color: 'white', fontSize: '20px' }}></i>
                   </div>
                   <div style={{ flex: 1 }}>
-                    <Typography variant="subtitle1" sx={{ 
-                      fontWeight: 600, 
-                      color: '#1a1a1a', 
+                    <Typography variant="subtitle1" sx={{
+                      fontWeight: 600,
+                      color: '#1a1a1a',
                       marginBottom: '8px',
                       lineHeight: 1.4
                     }}>
                       {formData.title || 'Bildirim Başlığı'}
                     </Typography>
-                    <Typography variant="body2" sx={{ 
-                      color: '#666', 
+                    <Typography variant="body2" sx={{
+                      color: '#666',
                       lineHeight: 1.6,
                       whiteSpace: 'pre-wrap'
                     }}>
                       {formData.message || 'Bildirim mesajınız burada görünecek...'}
                     </Typography>
-                    <Typography variant="caption" sx={{ 
-                      color: '#999', 
+                    <Typography variant="caption" sx={{
+                      color: '#999',
                       marginTop: '12px',
                       display: 'block'
                     }}>
@@ -564,16 +577,16 @@ const NotificationCreator = () => {
                     </Typography>
                   </div>
                 </div>
-                
+
                 {/* Alıcı Bilgisi */}
                 <Divider sx={{ margin: '16px 0' }} />
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Chip 
+                  <Chip
                     icon={formData.sendToAll ? <GroupIcon /> : <PersonIcon />}
                     label={
-                      formData.sendToAll 
-                        ? 'Herkese Gönderilecek' 
-                        : formData.selectedUser 
+                      formData.sendToAll
+                        ? 'Herkese Gönderilecek'
+                        : formData.selectedUser
                           ? `${formData.selectedUser.full_name} (${formData.selectedUser.sicil_no})`
                           : 'Kullanıcı seçilmedi'
                     }
@@ -597,8 +610,8 @@ const NotificationCreator = () => {
         onClose={() => setSnackbar({ ...snackbar, open: false })}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       >
-        <Alert 
-          severity={snackbar.severity} 
+        <Alert
+          severity={snackbar.severity}
           onClose={() => setSnackbar({ ...snackbar, open: false })}
           sx={{ borderRadius: '12px' }}
         >
