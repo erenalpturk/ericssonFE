@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useAuth } from '../contexts/AuthContext';
 
 const FeedbackForm = ({ onSuccess, onClose }) => {
     const [formData, setFormData] = useState({
@@ -15,7 +16,7 @@ const FeedbackForm = ({ onSuccess, onClose }) => {
     const [loading, setLoading] = useState(false);
 
     // Kullanıcı bilgilerini al
-    const userInfo = JSON.parse(localStorage.getItem('user') || '{}');
+    const { user } = useAuth();
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -52,7 +53,7 @@ const FeedbackForm = ({ onSuccess, onClose }) => {
             return;
         }
         
-        if (!userInfo.sicil_no) {
+        if (!user.sicil_no) {
             alert('Kullanıcı bilgileri bulunamadı. Lütfen tekrar giriş yapın.');
             return;
         }
@@ -62,9 +63,9 @@ const FeedbackForm = ({ onSuccess, onClose }) => {
         try {
             const payload = {
                 ...formData,
-                user_sicil_no: userInfo.sicil_no,
-                user_name: userInfo.full_name || userInfo.name || '',
-                user_email: userInfo.email || ''
+                user_sicil_no: user.sicil_no,
+                user_name: user.full_name || user.name || '',
+                user_email: user.email || ''
             };
             
             console.log('Feedback Payload:', payload);

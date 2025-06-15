@@ -26,7 +26,7 @@ const Contacts = () => {
         try {
             setLoading(true);
             setError(null);
-            const response = await contactsService.getAllContacts(baseUrl);
+            const response = await contactsService.getAllContacts(baseUrl, user);
             setContacts(response.data || []);
         } catch (err) {
             console.error('Kontaklar yüklenirken hata:', err);
@@ -103,10 +103,10 @@ const Contacts = () => {
             };
 
             if (editingId) {
-                await contactsService.updateContact(baseUrl, editingId, dataToSend);
+                await contactsService.updateContact(baseUrl, editingId, dataToSend, user);
                 toast.success('Kontak başarıyla güncellendi');
             } else {
-                await contactsService.createContact(baseUrl, dataToSend);
+                await contactsService.createContact(baseUrl, dataToSend, user);
                 toast.success('Kontak başarıyla oluşturuldu');
             }
             
@@ -125,7 +125,7 @@ const Contacts = () => {
         }
 
         try {
-            await contactsService.deleteContact(baseUrl, contactId);
+            await contactsService.deleteContact(baseUrl, contactId, user);
             toast.success('Kontak başarıyla silindi');
             fetchContacts();
         } catch (error) {

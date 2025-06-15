@@ -6,7 +6,7 @@ const AuthContext = createContext({});
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [needsPasswordChange, setNeedsPasswordChange] = useState(false);
     
     // Base URL'i ortam değişkenine göre belirle
@@ -18,14 +18,6 @@ export const AuthProvider = ({ children }) => {
     axios.defaults.baseURL = baseUrl;
     
     const [isWorkflowRunning, setIsWorkflowRunning] = useState(false);
-    useEffect(() => {
-        // Local storage'dan kullanıcı bilgisini al
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-            setUser(JSON.parse(storedUser));
-        }
-        setLoading(false);
-    }, []);
 
     const login = async (username, password) => {
         try {
@@ -49,7 +41,7 @@ export const AuthProvider = ({ children }) => {
             if (userData.password === userData.sicil_no) {
                 setNeedsPasswordChange(true);
                 setUser(userData);
-                localStorage.setItem('user', JSON.stringify(userData));
+                // localStorage.setItem('user', JSON.stringify(userData));
                 
                 // Kullanıcı adını localStorage'e user değişkeni olarak kaydet
                 localStorage.setItem('currentUsername', userData.full_name);
@@ -62,7 +54,7 @@ export const AuthProvider = ({ children }) => {
             }
 
             setUser(userData);
-            localStorage.setItem('user', JSON.stringify(userData));
+            // localStorage.setItem('user', JSON.stringify(userData));
             localStorage.setItem('currentUserSicilNo', userData.sicil_no);
             localStorage.setItem('currentUsername', userData.full_name);
             
@@ -109,7 +101,7 @@ export const AuthProvider = ({ children }) => {
             // Kullanıcı bilgilerini güncelle
             const updatedUser = { ...user, password: newPassword };
             setUser(updatedUser);
-            localStorage.setItem('user', JSON.stringify(updatedUser));
+            // localStorage.setItem('user', JSON.stringify(updatedUser));
             setNeedsPasswordChange(false);
             
             return { success: true };
