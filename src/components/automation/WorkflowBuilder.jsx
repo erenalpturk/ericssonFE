@@ -1065,12 +1065,13 @@ export default function WorkflowBuilder() {
     setLocalStorageData([]) // Yeni workflow yüklendiğinde localStorage verilerini temizle
     setGlobalVariables({})
     setShowWorkflowManager(false)
-    setLoading(true)
 
     // Workflow yüklendiğinde variables'ları yenile
     console.log('[WorkflowBuilder] Refreshing variables after workflow load...')
     await loadVariables()
 
+    // Loading state'ini false yap
+    setLoading(false)
     toast.success(`Workflow yüklendi: ${workflow.name}`)
   }
 
@@ -1595,14 +1596,15 @@ export default function WorkflowBuilder() {
                               WorkflowService.loadWorkflow(workflow.id)
                                 .then(({ workflow: workflowData, steps }) => {
                                   handleLoadWorkflow(workflowData, steps)
-                                  setLoading(false)
                                 })
                                 .catch(error => {
                                   console.error('Error loading workflow:', error)
+                                  setLoading(false)
                                   toast.error('Workflow yüklenirken hata oluştu')
                                 })
                             } catch (error) {
                               console.error('Error loading workflow:', error)
+                              setLoading(false)
                               toast.error('Workflow yüklenirken hata oluştu') 
                             }
                           }}
