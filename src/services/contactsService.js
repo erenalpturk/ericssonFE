@@ -7,6 +7,7 @@ const API_ENDPOINTS = {
 
 // Tüm kontakları getir
 const getAllContacts = async (baseUrl, user) => {
+    console.log(user, 'user')
     try {
         if (!user) {
             throw new Error('Kullanıcı girişi yapılmamış');
@@ -34,6 +35,7 @@ const getAllContacts = async (baseUrl, user) => {
 
 // Yeni kontak oluştur
 const createContact = async (baseUrl, contactData, user) => {
+    console.log(user, 'userasd')
     try {
         if (!user) {
             throw new Error('Kullanıcı girişi yapılmamış');
@@ -43,7 +45,7 @@ const createContact = async (baseUrl, contactData, user) => {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-User-Data': user
+                'X-User-Data': JSON.stringify(user)
             },
             body: JSON.stringify(contactData)
         });

@@ -93,7 +93,7 @@ const Scriptler = () => {
     // Proje listesini çek
     const fetchProjects = async () => {
         try {
-            const response = await projectsService.getProjectNames(baseUrl);
+            const response = await projectsService.getProjectNames(baseUrl, user);
             setProjects(response.data || []);
         } catch (err) {
             console.error('Projects fetch error:', err);
