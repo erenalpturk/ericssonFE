@@ -1,4 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import React, { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { toast } from 'react-toastify'
 import NotificationBell from './Notifications/NotificationBell'
@@ -7,6 +8,7 @@ function Sidebar({ isCollapsed, onToggle }) {
     const location = useLocation()
     const navigate = useNavigate()
     const { logout, user, isWorkflowRunning } = useAuth()
+    const [isBilgiMerkeziOpen, setIsBilgiMerkeziOpen] = useState(false)
 
     const handleLogout = async () => {
         const result = await logout()
@@ -23,6 +25,12 @@ function Sidebar({ isCollapsed, onToggle }) {
             }
         }
         navigate(path)
+    }
+
+    const handleBilgiMerkeziToggle = () => {
+        if (!isCollapsed) {
+            setIsBilgiMerkeziOpen(!isBilgiMerkeziOpen)
+        }
     }
 
     const menuItems = [
@@ -119,6 +127,24 @@ function Sidebar({ isCollapsed, onToggle }) {
             roles: ['admin']
         },
     ]
+
+    // Omni Bilgi Merkezi alt menüleri
+    const bilgiMerkeziItems = [
+        {
+            path: '/bilgi-merkezi/scriptler',
+            icon: 'bi-code-slash',
+            label: 'Scriptler',
+            color: 'text-blue-400',
+            roles: ['admin', 'support', 'tester']
+        },
+        {
+            path: '/bilgi-merkezi/kontak-bilgileri',
+            icon: 'bi-telephone-fill',
+            label: 'Kontak Bilgileri',
+            color: 'text-green-400',
+            roles: ['admin', 'support', 'tester']
+        }
+    ]
     return (
         <aside className={`modern-sidebar ${isCollapsed ? 'collapsed' : ''}`}>
             {/* Header */}
@@ -149,48 +175,101 @@ function Sidebar({ isCollapsed, onToggle }) {
             {/* Navigation */}
             <nav className="sidebar-nav">
                 <ul className="nav-list">
-                    {menuItems.filter(item => item.roles.includes(user.role)).map((item) => (
-                        <li key={item.path} className="nav-item">
-                            {item.disabled ? (
-                                <div className={`nav-link disabled ${item.color}`}>
-                                    <div className={`nav-icon ${item.color}`}>
-                                        <i className={item.icon}></i>
+                    {menuItems.filter(item => item.roles.includes(user.role)).map((item, index) => (
+                        <React.Fragment key={item.path}>
+                            <li className="nav-item">
+                                {item.disabled ? (
+                                    <div className={`nav-link disabled ${item.color}`}>
+                                        <div className={`nav-icon ${item.color}`}>
+                                            <i className={item.icon}></i>
+                                        </div>
+                                        {!isCollapsed && (
+                                            <>
+                                                <span className="nav-text">{item.label}</span>
+                                                {item.badge && (
+                                                    <span className="construction-badge">
+                                                        <i className="bi bi-hammer"></i>
+                                                    </span>
+                                                )}
+                                            </>
+                                        )}
                                     </div>
-                                    {!isCollapsed && (
-                                        <>
+                                ) : (
+                                    <Link
+                                        to={item.path}
+                                        className={`nav-link group ${location.pathname === item.path ? 'active' : ''}`}
+                                        title={isCollapsed ? item.label : ''}
+                                        onClick={(e) => {
+                                            if (isWorkflowRunning) {
+                                                e.preventDefault()
+                                                handleNavigation(item.path)
+                                            }
+                                        }}
+                                    >
+                                        <div className={`nav-icon ${item.color} group-hover:scale-110 transition-transform duration-200`}>
+                                            <i className={item.icon}></i>
+                                        </div>
+                                        {!isCollapsed && (
                                             <span className="nav-text">{item.label}</span>
-                                            {item.badge && (
-                                                <span className="construction-badge">
-                                                    <i className="bi bi-hammer"></i>
-                                                </span>
-                                            )}
-                                        </>
-                                    )}
-                                </div>
-                            ) : (
-                                <Link
-                                    to={item.path}
-                                    className={`nav-link group ${location.pathname === item.path ? 'active' : ''}`}
-                                    title={isCollapsed ? item.label : ''}
-                                    onClick={(e) => {
-                                        if (isWorkflowRunning) {
-                                            e.preventDefault()
-                                            handleNavigation(item.path)
-                                        }
-                                    }}
-                                >
-                                    <div className={`nav-icon ${item.color} group-hover:scale-110 transition-transform duration-200`}>
-                                        <i className={item.icon}></i>
+                                        )}
+                                        {location.pathname === item.path && !isCollapsed && (
+                                            <div className="active-indicator"></div>
+                                        )}
+                                    </Link>
+                                )}
+                            </li>
+
+                            {/* SQL Create'den sonra Omni Bilgi Merkezi Dropdown ekle */}
+                            {item.path === '/sql-create' && (
+                                <li className="nav-item">
+                                    <div 
+                                        className={`nav-link group cursor-pointer ${bilgiMerkeziItems.some(item => location.pathname === item.path) ? 'active' : ''}`}
+                                        onClick={handleBilgiMerkeziToggle}
+                                        title={isCollapsed ? "Omni Bilgi Merkezi" : ''}
+                                    >
+                                        <div className="nav-icon text-indigo-500 group-hover:scale-110 transition-transform duration-200">
+                                            <i className="bi bi-info-circle-fill"></i>
+                                        </div>
+                                        {!isCollapsed && (
+                                            <>
+                                                <span className="nav-text">Omni Bilgi Merkezi</span>
+                                                <div className="dropdown-arrow">
+                                                    <i className={`bi ${isBilgiMerkeziOpen ? 'bi-chevron-up' : 'bi-chevron-down'}`}></i>
+                                                </div>
+                                            </>
+                                        )}
                                     </div>
-                                    {!isCollapsed && (
-                                        <span className="nav-text">{item.label}</span>
+
+                                    {/* Alt Menü */}
+                                    {!isCollapsed && isBilgiMerkeziOpen && (
+                                        <ul className="sub-nav-list">
+                                            {bilgiMerkeziItems.filter(item => item.roles.includes(user.role)).map((subItem) => (
+                                                <li key={subItem.path} className="sub-nav-item">
+                                                    <Link
+                                                        to={subItem.path}
+                                                        className={`sub-nav-link ${location.pathname === subItem.path ? 'active' : ''}`}
+                                                        onClick={(e) => {
+                                                            if (isWorkflowRunning) {
+                                                                e.preventDefault()
+                                                                handleNavigation(subItem.path)
+                                                            }
+                                                        }}
+                                                    >
+                                                        <div className={`sub-nav-icon ${subItem.color}`}>
+                                                            <i className={subItem.icon}></i>
+                                                        </div>
+                                                        <span className="sub-nav-text">{subItem.label}</span>
+                                                        {location.pathname === subItem.path && (
+                                                            <div className="active-indicator"></div>
+                                                        )}
+                                                    </Link>
+                                                </li>
+                                            ))}
+                                        </ul>
                                     )}
-                                    {location.pathname === item.path && !isCollapsed && (
-                                        <div className="active-indicator"></div>
-                                    )}
-                                </Link>
+                                </li>
                             )}
-                        </li>
+                        </React.Fragment>
                     ))}
                 </ul>
             </nav>

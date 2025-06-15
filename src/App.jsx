@@ -21,6 +21,8 @@ import Stats from './components/Stats'
 import UserFeedbackList from './components/UserFeedbackList'
 import AdminFeedbackPanel from './components/AdminFeedbackPanel'
 import NotificationCreator from './components/Admin/NotificationCreator'
+import Scriptler from './components/Scriptler'
+import Contacts from './components/Contacts'
 
 function PrivateRoute({ children }) {
     const { user, loading, needsPasswordChange } = useAuth();
@@ -222,6 +224,26 @@ function AppRoutes() {
                         <PrivateRoute>
                             <Layout>
                                 <NotificationCreator />
+                            </Layout>
+                        </PrivateRoute>
+                    }
+                />
+                <Route
+                    path="/bilgi-merkezi/scriptler"
+                    element={
+                        <PrivateRoute>
+                            <Layout>
+                                <Scriptler />
+                            </Layout>
+                        </PrivateRoute>
+                    }
+                />
+                <Route
+                    path="/bilgi-merkezi/kontak-bilgileri"
+                    element={
+                        <PrivateRoute>
+                            <Layout>
+                                <Contacts />
                             </Layout>
                         </PrivateRoute>
                     }

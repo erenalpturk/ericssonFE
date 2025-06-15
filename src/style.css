@@ -350,6 +350,98 @@ body {
   display: none !important;
 }
 
+/* Dropdown arrow */
+.dropdown-arrow {
+  margin-left: auto !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 1.25rem !important;
+  height: 1.25rem !important;
+  font-size: 0.875rem !important;
+  transition: transform 0.2s ease !important;
+}
+
+.nav-link:hover .dropdown-arrow {
+  transform: scale(1.1) !important;
+}
+
+/* Sub navigation */
+.sub-nav-list {
+  list-style: none !important;
+  padding: 0 !important;
+  margin: 0.5rem 0 0 0 !important;
+  background: rgba(0, 0, 0, 0.05) !important;
+  border-radius: 0.5rem !important;
+  overflow: hidden !important;
+}
+
+.sub-nav-item {
+  margin: 0 !important;
+}
+
+.sub-nav-link {
+  display: flex !important;
+  align-items: center !important;
+  padding: 0.625rem 1rem 0.625rem 2.5rem !important;
+  color: #6b7280 !important;
+  text-decoration: none !important;
+  font-weight: 500 !important;
+  font-size: 0.8rem !important;
+  transition: all 0.2s ease !important;
+  position: relative !important;
+  border-left: 3px solid transparent !important;
+}
+
+.sub-nav-link:hover {
+  background: rgba(59, 130, 246, 0.1) !important;
+  color: #374151 !important;
+  border-left-color: rgba(59, 130, 246, 0.3) !important;
+  text-decoration: none !important;
+}
+
+.sub-nav-link.active {
+  background: rgba(59, 130, 246, 0.15) !important;
+  color: #1f2937 !important;
+  border-left-color: #3b82f6 !important;
+  font-weight: 600 !important;
+}
+
+.sub-nav-icon {
+  width: 1.25rem !important;
+  height: 1.25rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin-right: 0.625rem !important;
+  font-size: 1rem !important;
+  flex-shrink: 0 !important;
+  transition: all 0.2s ease !important;
+}
+
+.sub-nav-link:hover .sub-nav-icon {
+  transform: scale(1.1) !important;
+}
+
+.sub-nav-text {
+  flex: 1 !important;
+  font-weight: 500 !important;
+}
+
+.sub-nav-link .active-indicator {
+  position: absolute !important;
+  right: 0.5rem !important;
+  width: 0.25rem !important;
+  height: 1rem !important;
+  background: linear-gradient(to bottom, #3b82f6, #9333ea) !important;
+  border-radius: 9999px !important;
+}
+
+/* Cursor pointer for dropdown */
+.cursor-pointer {
+  cursor: pointer !important;
+}
+
 /* Footer */
 .sidebar-footer {
   padding: 1.25rem !important;
