@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import FeedbackForm from './FeedbackForm';
-
+import { useAuth } from '../contexts/AuthContext';
 const UserFeedbackList = () => {
     const [feedbacks, setFeedbacks] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -11,9 +11,7 @@ const UserFeedbackList = () => {
     const [filter, setFilter] = useState('all');
     const [successMessage, setSuccessMessage] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
-
-    // Kullanıcı bilgilerini al
-    const userInfo = JSON.parse(localStorage.getItem('user') || '{}');
+    const { user } = useAuth();
 
     useEffect(() => {
         loadFeedbacks();
@@ -24,13 +22,13 @@ const UserFeedbackList = () => {
         try {
             setLoading(true);
             
-            if (!userInfo.sicil_no) {
+            if (!user.sicil_no) {
                 showError('Kullanıcı bilgileri bulunamadı. Lütfen tekrar giriş yapın.');
                 return;
             }
             
             const response = await axios.post('/feedback/user/feedbacks', {
-                user_sicil_no: userInfo.sicil_no
+                user_sicil_no: user.sicil_no
             });
 
             if (response.data.success) {
@@ -46,12 +44,12 @@ const UserFeedbackList = () => {
 
     const loadUserStats = async () => {
         try {
-            if (!userInfo.sicil_no) {
+            if (!user.sicil_no) {
                 return;
             }
             
             const response = await axios.post('/feedback/user/stats', {
-                user_sicil_no: userInfo.sicil_no
+                user_sicil_no: user.sicil_no
             });
 
             if (response.data.success) {

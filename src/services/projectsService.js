@@ -5,9 +5,8 @@ const API_ENDPOINTS = {
 };
 
 // Tüm projeleri getir
-const getAllProjects = async (baseUrl, params = {}) => {
+const getAllProjects = async (baseUrl, params = {}, user) => {
     try {
-        const user = localStorage.getItem('user');
         if (!user) {
             throw new Error('Kullanıcı girişi yapılmamış');
         }
@@ -38,9 +37,8 @@ const getAllProjects = async (baseUrl, params = {}) => {
 };
 
 // Aktif proje isimlerini getir (dropdown için)
-const getProjectNames = async (baseUrl) => {
+const getProjectNames = async (baseUrl, user) => {
     try {
-        const user = localStorage.getItem('user');
         if (!user) {
             throw new Error('Kullanıcı girişi yapılmamış');
         }
@@ -66,9 +64,8 @@ const getProjectNames = async (baseUrl) => {
 };
 
 // Yeni proje oluştur (sadece admin)
-const createProject = async (baseUrl, projectData) => {
+const createProject = async (baseUrl, projectData, user) => {
     try {
-        const user = localStorage.getItem('user');
         if (!user) {
             throw new Error('Kullanıcı girişi yapılmamış');
         }
@@ -95,9 +92,8 @@ const createProject = async (baseUrl, projectData) => {
 };
 
 // Proje güncelle (sadece admin)
-const updateProject = async (baseUrl, projectId, projectData) => {
+const updateProject = async (baseUrl, projectId, projectData, user) => {
     try {
-        const user = localStorage.getItem('user');
         if (!user) {
             throw new Error('Kullanıcı girişi yapılmamış');
         }
@@ -124,9 +120,8 @@ const updateProject = async (baseUrl, projectId, projectData) => {
 };
 
 // Proje sil (sadece admin)
-const deleteProject = async (baseUrl, projectId) => {
+const deleteProject = async (baseUrl, projectId, user) => {
     try {
-        const user = localStorage.getItem('user');
         if (!user) {
             throw new Error('Kullanıcı girişi yapılmamış');
         }

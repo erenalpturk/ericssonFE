@@ -6,7 +6,7 @@ const AuthContext = createContext({});
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [needsPasswordChange, setNeedsPasswordChange] = useState(false);
     
     // Base URL'i ortam değişkenine göre belirle
@@ -18,14 +18,6 @@ export const AuthProvider = ({ children }) => {
     axios.defaults.baseURL = baseUrl;
     
     const [isWorkflowRunning, setIsWorkflowRunning] = useState(false);
-    useEffect(() => {
-        // Local storage'dan kullanıcı bilgisini al
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-            setUser(JSON.parse(storedUser));
-        }
-        setLoading(false);
-    }, []);
 
     const login = async (username, password) => {
         try {

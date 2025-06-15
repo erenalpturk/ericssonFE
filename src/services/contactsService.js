@@ -1,12 +1,13 @@
+import { useAuth } from '../contexts/AuthContext';
+
 // Contacts API Service
 const API_ENDPOINTS = {
     CONTACTS: '/api/contacts'
 };
 
 // Tüm kontakları getir
-const getAllContacts = async (baseUrl) => {
+const getAllContacts = async (baseUrl, user) => {
     try {
-        const user = localStorage.getItem('user');
         if (!user) {
             throw new Error('Kullanıcı girişi yapılmamış');
         }
@@ -32,9 +33,8 @@ const getAllContacts = async (baseUrl) => {
 };
 
 // Yeni kontak oluştur
-const createContact = async (baseUrl, contactData) => {
+const createContact = async (baseUrl, contactData, user) => {
     try {
-        const user = localStorage.getItem('user');
         if (!user) {
             throw new Error('Kullanıcı girişi yapılmamış');
         }
@@ -61,9 +61,8 @@ const createContact = async (baseUrl, contactData) => {
 };
 
 // Kontak güncelle
-const updateContact = async (baseUrl, contactId, contactData) => {
+const updateContact = async (baseUrl, contactId, contactData, user) => {
     try {
-        const user = localStorage.getItem('user');
         if (!user) {
             throw new Error('Kullanıcı girişi yapılmamış');
         }
@@ -90,9 +89,8 @@ const updateContact = async (baseUrl, contactId, contactData) => {
 };
 
 // Kontak sil
-const deleteContact = async (baseUrl, contactId) => {
+const deleteContact = async (baseUrl, contactId, user) => {
     try {
-        const user = localStorage.getItem('user');
         if (!user) {
             throw new Error('Kullanıcı girişi yapılmamış');
         }
