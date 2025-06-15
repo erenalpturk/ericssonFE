@@ -41,7 +41,7 @@ export const AuthProvider = ({ children }) => {
             if (userData.password === userData.sicil_no) {
                 setNeedsPasswordChange(true);
                 setUser(userData);
-                localStorage.setItem('user', JSON.stringify(userData));
+                // localStorage.setItem('user', JSON.stringify(userData));
                 
                 // Kullanıcı adını localStorage'e user değişkeni olarak kaydet
                 localStorage.setItem('currentUsername', userData.full_name);
@@ -54,7 +54,7 @@ export const AuthProvider = ({ children }) => {
             }
 
             setUser(userData);
-            localStorage.setItem('user', JSON.stringify(userData));
+            // localStorage.setItem('user', JSON.stringify(userData));
             localStorage.setItem('currentUserSicilNo', userData.sicil_no);
             localStorage.setItem('currentUsername', userData.full_name);
             
@@ -101,7 +101,7 @@ export const AuthProvider = ({ children }) => {
             // Kullanıcı bilgilerini güncelle
             const updatedUser = { ...user, password: newPassword };
             setUser(updatedUser);
-            localStorage.setItem('user', JSON.stringify(updatedUser));
+            // localStorage.setItem('user', JSON.stringify(updatedUser));
             setNeedsPasswordChange(false);
             
             return { success: true };
