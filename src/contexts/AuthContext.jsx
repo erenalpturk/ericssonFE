@@ -6,7 +6,7 @@ const AuthContext = createContext({});
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [needsPasswordChange, setNeedsPasswordChange] = useState(false);
     
     // Base URL'i ortam değişkenine göre belirle
@@ -18,6 +18,28 @@ export const AuthProvider = ({ children }) => {
     axios.defaults.baseURL = baseUrl;
     
     const [isWorkflowRunning, setIsWorkflowRunning] = useState(false);
+
+    // Sayfa yüklendiğinde localStorage'dan kullanıcı bilgilerini kontrol et ve otomatik giriş yap
+    useEffect(() => {
+        const storedUsername = localStorage.getItem('currentUserSicilNo');
+        const storedPassword = localStorage.getItem('currentPassword');
+        
+        if (storedUsername && storedPassword) {
+            login(storedUsername, storedPassword)
+                .then(result => {
+                    if (!result.success) {
+                        // Giriş başarısız olursa localStorage'ı temizle
+                        localStorage.removeItem('currentUserSicilNo');
+                        localStorage.removeItem('currentPassword');
+                    }
+                })
+                .finally(() => {
+                    setLoading(false);
+                });
+        } else {
+            setLoading(false);
+        }
+    }, []);
 
     const login = async (username, password) => {
         try {
@@ -37,14 +59,14 @@ export const AuthProvider = ({ children }) => {
             if (userData.password !== password) {
                 return { success: false, error: 'Hatalı şifre' };
             }
+
             // Şifre sicil no ile aynı mı kontrol et
             if (userData.password === userData.sicil_no) {
                 setNeedsPasswordChange(true);
                 setUser(userData);
-                // localStorage.setItem('user', JSON.stringify(userData));
-                
-                // Kullanıcı adını localStorage'e user değişkeni olarak kaydet
+                localStorage.setItem('currentUserSicilNo', username);
                 localStorage.setItem('currentUsername', userData.full_name);
+                localStorage.setItem('currentPassword', password);
                 
                 return { 
                     success: true, 
@@ -54,8 +76,8 @@ export const AuthProvider = ({ children }) => {
             }
 
             setUser(userData);
-            // localStorage.setItem('user', JSON.stringify(userData));
-            localStorage.setItem('currentUserSicilNo', userData.sicil_no);
+            localStorage.setItem('currentUserSicilNo', username);
+            localStorage.setItem('currentPassword', password);
             localStorage.setItem('currentUsername', userData.full_name);
             
             // Son giriş zamanını güncelle
@@ -101,7 +123,7 @@ export const AuthProvider = ({ children }) => {
             // Kullanıcı bilgilerini güncelle
             const updatedUser = { ...user, password: newPassword };
             setUser(updatedUser);
-            // localStorage.setItem('user', JSON.stringify(updatedUser));
+            localStorage.setItem('currentPassword', newPassword);
             setNeedsPasswordChange(false);
             
             return { success: true };
@@ -113,14 +135,15 @@ export const AuthProvider = ({ children }) => {
     const logout = async () => {
         try {
             setUser(null);
-            localStorage.removeItem('user');
+            localStorage.removeItem('currentUserSicilNo');
+            localStorage.removeItem('currentPassword');
             localStorage.removeItem('currentUsername');
             return { success: true };
         } catch (error) {
             return { success: false, error: error.message };
         }
     };
-    console.log(user);
+
     const value = {
         user,
         loading,
