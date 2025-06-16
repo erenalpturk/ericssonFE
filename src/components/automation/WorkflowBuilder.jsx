@@ -927,6 +927,12 @@ export default function WorkflowBuilder() {
     }
     setIsRunning(false)
     setAbortController(null)
+    
+    // Otomasyon durdurulduğunda da localStorage'ı temizle (user hariç)
+    setTimeout(() => {
+      cleanupLocalStorageAfterAutomation()
+    }, 1000)
+    
     toast.success('Workflow durduruldu')
   }
 
@@ -1522,18 +1528,17 @@ export default function WorkflowBuilder() {
   // Otomasyon sonrası localStorage temizlik fonksiyonu (user hariç)
   const cleanupLocalStorageAfterAutomation = () => {
     try {
+      console.log('[WorkflowBuilder] 🧹 Starting post-automation cleanup...')
+      
       // RuntimeVariables'dan user hariç tüm değişkenleri temizle
-      const runtimeVars = VariablesService.getRuntimeVariables()
+      VariablesService.clearRuntimeVariablesExceptUser()
       
-      Object.keys(runtimeVars).forEach(key => {
-        if (key !== 'user') {
-          VariablesService.deleteRuntimeVariable(key)
-        }
-      })
+      // Variables'ları yeniden yükle ki UI güncellensin
+      loadVariables()
       
-      console.log('[WorkflowBuilder] Cleaned up localStorage after automation (except user)')
+      console.log('[WorkflowBuilder] ✅ Post-automation cleanup completed (user preserved)')
     } catch (error) {
-      console.error('[WorkflowBuilder] Error cleaning up localStorage:', error)
+      console.error('[WorkflowBuilder] ❌ Error during post-automation cleanup:', error)
     }
   }
 
