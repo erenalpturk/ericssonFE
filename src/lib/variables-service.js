@@ -127,7 +127,7 @@ export class VariablesService {
         return
       }
       
-      const variables = this.getRuntimeVariables()
+      const variables = this.getRunTimeVariables()
       delete variables[key]
       localStorage.setItem('omni_runtime_variables', JSON.stringify(variables))
     } catch (error) {
@@ -146,7 +146,7 @@ export class VariablesService {
   // Combined Variables - Her ikisini birleştir
   static async getAllVariables() {
     const staticVars = await this.getStaticVariables()
-    const runtimeVars = this.getRuntimeVariables()
+    const runtimeVars = this.getRunTimeVariables()
     
     // Runtime değişkenleri sadece value olarak al
     const runtimeValues = {}
@@ -159,7 +159,7 @@ export class VariablesService {
   }
 
   static getVariableSource(key) {
-    const runtimeVars = this.getRuntimeVariables()
+    const runtimeVars = this.getRunTimeVariables()
     if (runtimeVars[key]) return 'runtime'
     
     // Static kontrolü async olduğu için burada direkt kontrol edemeyiz
@@ -170,7 +170,7 @@ export class VariablesService {
   // Cleanup - Eski runtime değişkenleri temizle
   static cleanupOldRuntimeVariables(maxAgeHours = 24) {
     try {
-      const variables = this.getRuntimeVariables()
+      const variables = this.getRunTimeVariables()
       const cutoffTime = Date.now() - (maxAgeHours * 60 * 60 * 1000)
       
       Object.keys(variables).forEach(key => {
