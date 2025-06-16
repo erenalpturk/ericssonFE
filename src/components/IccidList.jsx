@@ -33,7 +33,7 @@ const IccidList = () => {
   const { baseUrl, user } = useAuth();
   const [showIccidManagement, setShowIccidManagement] = useState(false);
   const [activeFilters, setActiveFilters] = useState({});
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+  const [sortConfig, setSortConfig] = useState({ key: 'updated_at', direction: 'desc' });
   const [copySuccess, setCopySuccess] = useState(false);
   const [tab, setTab] = useState('iccid-list');
 
