@@ -401,6 +401,11 @@
     color: #4a5568;
     line-height: 1.5;
     max-width: 300px;
+    min-width: 300px;
+    width: 300px;
+    word-wrap: break-word;
+    word-break: break-word;
+    white-space: normal;
 }
 
 .usage-cell {
@@ -408,6 +413,11 @@
     font-style: italic;
     line-height: 1.4;
     max-width: 250px;
+    min-width: 250px;
+    width: 250px;
+    word-wrap: break-word;
+    word-break: break-word;
+    white-space: normal;
 }
 
 .date-cell {
