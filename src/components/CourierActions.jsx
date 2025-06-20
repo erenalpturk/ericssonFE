@@ -94,7 +94,7 @@ const CourierActions = () => {
         ...JSON.parse(localStorage.getItem('courierVariables') || '{}')
       };
 
-      toast.info(`${triggers.length} API tetikleniyor...`);
+      toast.loading(`${triggers.length} API tetikleniyor...`);
       let successCount = 0;
       let failureCount = 0;
       const results = [];
