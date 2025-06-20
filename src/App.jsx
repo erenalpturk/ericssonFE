@@ -21,6 +21,7 @@ import Stats from './components/Stats'
 import UserFeedbackList from './components/UserFeedbackList'
 import AdminFeedbackPanel from './components/AdminFeedbackPanel'
 import NotificationCreator from './components/Admin/NotificationCreator'
+import TriggerManagement from './components/Admin/TriggerManagement'
 import Scriptler from './components/Scriptler'
 import Contacts from './components/Contacts'
 
@@ -224,6 +225,16 @@ function AppRoutes() {
                         <PrivateRoute>
                             <Layout>
                                 <NotificationCreator />
+                            </Layout>
+                        </PrivateRoute>
+                    }
+                />
+                <Route
+                    path="/admin/trigger-management"
+                    element={
+                        <PrivateRoute>
+                            <Layout>
+                                <TriggerManagement />
                             </Layout>
                         </PrivateRoute>
                     }

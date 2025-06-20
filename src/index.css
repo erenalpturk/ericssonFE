@@ -56,4 +56,15 @@
 
 .modal-body {
   padding: 1rem;
+}
+
+/* Placeholder Styles */
+.placeholder-lighter::placeholder {
+  opacity: 0.4 !important;
+  font-style: italic;
+  color: #9ca3af !important;
+}
+
+.placeholder-lighter:focus::placeholder {
+  opacity: 0.3 !important;
 } 

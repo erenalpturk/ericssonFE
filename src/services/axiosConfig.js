@@ -3,12 +3,23 @@ import axios from 'axios';
 // Axios varsayılan konfigürasyonu
 axios.defaults.headers.common['Content-Type'] = 'application/json';
 
-// Request interceptor - tüm isteklere '/api' prefix'i ekle
+// Request interceptor - tüm isteklere '/api' prefix'i ekle ve user header'ı ekle
 axios.interceptors.request.use(
   (config) => {
     // Eğer URL '/api' ile başlamıyorsa, ekle
     if (!config.url.startsWith('/api') && !config.url.startsWith('http')) {
       config.url = `/api${config.url}`;
+    }
+    
+    // User bilgisini localStorage'dan alıp header'a ekle
+    const storedUser = localStorage.getItem('currentUser');
+    if (storedUser) {
+      try {
+        const user = JSON.parse(storedUser);
+        config.headers['x-user-data'] = JSON.stringify(user);
+      } catch (error) {
+        console.warn('User data parse error:', error);
+      }
     }
     
     // Debug için URL'yi console'a yazdır
