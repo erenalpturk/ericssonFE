@@ -156,6 +156,13 @@ function Sidebar({ isCollapsed, onToggle }) {
             roles: ['admin', 'support', 'tester']
         },
         {
+            path: '/device-actions',
+            icon: 'bi-phone',
+            label: 'Cihaz',
+            color: 'text-purple-400',
+            roles: ['admin', 'support', 'tester']
+        },
+        {
             path: '/admin/trigger-management',
             icon: 'bi-gear-wide-connected',
             label: 'Tetikleme Yönetimi',
