@@ -31,6 +31,7 @@ export const AuthProvider = ({ children }) => {
                         // Giriş başarısız olursa localStorage'ı temizle
                         localStorage.removeItem('currentUserSicilNo');
                         localStorage.removeItem('currentPassword');
+                        localStorage.removeItem('currentUser');
                     }
                 })
                 .finally(() => {
@@ -67,6 +68,7 @@ export const AuthProvider = ({ children }) => {
                 localStorage.setItem('currentUserSicilNo', username);
                 localStorage.setItem('currentUsername', userData.full_name);
                 localStorage.setItem('currentPassword', password);
+                localStorage.setItem('currentUser', JSON.stringify(userData));
                 
                 return { 
                     success: true, 
@@ -79,6 +81,7 @@ export const AuthProvider = ({ children }) => {
             localStorage.setItem('currentUserSicilNo', username);
             localStorage.setItem('currentPassword', password);
             localStorage.setItem('currentUsername', userData.full_name);
+            localStorage.setItem('currentUser', JSON.stringify(userData));
             
             // Son giriş zamanını güncelle
             const { error: updateError } = await supabase
@@ -138,6 +141,7 @@ export const AuthProvider = ({ children }) => {
             localStorage.removeItem('currentUserSicilNo');
             localStorage.removeItem('currentPassword');
             localStorage.removeItem('currentUsername');
+            localStorage.removeItem('currentUser');
             return { success: true };
         } catch (error) {
             return { success: false, error: error.message };
