@@ -2,13 +2,12 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
-const CourierActions = () => {
+const DeviceActions = () => {
   const [formData, setFormData] = useState({
     environment: 'fonksiyonel',
-    simType: 'fiziksel',
-    iccid: '',
-    customerOrder: '',
-    tid: ''
+    paymentType: 'temlikli',
+    imei: '',
+    customerOrder: ''
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -48,13 +47,9 @@ const CourierActions = () => {
       errors.push('Müşteri Sipariş No');
     }
     
-    if (!formData.tid || !formData.tid.trim()) {
-      errors.push('Transaction ID (TID)');
-    }
-    
-    // Fiziksel SIM için ICCID zorunlu
-    if (formData.simType === 'fiziksel' && (!formData.iccid || !formData.iccid.trim())) {
-      errors.push('ICCID (Fiziksel SIM için zorunlu)');
+    // İade Reddi için IMEI zorunlu değil
+    if (formData.paymentType !== 'iade_reddi' && (!formData.imei || !formData.imei.trim())) {
+      errors.push('IMEI');
     }
     
     if (errors.length > 0) {
@@ -66,8 +61,8 @@ const CourierActions = () => {
     setShowResults(false);
     
     try {
-      // Aktif tetikleme API'lerini getir
-      const response = await axios.get(`/api/courier-triggers/active/${formData.environment}/${formData.simType}`);
+      // Aktif tetikleme API'lerini getir (cihaz tipi için)
+      const response = await axios.get(`/api/courier-triggers/active/device/${formData.environment}/${formData.paymentType}`);
       const triggers = response.data.data;
 
       if (!triggers || triggers.length === 0) {
@@ -87,12 +82,14 @@ const CourierActions = () => {
       // Değişken değerlerini hazırla
       const variables = {
         customerOrder: formData.customerOrder,
-        TID: formData.tid,
-        tid: formData.tid, // backward compatibility için hem TID hem tid
-        iccid: formData.iccid || '',
         // LocalStorage'dan additional variables alabilir
-        ...JSON.parse(localStorage.getItem('courierVariables') || '{}')
+        ...JSON.parse(localStorage.getItem('deviceVariables') || '{}')
       };
+
+      // İade Reddi dışında IMEI ekle
+      if (formData.paymentType !== 'iade_reddi') {
+        variables.imei = formData.imei;
+      }
 
       toast.loading(`${triggers.length} API tetikleniyor...`);
       let successCount = 0;
@@ -185,16 +182,6 @@ const CourierActions = () => {
           const endTime = Date.now();
           const duration = endTime - startTime;
 
-          // Console'da detaylı response bilgilerini logla
-          console.group(`✅ ${trigger.api_name} - Başarılı Response`);
-          console.log('🔗 Endpoint:', endpoint);
-          console.log('📊 HTTP Status:', proxyResponse.data.status);
-          console.log('⏱️ Süre:', `${duration}ms`);
-          console.log('📥 Response Headers:', proxyResponse.data.headers);
-          console.log('📦 Response Data:', responseData);
-          console.log('🔍 Tam Proxy Response:', proxyResponse.data);
-          console.groupEnd();
-
           // Başarılı sonuç kaydet
           const result = {
             trigger,
@@ -202,8 +189,7 @@ const CourierActions = () => {
             response: {
               ...proxyResponse.data,
               isEmpty: isEmpty,
-              data: responseData,
-              fullResponse: proxyResponse.data // Tam response'u sakla
+              data: responseData
             },
             duration,
             endpoint,
@@ -229,30 +215,11 @@ const CourierActions = () => {
           const endTime = Date.now();
           const duration = endTime - startTime;
 
-          // Console'da detaylı hata bilgilerini logla
-          console.group(`❌ ${trigger.api_name} - Hata Response`);
-          console.log('🔗 Endpoint:', replaceVariables(trigger.endpoint, variables));
-          console.log('⏱️ Süre:', `${duration}ms`);
-          console.log('💥 Hata Türü:', apiError.name);
-          console.log('📝 Hata Mesajı:', apiError.message);
-          console.log('📊 HTTP Status:', apiError.response?.status);
-          console.log('📥 Response Headers:', apiError.response?.headers);
-          console.log('📦 Response Data:', apiError.response?.data);
-          console.log('🔍 Tam Hata Objesi:', apiError);
-          console.groupEnd();
-
           // Hatalı sonuç kaydet
           const result = {
             trigger,
             success: false,
             error: apiError.response?.data?.message || apiError.message,
-            errorDetails: {
-              status: apiError.response?.status,
-              statusText: apiError.response?.statusText,
-              headers: apiError.response?.headers,
-              data: apiError.response?.data,
-              fullError: apiError.response || apiError
-            },
             duration,
             endpoint: replaceVariables(trigger.endpoint, variables),
             timestamp: new Date().toISOString()
@@ -317,10 +284,9 @@ const CourierActions = () => {
   const resetForm = () => {
     setFormData({
       environment: 'fonksiyonel',
-      simType: 'fiziksel',
-      iccid: '',
-      customerOrder: '',
-      tid: ''
+      paymentType: 'temlikli',
+      imei: '',
+      customerOrder: ''
     });
   };
 
@@ -361,16 +327,16 @@ const CourierActions = () => {
                   position: 'relative',
                   zIndex: 2
                 }}>
-                  <i className="bi bi-truck" style={{fontSize: '2.5rem'}}></i>
+                  <i className="bi bi-phone" style={{fontSize: '2.5rem'}}></i>
                 </div>
                 
                 {/* Hero Content */}
                 <div style={{position: 'relative', zIndex: 2}}>
                   <h1 className="mb-3" style={{fontSize: '2.5rem', fontWeight: '700', textShadow: '0 2px 4px rgba(0,0,0,0.3)'}}>
-                    Kurye Tetikleme Sistemi
+                    Cihaz Tetikleme Sistemi
                   </h1>
                   <p className="mb-4" style={{fontSize: '1.1rem', opacity: 0.9, maxWidth: '600px', margin: '0 auto'}}>
-                    Kurye süreçlerini tetiklemek için gerekli bilgileri girin
+                    Cihaz süreçlerini tetiklemek için gerekli bilgileri girin
                   </p>
                   
                   {/* Decorative Elements */}
@@ -395,7 +361,7 @@ const CourierActions = () => {
               <div className="card-body" style={{padding: '2rem'}}>
                 <form onSubmit={handleSubmit}>
                   <div className="row">
-                    {/* Sol Sütun - Ortam ve SIM Tipi */}
+                    {/* Sol Sütun - Ortam ve Ödeme Tipi */}
                     <div className="col-lg-6">
                       {/* Ortam Seçimi */}
                       <div className="form-group mb-4">
@@ -437,33 +403,35 @@ const CourierActions = () => {
                         </div>
                       </div>
 
-                      {/* SIM Tipi Seçimi */}
+                      {/* Tetikleme Tipi Seçimi */}
                       <div className="form-group mb-4">
                         <label className="form-label fw-bold mb-3">
-                          <i className="bi bi-sim me-2 text-purple-500"></i>
-                          SIM Tipi
+                          <i className="bi bi-gear me-2 text-purple-500"></i>
+                          Tetikleme Tipi
                         </label>
                         <div className="row g-3">
                           {[
-                            { value: 'fiziksel', label: 'Fiziksel SIM', icon: 'bi-credit-card', desc: 'Geleneksel SIM kart' },
-                            { value: 'esim', label: 'E-SIM', icon: 'bi-phone', desc: 'Dijital SIM profili' }
-                          ].map((sim) => (
-                            <div key={sim.value} className="col-6">
+                            { value: 'temlikli', label: 'Temlikli', icon: 'bi-shield-check', desc: 'Taksitli ödeme süreçleri' },
+                            { value: 'pesin', label: 'Peşin', icon: 'bi-cash-coin', desc: 'Peşin ödeme süreçleri' },
+                            { value: 'iade_reddi', label: 'İade Reddi', icon: 'bi-x-octagon', desc: 'İade red süreçleri' }
+                                                      ].map((payment) => (
+                            <div key={payment.value} className="col-4">
                               <div 
-                                className={`card text-center cursor-pointer ${formData.simType === sim.value ? 'border-primary bg-primary bg-opacity-10' : 'border-light'}`}
+                                className={`card text-center cursor-pointer h-100 d-flex ${formData.paymentType === payment.value ? 'border-primary bg-primary bg-opacity-10' : 'border-light'}`}
                                 style={{
                                   cursor: 'pointer',
                                   transition: 'all 0.3s ease',
-                                  border: formData.simType === sim.value ? '2px solid #0d6efd' : '1px solid #dee2e6',
-                                  borderRadius: '12px'
+                                  border: formData.paymentType === payment.value ? '2px solid #0d6efd' : '1px solid #dee2e6',
+                                  borderRadius: '12px',
+                                  minHeight: '120px'
                                 }}
-                                onClick={() => handleInputChange('simType', sim.value)}
+                                onClick={() => handleInputChange('paymentType', payment.value)}
                               >
-                                <div className="card-body py-3">
-                                  <i className={`${sim.icon} fs-3 mb-2 d-block text-primary`}></i>
-                                  <div className="fw-medium small">{sim.label}</div>
-                                  <div className="text-muted" style={{fontSize: '11px'}}>{sim.desc}</div>
-                                  {formData.simType === sim.value && (
+                                <div className="card-body py-3 d-flex flex-column justify-content-center align-items-center">
+                                  <i className={`${payment.icon} fs-3 mb-2 d-block text-primary`}></i>
+                                  <div className="fw-medium small mb-1">{payment.label}</div>
+                                  <div className="text-muted text-center" style={{fontSize: '11px', lineHeight: '1.2'}}>{payment.desc}</div>
+                                  {formData.paymentType === payment.value && (
                                     <div className="position-absolute top-0 end-0 translate-middle">
                                       <span className="badge bg-primary rounded-circle p-1">
                                         <i className="bi bi-check" style={{fontSize: '10px'}}></i>
@@ -480,40 +448,28 @@ const CourierActions = () => {
 
                     {/* Sağ Sütun - Input Alanları */}
                     <div className="col-lg-6">
-                      {/* ICCID Alanı (E-sim seçiliyse gizle) */}
-                      {formData.simType === 'fiziksel' && (
+                      {/* IMEI Alanı - İade Reddi'nde gizli */}
+                      {formData.paymentType !== 'iade_reddi' && (
                         <div className="form-group mb-4">
                           <label className="form-label fw-bold">
-                            <i className="bi bi-credit-card-2-front me-2 text-success"></i>
-                            ICCID
+                            <i className="bi bi-phone me-2 text-success"></i>
+                            IMEI
                             <span className="text-danger ms-1">*</span>
                           </label>
                           <div className="input-group">
                             <span className="input-group-text" style={{borderRadius: '12px 0 0 12px'}}>
-                              <i className="bi bi-credit-card-2-front text-success"></i>
+                              <i className="bi bi-phone text-success"></i>
                             </span>
-          <input
-            type="text"
-            className="form-control placeholder-lighter"
+                            <input
+                              type="text"
+                              className="form-control placeholder-lighter"
                               style={{borderRadius: '0 12px 12px 0'}}
-                              value={formData.iccid}
-                              onChange={(e) => handleInputChange('iccid', e.target.value)}
-                              placeholder="89900123456789012345"
-          />
-        </div>
-                          <div className="form-text">20 haneli ICCID numarasını girin</div>
-                        </div>
-                      )}
-
-                      {/* E-SIM için ICCID Bilgi Notu */}
-                      {formData.simType === 'esim' && (
-                        <div className="alert alert-info d-flex align-items-center mb-4" style={{borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg, #e3f2fd, #bbdefb)'}}>
-                          <i className="bi bi-info-circle-fill me-2"></i>
-                          <div>
-                            <strong>E-SIM seçildi</strong>
-                            <br />
-                            <small>E-SIM için ICCID alanı zorunlu değildir.</small>
+                              value={formData.imei}
+                              onChange={(e) => handleInputChange('imei', e.target.value)}
+                              placeholder="123456789012345"
+                            />
                           </div>
+                          <div className="form-text">15 haneli IMEI numarasını girin</div>
                         </div>
                       )}
 
@@ -540,28 +496,7 @@ const CourierActions = () => {
                         <div className="form-text">Müşteri sipariş numarasını girin</div>
         </div>
 
-                      {/* TID */}
-                      <div className="form-group mb-4">
-                        <label className="form-label fw-bold">
-                          <i className="bi bi-hash me-2 text-info"></i>
-                          Transaction ID (TID)
-                          <span className="text-danger ms-1">*</span>
-                        </label>
-                        <div className="input-group">
-                          <span className="input-group-text" style={{borderRadius: '12px 0 0 12px'}}>
-                            <i className="bi bi-hash text-info"></i>
-                          </span>
-                          <input
-                            type="text"
-                            className="form-control placeholder-lighter"
-                            style={{borderRadius: '0 12px 12px 0'}}
-                            value={formData.tid}
-                            onChange={(e) => handleInputChange('tid', e.target.value)}
-                            placeholder="TXN789456123"
-                          />
-                        </div>
-                        <div className="form-text">İşlem kimlik numarasını girin</div>
-                      </div>
+
                     </div>
                   </div>
 
@@ -664,7 +599,7 @@ const CourierActions = () => {
                                 result.success ? 'bg-success bg-opacity-5 border-success' : 'bg-danger bg-opacity-5 border-danger'
                               }`} style={{borderWidth: '1px!important'}}>
                                 <div className="card-body">
-                                  <div className="row">
+                                  <div className="row align-items-center">
                                     <div className="col-md-8">
                                       <div className="d-flex align-items-center mb-2">
                                         <div className="me-3">
@@ -687,67 +622,25 @@ const CourierActions = () => {
                                           </div>
                                         </div>
                                       </div>
-                                      
-                                      {/* Response/Error Details */}
-                                      {result.success ? (
-                                        <div className="mt-3">
-                                          <div className="d-flex align-items-center mb-2">
-                                            <i className="bi bi-info-circle text-primary me-2"></i>
-                                            <strong className="small">API Response:</strong>
-                                          </div>
-                                          <div className="bg-light p-2 rounded small">
-                                            <div className="row g-2">
-                                              <div className="col-sm-6">
-                                                <strong>Status:</strong> 
-                                                <span className="badge bg-success ms-1">{result.response?.status || 'N/A'}</span>
-                                              </div>
-                                              <div className="col-sm-6">
-                                                <strong>Content-Type:</strong> 
-                                                <span className="text-muted ms-1">{result.response?.headers?.['content-type'] || 'N/A'}</span>
-                                              </div>
-                                            </div>
-                                            {result.response?.data && Object.keys(result.response.data).length > 0 ? (
-                                              <div className="mt-2">
-                                                <strong>Response Data:</strong>
-                                                <pre className="bg-white p-2 mt-1 rounded border small" style={{maxHeight: '150px', overflow: 'auto'}}>
-                                                  {JSON.stringify(result.response.data, null, 2)}
-                                                </pre>
-                                              </div>
-                                            ) : (
-                                              <div className="mt-2 text-muted">
-                                                <i className="bi bi-info-circle me-1"></i>
-                                                {result.response?.isEmpty ? 'Boş response (No Content)' : 'Response data yok'}
-                                              </div>
-                                            )}
-                                          </div>
-                                        </div>
-                                      ) : (
-                                        <div className="mt-3">
-                                          <div className="alert alert-danger py-2 mb-2">
-                                            <div className="d-flex align-items-center mb-1">
-                                              <i className="bi bi-exclamation-triangle me-2"></i>
-                                              <strong>Hata Detayları:</strong>
-                                            </div>
-                                            <div><strong>Mesaj:</strong> {result.error}</div>
-                                            {result.errorDetails?.status && (
-                                              <div><strong>HTTP Status:</strong> {result.errorDetails.status} {result.errorDetails.statusText}</div>
-                                            )}
-                                            {result.errorDetails?.data && (
-                                              <div className="mt-2">
-                                                <strong>Error Response:</strong>
-                                                <pre className="bg-light p-2 mt-1 rounded small" style={{maxHeight: '100px', overflow: 'auto'}}>
-                                                  {JSON.stringify(result.errorDetails.data, null, 2)}
-                                                </pre>
-                                              </div>
-                                            )}
-                                          </div>
+                                      {!result.success && (
+                                        <div className="alert alert-danger py-2 mb-0">
+                                          <small><strong>Hata:</strong> {result.error}</small>
                                         </div>
                                       )}
                                     </div>
-                                    <div className="col-md-4">
-                                                                              <div className="text-muted small">
+                                    <div className="col-md-4 text-end">
+                                      <div className="text-muted small">
                                         <div><strong>Süre:</strong> {result.duration}ms</div>
                                         <div><strong>Zaman:</strong> {new Date(result.timestamp).toLocaleTimeString('tr-TR')}</div>
+                                                                                 {result.success && result.response?.status && (
+                                           <div>
+                                             <strong>Status:</strong> 
+                                             <span className="badge bg-success me-1">{result.response.status}</span>
+                                             {(result.response.status === 204 || result.response.isEmpty) && (
+                                               <small className="text-muted">(No Content)</small>
+                                             )}
+                                           </div>
+                                         )}
                                       </div>
                                     </div>
                                   </div>
@@ -832,4 +725,4 @@ const CourierActions = () => {
   );
 };
 
-export default CourierActions;
+export default DeviceActions;

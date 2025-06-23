@@ -12,6 +12,7 @@ import SelfybestInsertSql from './components/SelfybestInsertSql'
 import InfodealerToSqlUpdate from './components/InfodealerToSqlUpdate'
 import IccidManagement from './components/IccidManagement'
 import CourierActions from './components/CourierActions'
+import DeviceActions from './components/DeviceActions'
 import WorkflowBuilder from './components/automation/WorkflowBuilder'
 import SingleApiTester from './components/automation/SingleApiTester'
 import IccidList from './components/IccidList'
@@ -165,6 +166,16 @@ function AppRoutes() {
                         <PrivateRoute>
                             <Layout>
                                 <CourierActions onApiCall={handleApiCall} />
+                            </Layout>
+                        </PrivateRoute>
+                    }
+                />
+                <Route
+                    path="/device-actions"
+                    element={
+                        <PrivateRoute>
+                            <Layout>
+                                <DeviceActions onApiCall={handleApiCall} />
                             </Layout>
                         </PrivateRoute>
                     }

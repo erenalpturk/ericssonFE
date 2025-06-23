@@ -243,14 +243,15 @@ const styles = `
 const TriggerManagement = () => {
   const [triggers, setTriggers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedTriggerType, setSelectedTriggerType] = useState('courier');
   const [selectedEnv, setSelectedEnv] = useState('regresyon');
-  const [selectedSimType, setSelectedSimType] = useState('fiziksel');
+  const [selectedPaymentType, setSelectedPaymentType] = useState('fiziksel');
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingTrigger, setEditingTrigger] = useState(null);
   const [showCopyModal, setShowCopyModal] = useState(false);
   const [copyData, setCopyData] = useState({
     targetEnv: '',
-    targetSimType: ''
+    targetPaymentType: ''
   });
   const [formData, setFormData] = useState({
     api_name: '',
@@ -258,6 +259,7 @@ const TriggerManagement = () => {
     method: 'POST',
     body: '',
     headers: '',
+    validation_script: '',
     order_index: 0,
     active: true
   });
@@ -268,24 +270,52 @@ const TriggerManagement = () => {
     { value: 'hotfix', label: 'Hotfix', color: 'danger' }
   ];
 
-  const simTypes = [
-    { value: 'fiziksel', label: 'Fiziksel SIM' },
-    { value: 'esim', label: 'E-SIM' }
+  const triggerTypes = [
+    { value: 'courier', label: 'Kurye Tetikleme' },
+    { value: 'device', label: 'Cihaz Tetikleme' }
   ];
+
+  // Dynamic payment types based on trigger type
+  const getPaymentTypes = (triggerType) => {
+    if (triggerType === 'courier') {
+      return [
+        { value: 'fiziksel', label: 'Fiziksel SIM' },
+        { value: 'esim', label: 'E-SIM' }
+      ];
+    } else {
+      return [
+        { value: 'temlikli', label: 'Temlikli' },
+        { value: 'pesin', label: 'Peşin' },
+        { value: 'iade_reddi', label: 'İade Reddi' }
+      ];
+    }
+  };
+
+  // Current payment types based on selected trigger type
+  const paymentTypes = getPaymentTypes(selectedTriggerType);
 
   const methods = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'];
 
   useEffect(() => {
     fetchTriggers();
-  }, [selectedEnv, selectedSimType]);
+  }, [selectedTriggerType, selectedEnv, selectedPaymentType]);
+
+  // Trigger type değiştiğinde payment type'ı resetle
+  useEffect(() => {
+    const paymentTypes = getPaymentTypes(selectedTriggerType);
+    if (paymentTypes.length > 0) {
+      setSelectedPaymentType(paymentTypes[0].value);
+    }
+  }, [selectedTriggerType]);
 
   const fetchTriggers = async () => {
     try {
       setLoading(true);
       const response = await axios.get('/api/courier-triggers', {
         params: {
+          trigger_type: selectedTriggerType,
           environment: selectedEnv,
-          sim_type: selectedSimType
+          payment_type: selectedPaymentType
         }
       });
       setTriggers(response.data.data || []);
@@ -306,6 +336,7 @@ const TriggerManagement = () => {
       method: 'POST',
       body: '',
       headers: '',
+      validation_script: '',
       order_index: 0,
       active: true
     });
@@ -322,8 +353,9 @@ const TriggerManagement = () => {
     try {
       const payload = {
         ...formData,
+        trigger_type: selectedTriggerType,
         environment: selectedEnv,
-        sim_type: selectedSimType
+        payment_type: selectedPaymentType
       };
 
       if (editingTrigger) {
@@ -351,6 +383,7 @@ const TriggerManagement = () => {
       method: trigger.method || 'POST',
       body: trigger.body || '',
       headers: trigger.headers || '',
+      validation_script: trigger.validation_script || '',
       order_index: trigger.order_index || 0,
       active: trigger.active !== undefined ? trigger.active : true
     });
@@ -387,13 +420,13 @@ const TriggerManagement = () => {
   const handleCopyAPIs = async (e) => {
     e.preventDefault();
     
-    if (!copyData.targetEnv || !copyData.targetSimType) {
-      toast.error('Hedef ortam ve SIM tipi seçiniz');
+    if (!copyData.targetEnv || !copyData.targetPaymentType) {
+      toast.error(`Hedef ortam ve ${selectedTriggerType === 'courier' ? 'SIM tipi' : 'tetikleme tipi'} seçiniz`);
       return;
     }
 
-    if (copyData.targetEnv === selectedEnv && copyData.targetSimType === selectedSimType) {
-      toast.error('Hedef ortam ve SIM tipi mevcut kombinasyondan farklı olmalıdır');
+    if (copyData.targetEnv === selectedEnv && copyData.targetPaymentType === selectedPaymentType) {
+      toast.error(`Hedef ortam ve ${selectedTriggerType === 'courier' ? 'SIM tipi' : 'tetikleme tipi'} mevcut kombinasyondan farklı olmalıdır`);
       return;
     }
 
@@ -407,18 +440,19 @@ const TriggerManagement = () => {
           headers: trigger.headers,
           order_index: trigger.order_index,
           active: trigger.active,
+          trigger_type: selectedTriggerType,
           environment: copyData.targetEnv,
-          sim_type: copyData.targetSimType
+          payment_type: copyData.targetPaymentType
         };
         return axios.post('/api/courier-triggers', newTrigger);
       });
 
       await Promise.all(copyPromises);
       
-      toast.success(`${triggers.length} API başarıyla ${environments.find(e => e.value === copyData.targetEnv)?.label} - ${simTypes.find(s => s.value === copyData.targetSimType)?.label} kombinasyonuna kopyalandı`);
+      toast.success(`${triggers.length} API başarıyla ${environments.find(e => e.value === copyData.targetEnv)?.label} - ${paymentTypes.find(p => p.value === copyData.targetPaymentType)?.label} kombinasyonuna kopyalandı`);
       
       setShowCopyModal(false);
-      setCopyData({ targetEnv: '', targetSimType: '' });
+      setCopyData({ targetEnv: '', targetPaymentType: '' });
     } catch (error) {
       const message = error.response?.data?.message || 'Kopyalama işlemi başarısız';
       toast.error(message);
@@ -445,6 +479,25 @@ const TriggerManagement = () => {
                 <div className="filter-controls">
                   <div className="filter-group">
                     <label className="filter-label">
+                      <i className="bi bi-gear me-2"></i>
+                      Tetikleme Tipi
+                    </label>
+                    <div className="select-wrapper">
+                      <select 
+                        className="modern-select"
+                        value={selectedTriggerType}
+                        onChange={(e) => setSelectedTriggerType(e.target.value)}
+                      >
+                        {triggerTypes.map(type => (
+                          <option key={type.value} value={type.value}>{type.label}</option>
+                        ))}
+                      </select>
+                      <i className="bi bi-chevron-down select-arrow"></i>
+                    </div>
+                  </div>
+
+                  <div className="filter-group">
+                    <label className="filter-label">
                       <i className="bi bi-building me-2"></i>
                       Ortam
                     </label>
@@ -463,18 +516,18 @@ const TriggerManagement = () => {
                   </div>
 
                   <div className="filter-group">
-                    <label className="filter-label">
-                      <i className="bi bi-sim me-2"></i>
-                      SIM Tipi
-                    </label>
+                                          <label className="filter-label">
+                        <i className="bi bi-credit-card me-2"></i>
+                        {selectedTriggerType === 'courier' ? 'SIM Tipi' : 'Tetikleme Tipi'}
+                      </label>
                     <div className="select-wrapper">
                       <select 
                         className="modern-select"
-                        value={selectedSimType}
-                        onChange={(e) => setSelectedSimType(e.target.value)}
+                        value={selectedPaymentType}
+                        onChange={(e) => setSelectedPaymentType(e.target.value)}
                       >
-                        {simTypes.map(sim => (
-                          <option key={sim.value} value={sim.value}>{sim.label}</option>
+                        {paymentTypes.map(payment => (
+                          <option key={payment.value} value={payment.value}>{payment.label}</option>
                         ))}
                       </select>
                       <i className="bi bi-chevron-down select-arrow"></i>
@@ -505,13 +558,13 @@ const TriggerManagement = () => {
                 <div className="d-flex justify-content-between align-items-center">
                   <h5 className="mb-0">
                     <i className="bi bi-list-ul me-2"></i>
-                    {environments.find(e => e.value === selectedEnv)?.label} - {simTypes.find(s => s.value === selectedSimType)?.label} API'leri
+                    {environments.find(e => e.value === selectedEnv)?.label} - {paymentTypes.find(p => p.value === selectedPaymentType)?.label} API'leri
                   </h5>
                   {triggers.length > 0 && (
                     <button 
                       className="btn btn-outline-primary btn-sm copy-apis-btn"
                       onClick={() => setShowCopyModal(true)}
-                      title="API'leri başka ortam/SIM tipine kopyala"
+                      title={`API'leri başka ortam/${selectedTriggerType === 'courier' ? 'SIM tipine' : 'tetikleme tipine'} kopyala`}
                     >
                       <i className="bi bi-copy me-1"></i>
                       Kopyala
@@ -688,15 +741,35 @@ const TriggerManagement = () => {
                         rows="8"
                         value={formData.body}
                         onChange={(e) => setFormData(prev => ({...prev, body: e.target.value}))}
-                        placeholder={`{
+                        placeholder={
+                          selectedTriggerType === 'courier' 
+                            ? `{
   "customerOrder": "{{customerOrder}}",
   "transactionId": "{{TID}}",
   "iccid": "{{iccid}}"
-}`}
+}`
+                            : selectedPaymentType === 'iade_reddi'
+                              ? `{
+  "customerOrder": "{{customerOrder}}",
+  "action": "reject_refund",
+  "reason": "customer_request"
+}`
+                              : `{
+  "customerOrder": "{{customerOrder}}",
+  "imei": "{{imei}}",
+  "paymentType": "${selectedPaymentType}"
+}`
+                        }
                       />
                       <div className="form-text">
                         <i className="bi bi-info-circle me-1"></i>
-                        <strong>Değişkenler:</strong> {`{{customerOrder}}, {{TID}}, {{iccid}}`}
+                        <strong>Değişkenler:</strong> {
+                          selectedTriggerType === 'courier' 
+                            ? `{{customerOrder}}, {{TID}}, {{iccid}}` 
+                            : selectedPaymentType === 'iade_reddi'
+                              ? `{{customerOrder}}`
+                              : `{{customerOrder}}, {{imei}}`
+                        }
                       </div>
                     </div>
                     <div className="col-md-6">
@@ -717,6 +790,36 @@ const TriggerManagement = () => {
                       <div className="form-text">
                         <i className="bi bi-info-circle me-1"></i>
                         Header bilgilerini JSON formatında girin
+                      </div>
+                    </div>
+                    <div className="col-12">
+                      <label className="form-label fw-bold">
+                        <i className="bi bi-code-slash me-1"></i>
+                        Validation Script (JavaScript)
+                        <span className="badge bg-info ms-2">İsteğe Bağlı</span>
+                      </label>
+                      <textarea
+                        className="form-control font-monospace"
+                        rows="4"
+                        value={formData.validation_script}
+                        onChange={(e) => setFormData(prev => ({...prev, validation_script: e.target.value}))}
+                        placeholder={`return response.success === true && response.data !== null;
+
+// Kullanılabilir değişkenler:
+// response: API cevap body'si (JSON)
+// status: HTTP status kodu (number)  
+// headers: Response header'ları (object)`}
+                      />
+                      <div className="form-text">
+                        <i className="bi bi-info-circle me-1"></i>
+                        <strong>Bu script API cevabını kontrol eder.</strong> <code>true</code> döndürürse işlem devam eder, <code>false</code> döndürürse durdurulur.
+                        <br />
+                        <strong>Örnekler:</strong>
+                        <ul className="mb-0 mt-1">
+                          <li><code>return response.success === true;</code> - success alanı true mu?</li>
+                          <li><code>return status === 200 && response.data.length &gt; 0;</code> - 200 OK + data var mı?</li>
+                          <li><code>return response.errorCode === 0;</code> - errorCode 0 mı?</li>
+                        </ul>
                       </div>
                     </div>
                     <div className="col-12">
@@ -777,7 +880,7 @@ const TriggerManagement = () => {
                           <h6 className="card-title text-muted mb-2">Kaynak</h6>
                           <div className="d-flex align-items-center">
                             <span className="badge bg-primary me-2">{environments.find(e => e.value === selectedEnv)?.label}</span>
-                            <span className="badge bg-secondary">{simTypes.find(s => s.value === selectedSimType)?.label}</span>
+                            <span className="badge bg-secondary">{paymentTypes.find(p => p.value === selectedPaymentType)?.label}</span>
                           </div>
                         </div>
                       </div>
@@ -803,20 +906,20 @@ const TriggerManagement = () => {
                     
                     <div className="col-md-6">
                       <label className="form-label fw-bold">
-                        <i className="bi bi-sim me-1"></i>
-                        Hedef SIM Tipi *
+                        <i className="bi bi-credit-card me-1"></i>
+                        Hedef {selectedTriggerType === 'courier' ? 'SIM Tipi' : 'Tetikleme Tipi'} *
                       </label>
                       <select
                         className="form-select"
-                        value={copyData.targetSimType}
-                        onChange={(e) => setCopyData(prev => ({...prev, targetSimType: e.target.value}))}
+                        value={copyData.targetPaymentType}
+                        onChange={(e) => setCopyData(prev => ({...prev, targetPaymentType: e.target.value}))}
                         required
                       >
-                        <option value="">SIM Tipi Seçin</option>
-                        {simTypes.filter(sim => 
-                          !(sim.value === selectedSimType && copyData.targetEnv === selectedEnv)
-                        ).map(sim => (
-                          <option key={sim.value} value={sim.value}>{sim.label}</option>
+                        <option value="">{selectedTriggerType === 'courier' ? 'SIM Tipi Seçin' : 'Tetikleme Tipi Seçin'}</option>
+                        {paymentTypes.filter(payment => 
+                          !(payment.value === selectedPaymentType && copyData.targetEnv === selectedEnv)
+                        ).map(payment => (
+                          <option key={payment.value} value={payment.value}>{payment.label}</option>
                         ))}
                       </select>
                     </div>
