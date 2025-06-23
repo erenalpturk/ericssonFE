@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import { ENVIRONMENT_CONFIG } from '../services/config';
 
 const CourierActions = () => {
   const [formData, setFormData] = useState({
@@ -131,6 +132,12 @@ const CourierActions = () => {
 
           // Endpoint'teki değişkenleri değiştir
           const endpoint = replaceVariables(trigger.endpoint, variables);
+
+          // Environment check - iç ağ kontrolü
+          const envError = ENVIRONMENT_CONFIG.getErrorMessage(endpoint);
+          if (envError) {
+            throw new Error(`${envError.title}: ${envError.message} ${envError.suggestion}`);
+          }
 
           console.log(`Tetikleniyor: ${trigger.api_name}`, {
             method: trigger.method,
