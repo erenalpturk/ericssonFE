@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import appleTouchIcon from '../../public/apple-touch-icon.png';
 
 function Home() {
     const { user } = useAuth()
@@ -95,7 +96,7 @@ function Home() {
             <div className="hero-section">
                 <div className="hero-content">
                     <div className="hero-icon">
-                        <i className="bi bi-gear-wide-connected"></i>
+                        <img src={appleTouchIcon} alt="OMNI Tools" style={{ width: '5rem', height: '5rem' }} />
                     </div>
                     <h1 className="hero-title">OMNI Tools</h1>
                     <p className="hero-subtitle">Test Team Otomasyon Araçları Koleksiyonu</p>

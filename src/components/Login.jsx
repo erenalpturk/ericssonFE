@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import appleTouchIcon from '../../public/apple-touch-icon.png';
 
 function Login() {
     const [username, setUsername] = useState('');
@@ -23,13 +24,13 @@ function Login() {
         setLoading(true);
 
         const result = await login(username, password);
-        
+
         if (result.success) {
             navigate('/');
         } else {
             setError('Giriş başarısız. Lütfen kullanıcı adı ve şifrenizi kontrol edin.');
         }
-        
+
         setLoading(false);
     };
 
@@ -38,8 +39,9 @@ function Login() {
             <div className="login-container">
                 <div className="login-header">
                     <div className="login-icon">
-                        <i className="bi bi-gear-wide-connected"></i>
+                        <img src={appleTouchIcon} alt="OMNI Tools" style={{ width: '4rem', height: '4rem' }} />
                     </div>
+
                     <h1>OMNI Tools</h1>
                     <p>Test Team Otomasyon Araçları</p>
                 </div>
