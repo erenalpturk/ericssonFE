@@ -3,6 +3,7 @@ import React, { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { toast } from 'react-toastify'
 import NotificationBell from './Notifications/NotificationBell'
+import appleTouchIcon from '../../public/apple-touch-icon.png';
 
 function Sidebar({ isCollapsed, onToggle }) {
     const location = useLocation()
@@ -176,9 +177,7 @@ function Sidebar({ isCollapsed, onToggle }) {
             {/* Header */}
             <div className="sidebar-header">
                 <div className="brand">
-                    <div className="brand-icon">
-                        <i className="bi bi-gear-wide-connected"></i>
-                    </div>
+                        <img src={appleTouchIcon} alt="OMNI Tools" style={{ width: '3rem', height: '3rem' }} />
                     {!isCollapsed && (
                         <div className="brand-text">
                             <h1>OMNI</h1>

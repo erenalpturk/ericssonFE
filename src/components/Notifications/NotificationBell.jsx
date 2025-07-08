@@ -163,7 +163,7 @@ const NotificationBell = () => {
                     whiteSpace: 'pre-wrap',
                     lineHeight: 1.6,
                     color: theme.palette.text.primary,
-                    fontSize: '0.95rem'
+                    fontSize: '0.95rem',
                 }}>
                     {notification.message}
                 </Typography>
@@ -525,7 +525,7 @@ const NotificationBell = () => {
                                 </Box>
 
                                 {/* Başlık ve Meta Bilgiler */}
-                                <Box sx={{ flex: 1, minWidth: 0 }}>
+                                <Box sx={{ flex: 1, minWidth: 0,  }}>
                                     <Typography variant="h5" sx={{ 
                                         fontSize: '1.3rem',
                                         fontWeight: 700,
@@ -536,7 +536,7 @@ const NotificationBell = () => {
                                         {selectedNotification.title}
                                     </Typography>
                                     
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap', }}>
                                         <Box sx={{ 
                                             display: 'flex', 
                                             alignItems: 'center', 
@@ -610,7 +610,7 @@ const NotificationBell = () => {
                         </Box>
 
                         {/* İçerik Alanı */}
-                        <Box sx={{ p: 3 }}>
+                        <Box sx={{ p: 3, overflow: 'scroll' }}>
                             <Box sx={{
                                 background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.02), rgba(118, 75, 162, 0.02))',
                                 border: '1px solid rgba(102, 126, 234, 0.08)',

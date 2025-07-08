@@ -173,9 +173,7 @@ body {
 }
 
 .brand-icon {
-  width: 2.5rem !important;
-  height: 2.5rem !important;
-  background: linear-gradient(135deg, #3b82f6, #9333ea) !important;
+  background: rgba(255, 255, 255, 0.95) !important;
   border-radius: 0.75rem !important;
   display: flex !important;
   align-items: center !important;
@@ -1755,17 +1753,12 @@ body {
 }
 
 .hero-icon {
-  width: 5rem;
-  height: 5rem;
-  background: linear-gradient(135deg, #3b82f6, #9333ea);
-  border-radius: 1.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 2.5rem;
   color: white;
   margin: 0 auto 2rem;
-  box-shadow: 0 20px 25px -5px rgba(59, 130, 246, 0.4);
   animation: float 3s ease-in-out infinite;
 }
 
@@ -2194,9 +2187,6 @@ body {
 }
 
 .login-icon {
-    width: 4rem;
-    height: 4rem;
-    background: linear-gradient(135deg, #3b82f6, #2563eb);
     border-radius: 1rem;
     display: flex;
     align-items: center;
