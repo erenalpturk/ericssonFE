@@ -71,9 +71,9 @@ function Sidebar({ isCollapsed, onToggle }) {
             roles: ['admin', 'support', 'tester']
         },
         {
-            path: '/iccid-list',
+            path: '/serial-number-management',
             icon: 'bi-credit-card-2-front',
-            label: 'ICCID',
+            label: 'Seri No Yönetimi',
             color: 'text-emerald-500',
             roles: ['admin', 'support', 'tester']
         },

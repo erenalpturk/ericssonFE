@@ -10,11 +10,12 @@ import SqlCreate from './components/SqlCreate'
 import InfodealerToSql from './components/InfodealerToSql'
 import SelfybestInsertSql from './components/SelfybestInsertSql'
 import InfodealerToSqlUpdate from './components/InfodealerToSqlUpdate'
-import IccidManagement from './components/IccidManagement'
+import AddIccids from './components/AddIccids'
 import CourierActions from './components/CourierActions'
 import WorkflowBuilder from './components/automation/WorkflowBuilder'
 import SingleApiTester from './components/automation/SingleApiTester'
-import IccidList from './components/IccidList'
+import MyIccidList from './components/MyIccidList'
+import SerialNumberManagement from './components/SerialNumberManagement'
 import ActivationList from './components/ActivationList'
 import ChangePassword from './components/ChangePassword'
 import Stats from './components/Stats'
@@ -133,17 +134,17 @@ function AppRoutes() {
                     element={
                         <PrivateRoute>
                             <Layout>
-                                <IccidManagement />
+                                <AddIccids />
                             </Layout>
                         </PrivateRoute>
                     }
                 />
                 <Route
-                    path="/iccid-list"
+                    path="/serial-number-management"
                     element={
                         <PrivateRoute>
                             <Layout>
-                                <IccidList />
+                                <SerialNumberManagement />
                             </Layout>
                         </PrivateRoute>
                     }

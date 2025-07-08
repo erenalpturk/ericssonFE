@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import IccidManagement from './IccidManagement';
+import MyIccids from './AddIccids';
 import {
   MenuItem,
   Select,
@@ -13,12 +13,8 @@ import {
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
-import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
-import EditIcon from '@mui/icons-material/Edit';
-import SaveIcon from '@mui/icons-material/Save';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 
-const IccidList = () => {
+const MyIccidList = () => {
   const [iccids, setIccids] = useState([]);
   const [selectedIccids, setSelectedIccids] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -274,29 +270,6 @@ const IccidList = () => {
         </div>
       )}
 
-      {/* Header Section */}
-      <div className="page-header">
-        <div className="header-content">
-          <div className="header-icon">
-            <i className="bi bi-credit-card-2-front text-emerald-600"></i>
-          </div>
-          <div className="header-text">
-            <h1>ICCIDlerim</h1>
-            <p>Kullandığınız veya rezerve ettiğiniz ICCIDleri yönetin</p>
-          </div>
-          {user.role !== 'tester' && (
-            <button className="action-btn primary" onClick={() => setShowIccidManagement(true)}>
-              <i className="bi bi-plus-circle"></i>
-              ICCID Ekle
-            </button>
-          )}
-        </div>
-        <div className="stats-badge">
-          <i className="bi bi-list-ol"></i>
-          <span>{Array.isArray(iccids) ? iccids.length : 0} ICCID</span>
-        </div>
-      </div>
-
       {/* ICCID Management Modal */}
       {showIccidManagement && (
         <div className="modal-overlay">
@@ -308,7 +281,7 @@ const IccidList = () => {
               </button>
             </div>
             <div className="modal-body">
-              <IccidManagement onClose={() => setShowIccidManagement(false)} />
+              <AddIccids onClose={() => setShowIccidManagement(false)} />
             </div>
           </div>
         </div>
@@ -695,4 +668,4 @@ const IccidList = () => {
   );
 };
 
-export default IccidList;
+export default MyIccidList;
