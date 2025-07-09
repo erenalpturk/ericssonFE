@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import appleTouchIcon from '../../public/apple-touch-icon.png';
+import '../styles/login.css';
 
 function Login() {
     const [username, setUsername] = useState('');
