@@ -90,12 +90,18 @@ export class VariablesService {
           key: 'user',
           value: currentUserSicilNo,
           source: 'auth',
+          type: 'system',  // user değişkeni system tipinde
           timestamp: Date.now()
         }
-      } else {
-        // User bilgisi yoksa console'da uyarı ver ama hata fırlatma
-        console.warn('[VariablesService] User bilgisi localStorage\'da bulunamadı. Otomasyonda ayarlanacak.')
       }
+
+      // Static değişkenleri koru
+      const storedVars = { ...variables }
+      Object.entries(storedVars).forEach(([key, value]) => {
+        if (value.type === 'static') {
+          variables[key] = value  // Static değişkenleri geri ekle
+        }
+      })
       
       return variables
     } catch (error) {
