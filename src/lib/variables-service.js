@@ -110,13 +110,14 @@ export class VariablesService {
     }
   }
 
-  static setRuntimeVariable(key, value, source = 'manual') {
+  static setRuntimeVariable(key, value, source = 'manual', type = 'runtime') { // type parametresi eklendi
     try {
       const variables = this.getRuntimeVariables()
       variables[key] = {
         key,
         value,
         source,
+        type, // type bilgisi eklendi
         timestamp: Date.now()
       }
       localStorage.setItem('omni_runtime_variables', JSON.stringify(variables))

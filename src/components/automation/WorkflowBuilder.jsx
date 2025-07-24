@@ -18,6 +18,7 @@ export default function WorkflowBuilder() {
   const [globalVariables, setGlobalVariables] = useState({})
   const [staticVariables, setStaticVariables] = useState({})
   const [runtimeVariables, setRuntimeVariables] = useState({})
+  const [fullRuntimeVariables, setFullRuntimeVariables] = useState({}) // Yeni state
 
   // Veritabanı işlemleri için state'ler
   const [currentWorkflow, setCurrentWorkflow] = useState(null)
@@ -125,6 +126,7 @@ export default function WorkflowBuilder() {
 
       console.log('[WorkflowBuilder] Loading runtime variables...')
       const runtimeVars = VariablesService.getRuntimeVariables()
+      setFullRuntimeVariables(runtimeVars) // Yeni state'i doldur
       const runtimeValues = {}
       Object.values(runtimeVars).forEach(variable => {
         // Sadece silinmemiş değişkenleri al
@@ -386,8 +388,26 @@ export default function WorkflowBuilder() {
       usedVariables.forEach(varName => {
         const value = globalVariables[varName]
         if (value !== undefined && value !== null && value !== '') {
-          VariablesService.setRuntimeVariable(varName, String(value), 'automation')
-          console.log(`[WorkflowBuilder] Saved used variable to localStorage: ${varName} = ${value}`)
+          const existingRuntimeVar = fullRuntimeVariables[varName];
+
+          let type, source;
+
+          if (existingRuntimeVar && existingRuntimeVar.type) {
+              // Değişken localStorage'da mevcut ve bir tipi var, onu koru
+              type = existingRuntimeVar.type;
+              source = existingRuntimeVar.source || 'runtime';
+          } else if (staticVariables.hasOwnProperty(varName)) {
+              // Değişken localStorage'da yok (veya tipi yok), ama statik listesinde var
+              type = 'static';
+              source = 'automation';
+          } else {
+              // Diğer tüm durumlar için varsayılan
+              type = 'runtime';
+              source = 'automation';
+          }
+
+          VariablesService.setRuntimeVariable(varName, String(value), source, type)
+          console.log(`[WorkflowBuilder] Saved used variable to localStorage: ${varName} = ${value} (type: ${type})`)
           savedCount++
         }
       })
@@ -854,6 +874,7 @@ export default function WorkflowBuilder() {
         console: {
           log: (...args) => console.log('[Pre-request Script]:', ...args)
         },
+        localStorage: window.localStorage, // localStorage'ı context'e ekle
         Date: Date,
         Math: Math,
         JSON: JSON,
@@ -864,7 +885,7 @@ export default function WorkflowBuilder() {
       }
 
       // Execute script with direct parameters
-      const scriptFunction = new Function('variables', 'request', 'console', 'Date', 'Math', 'JSON', 'String', 'Number', 'parseInt', 'parseFloat', `
+      const scriptFunction = new Function('variables', 'request', 'console', 'localStorage', 'Date', 'Math', 'JSON', 'String', 'Number', 'parseInt', 'parseFloat', `
         ${script}
         return { variables, request };
       `)
@@ -873,6 +894,7 @@ export default function WorkflowBuilder() {
         mutableVariables,
         mutableRequest,
         scriptContext.console,
+        scriptContext.localStorage,
         scriptContext.Date,
         scriptContext.Math,
         scriptContext.JSON,
