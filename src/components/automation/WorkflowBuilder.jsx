@@ -4,6 +4,7 @@ import ApiStep from './ApiStep'
 import WorkflowResults from './WorkflowResults'
 import WorkflowManager from './WorkflowManager'
 import VariablesManager from './VariablesManager'
+import StaticVariables from './StaticVariables'
 import { WorkflowService } from '../../lib/workflow-service'
 import { VariablesService } from '../../lib/variables-service'
 import { useAuth } from '../../contexts/AuthContext'
@@ -69,6 +70,12 @@ export default function WorkflowBuilder() {
       }
     }
 
+    // Runtime değişkenler değiştiğinde yenile
+    const handleRuntimeVariablesChanged = () => {
+      console.log('[WorkflowBuilder] Runtime variables changed, refreshing...')
+      loadVariables()
+    }
+
     // Sayfa yenilendiğinde isWorkflowRunning kontrolü
     const handleBeforeUnload = (e) => {
       if (isWorkflowRunning) {
@@ -91,12 +98,14 @@ export default function WorkflowBuilder() {
     document.addEventListener('visibilitychange', handleVisibilityChange)
     document.addEventListener('click', handleClickOutside)
     window.addEventListener('beforeunload', handleBeforeUnload)
+    window.addEventListener('runtimeVariablesChanged', handleRuntimeVariablesChanged)
 
     return () => {
       window.removeEventListener('focus', handleFocus)
       document.removeEventListener('visibilitychange', handleVisibilityChange)
       document.removeEventListener('click', handleClickOutside)
       window.removeEventListener('beforeunload', handleBeforeUnload)
+      window.removeEventListener('runtimeVariablesChanged', handleRuntimeVariablesChanged)
     }
   }, [isWorkflowRunning]) // isWorkflowRunning'i dependency olarak ekledik
 
@@ -118,7 +127,10 @@ export default function WorkflowBuilder() {
       const runtimeVars = VariablesService.getRuntimeVariables()
       const runtimeValues = {}
       Object.values(runtimeVars).forEach(variable => {
-        runtimeValues[variable.key] = variable.value
+        // Sadece silinmemiş değişkenleri al
+        if (!variable.deleted) {
+          runtimeValues[variable.key] = variable.value
+        }
       })
       console.log('[WorkflowBuilder] Runtime variables loaded:', runtimeValues)
       setRuntimeVariables(runtimeValues)
@@ -549,9 +561,10 @@ export default function WorkflowBuilder() {
               icon: '🎉'
             })
             // Tüm çalıştırmalar başarılı - localStorage verileri zaten toplandı
-            // Otomasyon tamamlandı, localStorage'ı temizle (user hariç)
+            // Otomasyon tamamlandı, localStorage'ı temizle (user ve static değişkenler hariç)
             setTimeout(() => {
               cleanupLocalStorageAfterAutomation()
+              console.log('[WorkflowBuilder] Running cleanup after successful automation')
             }, 2000)
           } else if (successfulRuns.length === 0) {
             const finalMsg = `Tüm workflow çalıştırmaları başarısız oldu! (0/${totalRuns})`
@@ -562,9 +575,10 @@ export default function WorkflowBuilder() {
             })
             // Tüm çalıştırmalar başarısız - localStorage verilerini temizle
             setLocalStorageData([])
-            // Hata durumunda da localStorage'ı temizle (user hariç)
+            // Hata durumunda da localStorage'ı temizle (user ve static değişkenler hariç)
             setTimeout(() => {
               cleanupLocalStorageAfterAutomation()
+              console.log('[WorkflowBuilder] Running cleanup after failed automation')
             }, 2000)
           } else {
             const finalMsg = `${successfulRuns.length}/${totalRuns} çalıştırma başarılı, ${failedRuns.length} çalıştırma başarısız`
@@ -592,9 +606,10 @@ export default function WorkflowBuilder() {
             toast.error('Workflow hatalarla tamamlandı')
             // Hata var - localStorage verilerini temizle
             setLocalStorageData([])
-            // Hata durumunda da localStorage'ı temizle (user hariç)
+            // Hata durumunda da localStorage'ı temizle (user ve static değişkenler hariç)
             setTimeout(() => {
               cleanupLocalStorageAfterAutomation()
+              console.log('[WorkflowBuilder] Running cleanup after error')
             }, 2000)
           } else {
             toast.success('Workflow tamamlandı')
@@ -623,9 +638,10 @@ export default function WorkflowBuilder() {
       } else {
         toast.error('Workflow çalıştırılırken hata oluştu')
       }
-      // Hata durumunda da localStorage'ı temizle (user hariç)
+      // Hata durumunda da localStorage'ı temizle (user ve static değişkenler hariç)
       setTimeout(() => {
         cleanupLocalStorageAfterAutomation()
+        console.log('[WorkflowBuilder] Running cleanup after workflow error')
       }, 2000)
     } finally {
       setIsRunning(false)
@@ -687,6 +703,18 @@ export default function WorkflowBuilder() {
           requestVariables = preRequestResult.variables
           finalRequest = preRequestResult.request
           console.log('[WorkflowBuilder] Pre-request script executed successfully')
+
+          // Eğer script adımın atlanmasını istiyorsa
+          if (requestVariables.skipStep) {
+            console.log('[WorkflowBuilder] Step skipped by pre-request script:', requestVariables.skipReason)
+            return {
+              stepId: step.id,
+              stepName: step.name,
+              status: 'skipped',
+              message: requestVariables.skipReason || 'Pre-request script tarafından atlandı',
+              duration: Date.now() - startTime
+            }
+          }
         } catch (error) {
           console.warn('[WorkflowBuilder] Pre-request script failed:', error)
           // Continue with original request if script fails
@@ -1530,13 +1558,41 @@ export default function WorkflowBuilder() {
     try {
       console.log('[WorkflowBuilder] 🧹 Starting post-automation cleanup...')
       
-      // RuntimeVariables'dan user hariç tüm değişkenleri temizle
-      VariablesService.clearRuntimeVariablesExceptUser()
+      // 1. static_variables'dan değişkenleri al
+      const staticVars = JSON.parse(localStorage.getItem('static_variables') || '{}')
+      console.log('[WorkflowBuilder] 📦 Loading static variables:', Object.keys(staticVars))
+
+      // 2. Sadece user değişkenini koru
+      const runtimeVars = JSON.parse(localStorage.getItem('omni_runtime_variables') || '{}')
+      const userVar = runtimeVars['user']
       
-      // Variables'ları yeniden yükle ki UI güncellensin
+      // 3. Yeni runtime variables oluştur (user + static değişkenler)
+      const cleanedVars = {}
+      
+      // User değişkenini ekle
+      if (userVar) {
+        cleanedVars['user'] = userVar
+        console.log('[WorkflowBuilder] 🔒 Preserving user variable')
+      }
+
+      // Static değişkenleri ekle
+      Object.entries(staticVars).forEach(([key, value]) => {
+        cleanedVars[key] = value
+        console.log(`[WorkflowBuilder] 📌 Restoring static variable: ${key}`)
+      })
+
+      // 4. Temizlenmiş değişkenleri kaydet
+      localStorage.setItem('omni_runtime_variables', JSON.stringify(cleanedVars))
+      console.log('[WorkflowBuilder] ✅ Updated omni_runtime_variables with user and static variables')
+      
+      // 5. Variables'ları yeniden yükle ki UI güncellensin
       loadVariables()
       
-      console.log('[WorkflowBuilder] ✅ Post-automation cleanup completed (user preserved)')
+      // Log sonuçları
+      const preservedVars = Object.keys(cleanedVars)
+      console.log('[WorkflowBuilder] ✅ Cleanup completed.')
+      console.log('[WorkflowBuilder] 🔒 Preserved variables:', preservedVars)
+      console.log('[WorkflowBuilder] 📝 Final variables state:', cleanedVars)
     } catch (error) {
       console.error('[WorkflowBuilder] ❌ Error during post-automation cleanup:', error)
     }
@@ -1561,8 +1617,10 @@ export default function WorkflowBuilder() {
       {/* Action Bar */}
       <div className="action-bar-minimal">
         {/* Sol grup - Ana işlemler */}
-
         <div className="action-group-left">
+          {/* Statik Değişkenler - sadece workflow yüklendiğinde göster */}
+          {currentWorkflow && <StaticVariables />}
+
           {/* Normal kullanıcılar için araçlar */}
           {!isAdmin && (
             <>
