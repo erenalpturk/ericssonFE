@@ -18,7 +18,7 @@ export default function WorkflowBuilder() {
   const [globalVariables, setGlobalVariables] = useState({})
   const [staticVariables, setStaticVariables] = useState({})
   const [runtimeVariables, setRuntimeVariables] = useState({})
-  const [fullRuntimeVariables, setFullRuntimeVariables] = useState({}) // Yeni state
+  const [fullRuntimeVariables, setFullRuntimeVariables] = useState({})
 
   // Veritabanı işlemleri için state'ler
   const [currentWorkflow, setCurrentWorkflow] = useState(null)
@@ -126,7 +126,7 @@ export default function WorkflowBuilder() {
 
       console.log('[WorkflowBuilder] Loading runtime variables...')
       const runtimeVars = VariablesService.getRuntimeVariables()
-      setFullRuntimeVariables(runtimeVars) // Yeni state'i doldur
+      setFullRuntimeVariables(runtimeVars)
       const runtimeValues = {}
       Object.values(runtimeVars).forEach(variable => {
         // Sadece silinmemiş değişkenleri al
