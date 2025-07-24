@@ -441,27 +441,28 @@ export default function ApiStep({
 const runtimeVars = JSON.parse(localStorage.getItem('omni_runtime_variables') || '{}');
 
 // Kontrol edilecek değişken
-const checkVar = 'customerId';  // Kontrol edilecek değişken adı
+const checkVar = 'customerId';
 
 // Runtime değişkenini bul
 const runtimeVar = runtimeVars[checkVar];
 
-// Eğer değişken varsa ve bir değeri varsa
-if (runtimeVar && runtimeVar.value) {
-    // Değişkeni global değişkenlere ekle
+// 'variables' objesinin varlığını kontrol et
+if (typeof variables === 'undefined') {
+    variables = {};
+}
+
+// Eğer değişken varsa, değeri varsa ve tipi "static" ise adımı atla
+if (runtimeVar && runtimeVar.value && runtimeVar.type === "static") {
     variables[checkVar] = runtimeVar.value;
-    
-    // Adımı atla
     variables.skipStep = true;
-    variables.skipReason = \`\${checkVar} değişkeni mevcut olduğu için adım atlandı (değer: \${runtimeVar.value})\`;
-    console.log(\`Variable \${checkVar} found with value \${runtimeVar.value}, skipping step\`);
+    variables.skipReason = \`\${checkVar} değişkeni 'static' olduğu için atlandı.\`;
 }`;
                             handleInputChange('preRequestScript', template);
                           }}
                           type="button"
                           disabled={isRunning}
                         >
-                          <i className="bi bi-lightning-charge"></i>
+                          <i className="bi bi-shield-check"></i>
                           Statik Değişken Kontrolü Ekle
                         </button>
                       </label>
