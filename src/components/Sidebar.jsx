@@ -295,58 +295,58 @@ function Sidebar({ isCollapsed, onToggle }) {
                                 </li>
                             )}
 
-                            {/* Tetiklemeler'den sonra Omni Bilgi Merkezi Dropdown ekle */}
-                            {item.path === '/admin/notifications' && (
-                                <li className="nav-item">
-                                    <div 
-                                        className={`nav-link group cursor-pointer ${bilgiMerkeziItems.some(item => location.pathname === item.path) ? 'active' : ''}`}
-                                        onClick={handleBilgiMerkeziToggle}
-                                        title={isCollapsed ? "Omni Bilgi Merkezi" : ''}
-                                    >
-                                        <div className="nav-icon text-indigo-500 group-hover:scale-110 transition-transform duration-200">
-                                            <i className="bi bi-info-circle-fill"></i>
-                                        </div>
-                                        {!isCollapsed && (
-                                            <>
-                                                <span className="nav-text">Omni Bilgi Merkezi</span>
-                                                <div className="dropdown-arrow">
-                                                    <i className={`bi ${isBilgiMerkeziOpen ? 'bi-chevron-up' : 'bi-chevron-down'}`}></i>
-                                                </div>
-                                            </>
-                                        )}
-                                    </div>
-
-                                    {/* Alt Menü */}
-                                    {!isCollapsed && isBilgiMerkeziOpen && (
-                                        <ul className="sub-nav-list">
-                                            {bilgiMerkeziItems.filter(item => item.roles.includes(user.role)).map((subItem) => (
-                                                <li key={subItem.path} className="sub-nav-item">
-                                                    <Link
-                                                        to={subItem.path}
-                                                        className={`sub-nav-link ${location.pathname === subItem.path ? 'active' : ''}`}
-                                                        onClick={(e) => {
-                                                            if (isWorkflowRunning) {
-                                                                e.preventDefault()
-                                                                handleNavigation(subItem.path)
-                                                            }
-                                                        }}
-                                                    >
-                                                        <div className={`sub-nav-icon ${subItem.color}`}>
-                                                            <i className={subItem.icon}></i>
-                                                        </div>
-                                                        <span className="sub-nav-text">{subItem.label}</span>
-                                                        {location.pathname === subItem.path && (
-                                                            <div className="active-indicator"></div>
-                                                        )}
-                                                    </Link>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    )}
-                                </li>
-                            )}
+                            
                         </React.Fragment>
                     ))}
+
+                    {/* Omni Bilgi Merkezi: Tüm rollere açık bağımsız dropdown */}
+                    <li className="nav-item">
+                        <div 
+                            className={`byi nav-link group cursor-pointer ${bilgiMerkeziItems.some(item => location.pathname === item.path) ? 'active' : ''}`}
+                            onClick={handleBilgiMerkeziToggle}
+                            title={isCollapsed ? "Omni Bilgi Merkezi" : ''}
+                        >
+                            <div className="nav-icon text-indigo-500 group-hover:scale-110 transition-transform duration-200">
+                                <i className="bi bi-info-circle-fill"></i>
+                            </div>
+                            {!isCollapsed && (
+                                <>
+                                    <span className="nav-text">Omni Bilgi Merkezi</span>
+                                    <div className="dropdown-arrow">
+                                        <i className={`bi ${isBilgiMerkeziOpen ? 'bi-chevron-up' : 'bi-chevron-down'}`}></i>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+
+                        {/* Alt Menü */}
+                        {!isCollapsed && isBilgiMerkeziOpen && (
+                            <ul className="sub-nav-list">
+                                {bilgiMerkeziItems.map((subItem) => (
+                                    <li key={subItem.path} className="sub-nav-item">
+                                        <Link
+                                            to={subItem.path}
+                                            className={`sub-nav-link ${location.pathname === subItem.path ? 'active' : ''}`}
+                                            onClick={(e) => {
+                                                if (isWorkflowRunning) {
+                                                    e.preventDefault()
+                                                    handleNavigation(subItem.path)
+                                                }
+                                            }}
+                                        >
+                                            <div className={`sub-nav-icon ${subItem.color}`}>
+                                                <i className={subItem.icon}></i>
+                                            </div>
+                                            <span className="sub-nav-text">{subItem.label}</span>
+                                            {location.pathname === subItem.path && (
+                                                <div className="active-indicator"></div>
+                                            )}
+                                        </Link>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                    </li>
                 </ul>
             </nav>
 
