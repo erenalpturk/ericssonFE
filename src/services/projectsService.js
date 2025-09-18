@@ -20,7 +20,7 @@ const getAllProjects = async (baseUrl, params = {}, user) => {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'X-User-Data': user
+                'X-User-Data': typeof user === 'string' ? user : JSON.stringify(user)
             }
         });
 
@@ -47,7 +47,7 @@ const getProjectNames = async (baseUrl, user) => {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'X-User-Data': user
+                'X-User-Data': typeof user === 'string' ? user : JSON.stringify(user)
             }
         });
 
@@ -74,7 +74,7 @@ const createProject = async (baseUrl, projectData, user) => {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-User-Data': user
+                'X-User-Data': typeof user === 'string' ? user : JSON.stringify(user)
             },
             body: JSON.stringify(projectData)
         });
@@ -102,7 +102,7 @@ const updateProject = async (baseUrl, projectId, projectData, user) => {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
-                'X-User-Data': user
+                'X-User-Data': typeof user === 'string' ? user : JSON.stringify(user)
             },
             body: JSON.stringify(projectData)
         });
@@ -130,7 +130,7 @@ const deleteProject = async (baseUrl, projectId, user) => {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
-                'X-User-Data': user
+                'X-User-Data': typeof user === 'string' ? user : JSON.stringify(user)
             }
         });
 

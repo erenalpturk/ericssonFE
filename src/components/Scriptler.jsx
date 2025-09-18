@@ -315,7 +315,7 @@ const Scriptler = () => {
         }
 
         try {
-            await projectsService.createProject(baseUrl, projectFormData);
+            await projectsService.createProject(baseUrl, projectFormData, user);
             toast.success('Proje başarıyla oluşturuldu');
             setShowAddProject(false);
             setProjectFormData({
