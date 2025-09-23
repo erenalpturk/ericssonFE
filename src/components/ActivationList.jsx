@@ -74,7 +74,8 @@ const ActivationList = () => {
         method: 'POST'
       });
       const data = await response.json();
-      setActivations(data);
+      const normalized = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []);
+      setActivations(normalized);
     } catch (error) {
       showError('Veriler yüklenirken bir hata oluştu.');
     } finally {
@@ -535,7 +536,7 @@ const ActivationList = () => {
                     <span>Kirli</span>
                   </div>
                 </MenuItem>
-                {Array.from(new Set(activations.map(a => a.status)))
+                {Array.from(new Set((Array.isArray(activations) ? activations : []).map(a => a.status)))
                   .filter(status => status !== 'clean' && status !== 'dirty')
                   .map(status => (
                     <MenuItem key={status} value={status}>
@@ -573,7 +574,7 @@ const ActivationList = () => {
                 <MenuItem value="">
                   <span className="text-gray-500">Tarife</span>
                 </MenuItem>
-                {Array.from(new Set(activations.map(a => a.tariff_name))).map(tariff => (
+                {Array.from(new Set((Array.isArray(activations) ? activations : []).map(a => a.tariff_name))).map(tariff => (
                   <MenuItem key={tariff} value={tariff}>
                     <span className="truncate">{tariff}</span>
                   </MenuItem>
@@ -609,7 +610,7 @@ const ActivationList = () => {
                 <MenuItem value="">
                   <span className="text-gray-500">Ortam</span>
                 </MenuItem>
-                {Array.from(new Set(activations.map(a => a.activationtype))).map(type => (
+                {Array.from(new Set((Array.isArray(activations) ? activations : []).map(a => a.activationtype))).map(type => (
                   <MenuItem key={type} value={type}>
                     <span className="truncate">{type}</span>
                   </MenuItem>
@@ -646,7 +647,7 @@ const ActivationList = () => {
                   <MenuItem value="">
                     <span className="text-gray-500">Kullanıcı</span>
                   </MenuItem>
-                  {Array.from(new Set(activations.map(a => a.full_name))).map(name => (
+                  {Array.from(new Set((Array.isArray(activations) ? activations : []).map(a => a.full_name))).map(name => (
                     <MenuItem key={name} value={name}>
                       <span className="truncate">{name}</span>
                     </MenuItem>

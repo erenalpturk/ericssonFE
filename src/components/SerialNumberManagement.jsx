@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import AddIccids from './AddIccids';
-import IccidSetManagement from './IccidSetManagement';
+import SetManagement from './SetManagement';
 import SerialNumberAdd from './SerialNumberAdd';
 import GetIccid from './GetIccid';
 import MyIccidList from './MyIccidList';
@@ -23,7 +23,7 @@ const SerialNumberManagement = () => {
     const [activeFilters, setActiveFilters] = useState({});
     const [sortConfig, setSortConfig] = useState({ key: 'updated_at', direction: 'desc' });
     const [copySuccess, setCopySuccess] = useState(false);
-    const [tab, setTab] = useState('iccid-list');
+    const [tab, setTab] = useState('claim');
 
     useEffect(() => {
         fetchIccids();
@@ -278,27 +278,27 @@ const SerialNumberManagement = () => {
                                 <i className="bi bi-plus-circle"></i>
                                 Al
                             </button>
-                            <button className="action-btn primary" onClick={() => setTab('add')}>
+                            {/* <button className="action-btn primary" onClick={() => setTab('add')}>
                                 <i className="bi bi-plus-circle"></i>
                                 Ekle
-                            </button>
+                            </button> */}
                             <button className="action-btn primary" onClick={() => setTab('setManagement')}>
                                 <i className="bi bi-plus-circle"></i>
                                 Setlerim
                             </button>
-                            <button className="action-btn primary" onClick={() => setTab('used')}>
+                            {/* <button className="action-btn primary" onClick={() => setTab('used')}>
                                 <i className="bi bi-plus-circle"></i>
                                 Kullandıklarım
-                            </button>
+                            </button> */}
                         </div>
                     )}
                 </div>
             </div>
             <div className="page-content">
-                {tab === 'used' && <MyIccidList />}
+                {/* {tab === 'used' && <MyIccidList />} */}
                 {tab === 'claim' && <GetIccid />}
-                {tab === 'add' && <SerialNumberAdd />}
-                {tab === 'setManagement' && <IccidSetManagement />}
+                {/* {tab === 'add' && <SerialNumberAdd />} */}
+                {tab === 'setManagement' && <SetManagement />}
             </div>
         </div>
     );
