@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import IccidManagement from './IccidManagement';
+import MyIccids from './AddIccids';
 import {
   MenuItem,
   Select,
@@ -13,12 +13,8 @@ import {
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
-import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
-import EditIcon from '@mui/icons-material/Edit';
-import SaveIcon from '@mui/icons-material/Save';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 
-const IccidList = () => {
+const MyIccidList = ({ output }) => {
   const [iccids, setIccids] = useState([]);
   const [selectedIccids, setSelectedIccids] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -39,7 +35,7 @@ const IccidList = () => {
 
   useEffect(() => {
     fetchIccids();
-  }, []);
+  }, [output]);
 
   const showSuccess = (message) => {
     setSuccessMessage(message);
@@ -63,8 +59,9 @@ const IccidList = () => {
       });
       const data = await response.json();
 
-      // Eğer admin değilse, data.data içinden ICCID'leri al
-      setIccids(user.role === 'admin' || user.role === 'support' ? data : data.data);
+      // Admin/support için data zaten dizi; değilse data.data olabilir. Her durumda diziye zorla.
+      const next = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []);
+      setIccids(next);
     } catch (error) {
       showError('ICCID\'ler yüklenirken bir hata oluştu.');
     } finally {
@@ -181,8 +178,6 @@ const IccidList = () => {
       }
     } catch (error) {
       showError('Statü güncellenirken bir hata oluştu.');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -274,29 +269,6 @@ const IccidList = () => {
         </div>
       )}
 
-      {/* Header Section */}
-      <div className="page-header">
-        <div className="header-content">
-          <div className="header-icon">
-            <i className="bi bi-credit-card-2-front text-emerald-600"></i>
-          </div>
-          <div className="header-text">
-            <h1>ICCIDlerim</h1>
-            <p>Kullandığınız veya rezerve ettiğiniz ICCIDleri yönetin</p>
-          </div>
-          {user.role !== 'tester' && (
-            <button className="action-btn primary" onClick={() => setShowIccidManagement(true)}>
-              <i className="bi bi-plus-circle"></i>
-              ICCID Ekle
-            </button>
-          )}
-        </div>
-        <div className="stats-badge">
-          <i className="bi bi-list-ol"></i>
-          <span>{Array.isArray(iccids) ? iccids.length : 0} ICCID</span>
-        </div>
-      </div>
-
       {/* ICCID Management Modal */}
       {showIccidManagement && (
         <div className="modal-overlay">
@@ -308,7 +280,7 @@ const IccidList = () => {
               </button>
             </div>
             <div className="modal-body">
-              <IccidManagement onClose={() => setShowIccidManagement(false)} />
+              <AddIccids onClose={() => setShowIccidManagement(false)} />
             </div>
           </div>
         </div>
@@ -421,7 +393,7 @@ const IccidList = () => {
                   <MenuItem value="">
                     <span className="text-gray-500">Kullanıcı</span>
                   </MenuItem>
-                  {Array.from(new Set(iccids.map(a => a.used_by))).map(user => (
+                  {Array.from(new Set((iccids || []).map(a => a.used_by))).map(user => (
                     <MenuItem key={user} value={user}>
                       <span className="truncate">{user}</span>
                     </MenuItem>
@@ -458,7 +430,7 @@ const IccidList = () => {
                 <MenuItem value="">
                   <span className="text-gray-500">Tip</span>
                 </MenuItem>
-                {Array.from(new Set(iccids.map(a => a.type))).map(type => (
+                {Array.from(new Set((iccids || []).map(a => a.type))).map(type => (
                   <MenuItem key={type} value={type}>
                     <span className="truncate">{type}</span>
                   </MenuItem>
@@ -494,10 +466,10 @@ const IccidList = () => {
           {/* Table */}
           <div className="table-container">
             {loading ? (
-              <div style={{ 
-                display: 'flex', 
-                justifyContent: 'center', 
-                alignItems: 'center', 
+              <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
                 padding: '2rem',
                 background: 'rgba(255, 255, 255, 0.9)'
               }}>
@@ -524,6 +496,14 @@ const IccidList = () => {
                         </span>
                       )}
                     </th>
+                    <th onClick={() => handleSort('type')} style={{ cursor: 'pointer' }}>
+                      Tip
+                      {sortConfig.key === 'type' && (
+                        <span className="ml-1">
+                          {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                        </span>
+                      )}
+                    </th>
                     <th onClick={() => handleSort('stock')} style={{ cursor: 'pointer' }}>
                       Durum
                       {sortConfig.key === 'stock' && (
@@ -532,8 +512,8 @@ const IccidList = () => {
                         </span>
                       )}
                     </th>
-                    <th onClick={() => handleSort('type')} style={{ cursor: 'pointer' }}>
-                      Tip
+                    <th onClick={() => handleSort('stock')} style={{ cursor: 'pointer' }}>
+                      Stok
                       {sortConfig.key === 'type' && (
                         <span className="ml-1">
                           {sortConfig.direction === 'asc' ? '↑' : '↓'}
@@ -580,14 +560,14 @@ const IccidList = () => {
                         <td>
                           <input
                             type="checkbox"
-                          checked={selectedIccids.includes(row.iccid)}
-                          onChange={() => handleSelectIccid(row.iccid)}
-                        />
+                            checked={selectedIccids.includes(row.iccid)}
+                            onChange={() => handleSelectIccid(row.iccid)}
+                          />
                         </td>
                       )}
                       <td className="font-mono text-sm">{row.iccid}</td>
-                      <td>
-                        <select
+                      <td className="text-gray-600">
+                        {/* <select
                           className={`status-select ${getStatusColor(row.stock)}`}
                           value={row.stock}
                           onChange={(e) => handleStatusChange(row.iccidid, e.target.value)}
@@ -596,44 +576,56 @@ const IccidList = () => {
                           {statusOptions.map(option => (
                             <option key={option} value={option}>{option}</option>
                           ))}
-                        </select>
+                        </select> */}
+                        <button
+                          onClick={() => handleStatusChange(row.iccidid, 'available')}
+                          className={row.added_by === user.sicil_no ? 'action-btn success' : 'action-btn danger'}
+                          disabled={row.stock === 'available'}
+                        >
+                          {row.added_by === user.sicil_no ? 'Temizle' : 'İade Et'}
+                        </button>
+                      </td>
+                      <td className={`status ${getStatusColor(row.stock)}`}>
+                        <span className="text-sm font-medium">
+                          {row.stock}
+                        </span>
                       </td>
                       <td>
                         <span className="type-badge">{row.type}</span>
                       </td>
                       <td className="text-gray-600">
                         <span className="text-sm font-medium">
-                            {new Date(row.cdate).toLocaleString('tr-TR', {
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
-                          </span>
-                          <br />
-                          <span className="text-xs text-gray-500">
-                            {new Date(row.cdate).toLocaleString('tr-TR', {
-                              day: '2-digit',
-                              month: '2-digit',
-                              year: 'numeric'
-                            })}
-                          </span>
+                          {new Date(row.cdate).toLocaleString('tr-TR', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </span>
+                        <br />
+                        <span className="text-xs text-gray-500">
+                          {new Date(row.cdate).toLocaleString('tr-TR', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric'
+                          })}
+                        </span>
                       </td>
                       <td className="text-gray-600">
                         <span className="text-sm font-medium">
-                            {new Date(row.updated_at).toLocaleString('tr-TR', {
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
-                          </span>
-                          <br />
-                          <span className="text-xs text-gray-500">
-                            {new Date(row.updated_at).toLocaleString('tr-TR', {
-                              day: '2-digit',
-                              month: '2-digit',
-                              year: 'numeric'
-                            })}
-                          </span>
+                          {new Date(row.updated_at).toLocaleString('tr-TR', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </span>
+                        <br />
+                        <span className="text-xs text-gray-500">
+                          {new Date(row.updated_at).toLocaleString('tr-TR', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric'
+                          })}
+                        </span>
                       </td>
-                      
+
                       <td className="text-gray-600">
                         {row.used_by_name}
                       </td>
@@ -695,4 +687,4 @@ const IccidList = () => {
   );
 };
 
-export default IccidList;
+export default MyIccidList;

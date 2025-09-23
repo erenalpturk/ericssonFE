@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import 'react-toastify/dist/ReactToastify.css';
 import { useAuth } from '../contexts/AuthContext';
-import IccidList from './IccidList';
+import MyIccidList from './MyIccidList';
 import ActivationList from './ActivationList';
 
-const IccidManagement = ({ onClose }) => {
+const AddIccids = ({ onClose }) => {
   const [activeTab, setActiveTab] = useState(0);
   const [iccidText, setIccidText] = useState('');
   const [selectedType, setSelectedType] = useState('fonkpos');
@@ -193,68 +193,8 @@ const IccidManagement = ({ onClose }) => {
           </button>
         </div>
       </div>
-
-      {/* Tabs and Table Section */}
-      {/* <div className="output-card">
-        <div className="card-header">
-          <div className="tabs-container">
-            <button
-              className={`tab-btn ${activeTab === 0 ? 'active' : ''}`}
-              onClick={() => setActiveTab(0)}
-            >
-              <i className="bi bi-credit-card text-blue-500"></i>
-              ICCID Listesi
-            </button>
-            <button
-              className={`tab-btn ${activeTab === 1 ? 'active' : ''}`}
-              onClick={() => setActiveTab(1)}
-            >
-              <i className="bi bi-check-circle text-green-500"></i>
-              Aktivasyonlar
-            </button>
-          </div>
-        </div>
-        <div className="card-body">
-          {activeTab === 0 ? <IccidList /> : <ActivationList />}
-        </div>
-      </div> */}
-
-      {/* Help Section */}
-      {/* <div className="help-card">
-        <div className="help-header">
-          <i className="bi bi-question-circle text-orange-500"></i>
-          <span>Nasıl Kullanılır?</span>
-        </div>
-        <div className="help-content">
-          <div className="help-steps">
-            <div className="help-step">
-              <span className="step-number">1</span>
-              <span>ICCID tipini seçin veya özel tip tanımlayın</span>
-            </div>
-            <div className="help-step">
-              <span className="step-number">2</span>
-              <span>ICCID'leri metin alanına yapıştırın (her satıra bir ICCID)</span>
-            </div>
-            <div className="help-step">
-              <span className="step-number">3</span>
-              <span>"ICCID'leri Ekle" butonuna tıklayın</span>
-            </div>
-            <div className="help-step">
-              <span className="step-number">4</span>
-              <span>Tabloda ICCID'leri yönetin, durum güncelleyin veya toplu silme yapın</span>
-            </div>
-          </div>
-          <div className="help-note">
-            <div className="note-header">
-              <i className="bi bi-lightbulb text-yellow-500"></i>
-              <span>İpucu</span>
-            </div>
-            <p>Durum renkleri: Yeşil (Müsait), Sarı (Rezerve), Kırmızı (Satıldı). Arama ile tabloda filtreleme yapabilirsiniz.</p>
-          </div>
-        </div>
-      </div> */}
     </div>
   );
 };
 
-export default IccidManagement;
+export default AddIccids;

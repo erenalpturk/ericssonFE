@@ -10,18 +10,20 @@ import SqlCreate from './components/SqlCreate'
 import InfodealerToSql from './components/InfodealerToSql'
 import SelfybestInsertSql from './components/SelfybestInsertSql'
 import InfodealerToSqlUpdate from './components/InfodealerToSqlUpdate'
-import IccidManagement from './components/IccidManagement'
+import AddIccids from './components/AddIccids'
 import CourierActions from './components/CourierActions'
 import DeviceActions from './components/DeviceActions'
 import WorkflowBuilder from './components/automation/WorkflowBuilder'
 import SingleApiTester from './components/automation/SingleApiTester'
-import IccidList from './components/IccidList'
+import MyIccidList from './components/MyIccidList'
+import SerialNumberManagement from './components/SerialNumberManagement'
 import ActivationList from './components/ActivationList'
 import ChangePassword from './components/ChangePassword'
 import Stats from './components/Stats'
 import UserFeedbackList from './components/UserFeedbackList'
 import AdminFeedbackPanel from './components/AdminFeedbackPanel'
 import NotificationCreator from './components/Admin/NotificationCreator'
+import AdminPanel from './components/AdminPanel'
 import TriggerManagement from './components/Admin/TriggerManagement'
 import Scriptler from './components/Scriptler'
 import Contacts from './components/Contacts'
@@ -135,17 +137,17 @@ function AppRoutes() {
                     element={
                         <PrivateRoute>
                             <Layout>
-                                <IccidManagement />
+                                <AddIccids />
                             </Layout>
                         </PrivateRoute>
                     }
                 />
                 <Route
-                    path="/iccid-list"
+                    path="/serial-number-management"
                     element={
                         <PrivateRoute>
                             <Layout>
-                                <IccidList />
+                                <SerialNumberManagement />
                             </Layout>
                         </PrivateRoute>
                     }
@@ -241,11 +243,11 @@ function AppRoutes() {
                     }
                 />
                 <Route
-                    path="/admin/trigger-management"
+                    path="/admin-panel"
                     element={
                         <PrivateRoute>
                             <Layout>
-                                <TriggerManagement />
+                                <AdminPanel />
                             </Layout>
                         </PrivateRoute>
                     }
@@ -256,6 +258,16 @@ function AppRoutes() {
                         <PrivateRoute>
                             <Layout>
                                 <Scriptler />
+                            </Layout>
+                        </PrivateRoute>
+                    }
+                />
+                <Route
+                    path="/admin/trigger-management"
+                    element={
+                        <PrivateRoute>
+                            <Layout>
+                                <TriggerManagement />
                             </Layout>
                         </PrivateRoute>
                     }

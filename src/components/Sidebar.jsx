@@ -49,13 +49,13 @@ function Sidebar({ isCollapsed, onToggle }) {
             color: 'text-blue-500',
             roles: ['admin', 'support', 'tester']
         },
-        {
-            path: '/stats',
-            icon: 'bi-graph-up',
-            label: 'İstatistikler',
-            color: 'text-purple-500',
-            roles: ['admin']
-        },
+        // {
+        //     path: '/stats',
+        //     icon: 'bi-graph-up',
+        //     label: 'İstatistikler',
+        //     color: 'text-purple-500',
+        //     roles: ['admin']
+        // },
         {
             path: '/activation-list',
             icon: 'bi-check-circle',
@@ -78,9 +78,9 @@ function Sidebar({ isCollapsed, onToggle }) {
             roles: ['admin', 'support', 'tester']
         },
         {
-            path: '/iccid-list',
+            path: '/serial-number-management',
             icon: 'bi-credit-card-2-front',
-            label: 'ICCID',
+            label: 'Seri No Yönetimi',
             color: 'text-emerald-500',
             roles: ['admin', 'support', 'tester']
         },
@@ -112,21 +112,27 @@ function Sidebar({ isCollapsed, onToggle }) {
             color: 'text-red-500',
             roles: ['support', 'tester']
         },
+        // {
+        //     path: '/admin/feedback',
+        //     icon: 'bi-gear-fill',
+        //     label: 'Feedback Yönetimi',
+        //     color: 'text-indigo-500',
+        //     roles: ['admin']
+        // },
+        // {
+        //     path: '/admin/notifications',
+        //     icon: 'bi-bell-fill',
+        //     label: 'Bildirim Oluştur',
+        //     color: 'text-amber-500',
+        //     roles: ['admin']
+        // },
         {
-            path: '/admin/feedback',
+            path: '/admin-panel',
             icon: 'bi-gear-fill',
-            label: 'Feedback Yönetimi',
+            label: 'Admin Panel',
             color: 'text-indigo-500',
             roles: ['admin']
         },
-        {
-            path: '/admin/notifications',
-            icon: 'bi-bell-fill',
-            label: 'Bildirim Oluştur',
-            color: 'text-amber-500',
-            roles: ['admin']
-        },
-
     ]
 
     // Omni Bilgi Merkezi alt menüleri
