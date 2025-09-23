@@ -10,6 +10,7 @@ function Sidebar({ isCollapsed, onToggle }) {
     const navigate = useNavigate()
     const { logout, user, isWorkflowRunning } = useAuth()
     const [isBilgiMerkeziOpen, setIsBilgiMerkeziOpen] = useState(false)
+    const [isTetiklemelerOpen, setIsTetiklemelerOpen] = useState(false)
 
     const handleLogout = async () => {
         const result = await logout()
@@ -31,6 +32,12 @@ function Sidebar({ isCollapsed, onToggle }) {
     const handleBilgiMerkeziToggle = () => {
         if (!isCollapsed) {
             setIsBilgiMerkeziOpen(!isBilgiMerkeziOpen)
+        }
+    }
+
+    const handleTetiklemelerToggle = () => {
+        if (!isCollapsed) {
+            setIsTetiklemelerOpen(!isTetiklemelerOpen)
         }
     }
 
@@ -99,14 +106,6 @@ function Sidebar({ isCollapsed, onToggle }) {
             roles: ['admin', 'support', 'tester']
         },
         {
-            path: '/courier-actions',
-            icon: 'bi-truck',
-            label: 'Kurye Tetikleme',
-            color: 'text-cyan-500',
-            roles: ['admin', 'support', 'tester'],
-            disabled: true
-        },
-        {
             path: '/feedback',
             icon: 'bi-bug-fill',
             label: 'Hata & Öneri',
@@ -153,6 +152,32 @@ function Sidebar({ isCollapsed, onToggle }) {
             roles: ['admin', 'support', 'tester']
         }
     ]
+
+    // Tetiklemeler alt menüleri
+    const tetiklemelerItems = [
+        {
+            path: '/courier-actions',
+            icon: 'bi-truck',
+            label: 'Kurye',
+            color: 'text-cyan-400',
+            roles: ['admin', 'support', 'tester']
+        },
+        {
+            path: '/device-actions',
+            icon: 'bi-phone',
+            label: 'Cihaz',
+            color: 'text-purple-400',
+            roles: ['admin', 'support', 'tester']
+        },
+        {
+            path: '/admin/trigger-management',
+            icon: 'bi-gear-wide-connected',
+            label: 'Tetikleme Yönetimi',
+            color: 'text-indigo-400',
+            roles: ['admin']
+        }
+    ]
+
     return (
         <aside className={`modern-sidebar ${isCollapsed ? 'collapsed' : ''}`}>
             {/* Header */}
@@ -225,31 +250,31 @@ function Sidebar({ isCollapsed, onToggle }) {
                                 )}
                             </li>
 
-                            {/* SQL Create'den sonra Omni Bilgi Merkezi Dropdown ekle */}
+                            {/* SQL Create'den sonra Tetiklemeler Dropdown ekle */}
                             {item.path === '/sql-create' && (
                                 <li className="nav-item">
                                     <div 
-                                        className={`nav-link group cursor-pointer ${bilgiMerkeziItems.some(item => location.pathname === item.path) ? 'active' : ''}`}
-                                        onClick={handleBilgiMerkeziToggle}
-                                        title={isCollapsed ? "Omni Bilgi Merkezi" : ''}
+                                        className={`nav-link group cursor-pointer ${tetiklemelerItems.some(item => location.pathname === item.path) ? 'active' : ''}`}
+                                        onClick={handleTetiklemelerToggle}
+                                        title={isCollapsed ? "Tetiklemeler" : ''}
                                     >
-                                        <div className="nav-icon text-indigo-500 group-hover:scale-110 transition-transform duration-200">
-                                            <i className="bi bi-info-circle-fill"></i>
+                                        <div className="nav-icon text-violet-500 group-hover:scale-110 transition-transform duration-200">
+                                            <i className="bi bi-play-circle-fill"></i>
                                         </div>
                                         {!isCollapsed && (
                                             <>
-                                                <span className="nav-text">Omni Bilgi Merkezi</span>
+                                                <span className="nav-text">Tetiklemeler</span>
                                                 <div className="dropdown-arrow">
-                                                    <i className={`bi ${isBilgiMerkeziOpen ? 'bi-chevron-up' : 'bi-chevron-down'}`}></i>
+                                                    <i className={`bi ${isTetiklemelerOpen ? 'bi-chevron-up' : 'bi-chevron-down'}`}></i>
                                                 </div>
                                             </>
                                         )}
                                     </div>
 
                                     {/* Alt Menü */}
-                                    {!isCollapsed && isBilgiMerkeziOpen && (
+                                    {!isCollapsed && isTetiklemelerOpen && (
                                         <ul className="sub-nav-list">
-                                            {bilgiMerkeziItems.filter(item => item.roles.includes(user.role)).map((subItem) => (
+                                            {tetiklemelerItems.filter(item => item.roles.includes(user.role)).map((subItem) => (
                                                 <li key={subItem.path} className="sub-nav-item">
                                                     <Link
                                                         to={subItem.path}
@@ -275,8 +300,59 @@ function Sidebar({ isCollapsed, onToggle }) {
                                     )}
                                 </li>
                             )}
+
+                            
                         </React.Fragment>
                     ))}
+
+                    {/* Omni Bilgi Merkezi: Tüm rollere açık bağımsız dropdown */}
+                    <li className="nav-item">
+                        <div 
+                            className={`byi nav-link group cursor-pointer ${bilgiMerkeziItems.some(item => location.pathname === item.path) ? 'active' : ''}`}
+                            onClick={handleBilgiMerkeziToggle}
+                            title={isCollapsed ? "Omni Bilgi Merkezi" : ''}
+                        >
+                            <div className="nav-icon text-indigo-500 group-hover:scale-110 transition-transform duration-200">
+                                <i className="bi bi-info-circle-fill"></i>
+                            </div>
+                            {!isCollapsed && (
+                                <>
+                                    <span className="nav-text">Omni Bilgi Merkezi</span>
+                                    <div className="dropdown-arrow">
+                                        <i className={`bi ${isBilgiMerkeziOpen ? 'bi-chevron-up' : 'bi-chevron-down'}`}></i>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+
+                        {/* Alt Menü */}
+                        {!isCollapsed && isBilgiMerkeziOpen && (
+                            <ul className="sub-nav-list">
+                                {bilgiMerkeziItems.map((subItem) => (
+                                    <li key={subItem.path} className="sub-nav-item">
+                                        <Link
+                                            to={subItem.path}
+                                            className={`sub-nav-link ${location.pathname === subItem.path ? 'active' : ''}`}
+                                            onClick={(e) => {
+                                                if (isWorkflowRunning) {
+                                                    e.preventDefault()
+                                                    handleNavigation(subItem.path)
+                                                }
+                                            }}
+                                        >
+                                            <div className={`sub-nav-icon ${subItem.color}`}>
+                                                <i className={subItem.icon}></i>
+                                            </div>
+                                            <span className="sub-nav-text">{subItem.label}</span>
+                                            {location.pathname === subItem.path && (
+                                                <div className="active-indicator"></div>
+                                            )}
+                                        </Link>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                    </li>
                 </ul>
             </nav>
 

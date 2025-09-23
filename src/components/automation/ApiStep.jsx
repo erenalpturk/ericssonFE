@@ -76,6 +76,8 @@ export default function ApiStep({
     handleInputChange('variables', newVariables)
   }
 
+
+
   const addVariable = () => {
     const newVarName = 'newVariable'
     let counter = 1
@@ -368,53 +370,61 @@ export default function ApiStep({
 
               {activeTab === 'variables' && (
                 <div className="tab-panel-modern">
-                  <div className="panel-header-modern">
-                    <button 
-                      className="add-btn-modern"
-                      onClick={addVariable}
-                      disabled={isRunning}
-                    >
-                      <i className="bi bi-plus"></i>
-                      <span>Değişken Ekle</span>
-                    </button>
+                  {/* Response Variables Section */}
+                  <div className="section-modern">
+                    <h3 className="section-title-modern">Response Variables</h3>
+                    <p className="section-desc-modern">API yanıtından değer çıkarmak için kullanılır</p>
+                    
+                    <div className="panel-header-modern">
+                      <button 
+                        className="add-btn-modern"
+                        onClick={addVariable}
+                        disabled={isRunning}
+                      >
+                        <i className="bi bi-plus"></i>
+                        <span>Değişken Ekle</span>
+                      </button>
+                    </div>
+                    
+                    {Object.keys(step.variables).length === 0 ? (
+                      <div className="empty-state-modern">
+                        <i className="bi bi-code-square"></i>
+                        <p>Değişken tanımlanmadı</p>
+                      </div>
+                    ) : (
+                      <div className="items-list-modern">
+                        {Object.entries(step.variables).map(([varName, path]) => (
+                          <div key={varName} className="item-row-modern">
+                            <input
+                              type="text"
+                              className="item-input-modern key"
+                              value={varName}
+                              onChange={(e) => handleVariableChange(e.target.value, path, varName)}
+                              placeholder="Değişken adı"
+                              disabled={isRunning}
+                            />
+                            <input
+                              type="text"
+                              className="item-input-modern value"
+                              value={path}
+                              onChange={(e) => handleVariableChange(varName, e.target.value)}
+                              placeholder="response.field"
+                              disabled={isRunning}
+                            />
+                            <button
+                              className="remove-btn-modern"
+                              onClick={() => removeVariable(varName)}
+                              disabled={isRunning}
+                            >
+                              <i className="bi bi-x"></i>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  
-                  {Object.keys(step.variables).length === 0 ? (
-                    <div className="empty-state-modern">
-                      <i className="bi bi-code-square"></i>
-                      <p>Değişken tanımlanmadı</p>
-                    </div>
-                  ) : (
-                    <div className="items-list-modern">
-                      {Object.entries(step.variables).map(([varName, path]) => (
-                        <div key={varName} className="item-row-modern">
-                          <input
-                            type="text"
-                            className="item-input-modern key"
-                            value={varName}
-                            onChange={(e) => handleVariableChange(e.target.value, path, varName)}
-                            placeholder="Değişken adı"
-                            disabled={isRunning}
-                          />
-                          <input
-                            type="text"
-                            className="item-input-modern value"
-                            value={path}
-                            onChange={(e) => handleVariableChange(varName, e.target.value)}
-                            placeholder="response.field"
-                            disabled={isRunning}
-                          />
-                          <button
-                            className="remove-btn-modern"
-                            onClick={() => removeVariable(varName)}
-                            disabled={isRunning}
-                          >
-                            <i className="bi bi-x"></i>
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+
+
                 </div>
               )}
 
@@ -422,7 +432,40 @@ export default function ApiStep({
                 <div className="tab-panel-modern">
                   <div className="scripts-container-modern">
                     <div className="script-section-modern">
-                      <label className="script-label-modern">Pre-request Script</label>
+                      <label className="script-label-modern">
+                        Pre-request Script
+                        <button
+                          className="script-template-btn"
+                          onClick={() => {
+                            const template = `// Runtime değişkenleri kontrol et
+const runtimeVars = JSON.parse(localStorage.getItem('omni_runtime_variables') || '{}');
+
+// Kontrol edilecek değişken
+const checkVar = 'customerId';
+
+// Runtime değişkenini bul
+const runtimeVar = runtimeVars[checkVar];
+
+// 'variables' objesinin varlığını kontrol et
+if (typeof variables === 'undefined') {
+    variables = {};
+}
+
+// Eğer değişken varsa, değeri varsa ve tipi "static" ise adımı atla
+if (runtimeVar && runtimeVar.value && runtimeVar.type === "static") {
+    variables[checkVar] = runtimeVar.value;
+    variables.skipStep = true;
+    variables.skipReason = \`\${checkVar} değişkeni 'static' olduğu için atlandı.\`;
+}`;
+                            handleInputChange('preRequestScript', template);
+                          }}
+                          type="button"
+                          disabled={isRunning}
+                        >
+                          <i className="bi bi-shield-check"></i>
+                          Statik Değişken Kontrolü Ekle
+                        </button>
+                      </label>
                       <textarea
                         className="form-textarea-modern script"
                         rows="6"

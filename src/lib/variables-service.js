@@ -90,12 +90,18 @@ export class VariablesService {
           key: 'user',
           value: currentUserSicilNo,
           source: 'auth',
+          type: 'system',  // user değişkeni system tipinde
           timestamp: Date.now()
         }
-      } else {
-        // User bilgisi yoksa console'da uyarı ver ama hata fırlatma
-        console.warn('[VariablesService] User bilgisi localStorage\'da bulunamadı. Otomasyonda ayarlanacak.')
       }
+
+      // Static değişkenleri koru
+      const storedVars = { ...variables }
+      Object.entries(storedVars).forEach(([key, value]) => {
+        if (value.type === 'static') {
+          variables[key] = value  // Static değişkenleri geri ekle
+        }
+      })
       
       return variables
     } catch (error) {
@@ -104,13 +110,14 @@ export class VariablesService {
     }
   }
 
-  static setRuntimeVariable(key, value, source = 'manual') {
+  static setRuntimeVariable(key, value, source = 'manual', type = 'runtime') { // type parametresi eklendi
     try {
       const variables = this.getRuntimeVariables()
       variables[key] = {
         key,
         value,
         source,
+        type, // type bilgisi eklendi
         timestamp: Date.now()
       }
       localStorage.setItem('omni_runtime_variables', JSON.stringify(variables))
@@ -127,7 +134,7 @@ export class VariablesService {
         return
       }
       
-      const variables = this.getRunTimeVariables()
+      const variables = this.getRuntimeVariables()
       delete variables[key]
       localStorage.setItem('omni_runtime_variables', JSON.stringify(variables))
     } catch (error) {
@@ -146,7 +153,7 @@ export class VariablesService {
   // Combined Variables - Her ikisini birleştir
   static async getAllVariables() {
     const staticVars = await this.getStaticVariables()
-    const runtimeVars = this.getRunTimeVariables()
+    const runtimeVars = this.getRuntimeVariables()
     
     // Runtime değişkenleri sadece value olarak al
     const runtimeValues = {}
@@ -159,7 +166,7 @@ export class VariablesService {
   }
 
   static getVariableSource(key) {
-    const runtimeVars = this.getRunTimeVariables()
+    const runtimeVars = this.getRuntimeVariables()
     if (runtimeVars[key]) return 'runtime'
     
     // Static kontrolü async olduğu için burada direkt kontrol edemeyiz
@@ -170,7 +177,7 @@ export class VariablesService {
   // Cleanup - Eski runtime değişkenleri temizle
   static cleanupOldRuntimeVariables(maxAgeHours = 24) {
     try {
-      const variables = this.getRunTimeVariables()
+      const variables = this.getRuntimeVariables()
       const cutoffTime = Date.now() - (maxAgeHours * 60 * 60 * 1000)
       
       Object.keys(variables).forEach(key => {
@@ -185,6 +192,36 @@ export class VariablesService {
       localStorage.setItem('omni_runtime_variables', JSON.stringify(variables))
     } catch (error) {
       console.error('Error cleaning up old runtime variables:', error)
+    }
+  }
+
+  // Otomasyon sonrası temizlik - User hariç tüm runtime değişkenleri temizle
+  static clearRuntimeVariablesExceptUser() {
+    try {
+      console.log('[VariablesService] 🧹 Clearing runtime variables except user...')
+      
+      const variables = this.getRuntimeVariables()
+      const userVariable = variables['user'] // User değişkenini sakla
+      
+      // Temizlenecek değişkenlerin listesini oluştur
+      const variablesToClear = Object.keys(variables).filter(key => key !== 'user')
+      
+      // User hariç tüm değişkenleri temizle
+      const clearedVariables = {}
+      if (userVariable) {
+        clearedVariables['user'] = userVariable
+        console.log('[VariablesService] ✅ Preserved user variable:', userVariable.value)
+      }
+      
+      localStorage.setItem('omni_runtime_variables', JSON.stringify(clearedVariables))
+      
+      if (variablesToClear.length > 0) {
+        console.log(`[VariablesService] 🗑️ Cleared ${variablesToClear.length} runtime variables:`, variablesToClear)
+      } else {
+        console.log('[VariablesService] ℹ️ No runtime variables to clear (only user exists)')
+      }
+    } catch (error) {
+      console.error('❌ Error clearing runtime variables except user:', error)
     }
   }
 } 

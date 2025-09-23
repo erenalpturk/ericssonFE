@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Advertisement from './Advertisement'
 import Sidebar from './Sidebar'
 
 function Layout({ children }) {
@@ -6,6 +7,7 @@ function Layout({ children }) {
 
     return (
         <div className="h-screen relative">
+            <Advertisement />
             <Sidebar 
                 isCollapsed={isSidebarCollapsed} 
                 onToggle={setIsSidebarCollapsed} 

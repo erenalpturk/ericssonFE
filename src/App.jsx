@@ -12,6 +12,7 @@ import SelfybestInsertSql from './components/SelfybestInsertSql'
 import InfodealerToSqlUpdate from './components/InfodealerToSqlUpdate'
 import AddIccids from './components/AddIccids'
 import CourierActions from './components/CourierActions'
+import DeviceActions from './components/DeviceActions'
 import WorkflowBuilder from './components/automation/WorkflowBuilder'
 import SingleApiTester from './components/automation/SingleApiTester'
 import MyIccidList from './components/MyIccidList'
@@ -23,6 +24,7 @@ import UserFeedbackList from './components/UserFeedbackList'
 import AdminFeedbackPanel from './components/AdminFeedbackPanel'
 import NotificationCreator from './components/Admin/NotificationCreator'
 import AdminPanel from './components/AdminPanel'
+import TriggerManagement from './components/Admin/TriggerManagement'
 import Scriptler from './components/Scriptler'
 import Contacts from './components/Contacts'
 
@@ -171,6 +173,16 @@ function AppRoutes() {
                     }
                 />
                 <Route
+                    path="/device-actions"
+                    element={
+                        <PrivateRoute>
+                            <Layout>
+                                <DeviceActions onApiCall={handleApiCall} />
+                            </Layout>
+                        </PrivateRoute>
+                    }
+                />
+                <Route
                     path="/api-automation"
                     element={
                         <PrivateRoute>
@@ -246,6 +258,16 @@ function AppRoutes() {
                         <PrivateRoute>
                             <Layout>
                                 <Scriptler />
+                            </Layout>
+                        </PrivateRoute>
+                    }
+                />
+                <Route
+                    path="/admin/trigger-management"
+                    element={
+                        <PrivateRoute>
+                            <Layout>
+                                <TriggerManagement />
                             </Layout>
                         </PrivateRoute>
                     }

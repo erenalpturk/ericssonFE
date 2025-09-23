@@ -14,11 +14,11 @@ const AddIccids = ({ onClose }) => {
   const [errorMessage, setErrorMessage] = useState('');
   const { baseUrl, user } = useAuth();
   const iccidTypes = [
-    { value: 'fonkpos', label: 'Fonksiyonel Postpaid' },
-    { value: 'regpos', label: 'Regresyon Postpaid' },
-    { value: 'fonkpre', label: 'Fonksiyonel Prepaid' },
-    { value: 'regpre', label: 'Regresyon Prepaid' },
-    { value: 'custom', label: 'Diğer' }
+    { type: 'fonkpos', label: 'Fonksiyonel Postpaid', environment: 'fonk', gsm_type: 'post', dealer: '7101717', },
+    { type: 'regpos', label: 'Regresyon Postpaid', environment: 'reg', gsm_type: 'post', dealer: '7101694' },
+    { type: 'fonkpre', label: 'Fonksiyonel Prepaid', environment: 'fonk', gsm_type: 'pre', dealer: '7101717' },
+    { type: 'regpre', label: 'Regresyon Prepaid', environment: 'reg', gsm_type: 'pre', dealer: '7101694' },
+    { type: 'custom', label: 'Diğer', environment: 'fonk', gsm_type: 'post', dealer: '7101717' }
   ];
 
   useEffect(() => {
@@ -41,7 +41,10 @@ const AddIccids = ({ onClose }) => {
     try {
       setLoading(true);
       const type = selectedType === 'custom' ? customType : selectedType;
-      const response = await fetch(`${baseUrl}/iccid/formatAndInsertIccids/${type}/${user.sicil_no}`, {
+      const environment = iccidTypes.find(t => t.type === type).environment;
+      const gsm_type = iccidTypes.find(t => t.type === type).gsm_type;
+      const dealer = iccidTypes.find(t => t.type === type).dealer;
+      const response = await fetch(`${baseUrl}/iccid/formatAndInsertIccids/${type}/${environment}/${gsm_type}/${dealer}/${user.sicil_no}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'text/plain',
@@ -140,7 +143,7 @@ const AddIccids = ({ onClose }) => {
                 onChange={(e) => setSelectedType(e.target.value)}
               >
                 {iccidTypes.map((type) => (
-                  <option key={type.value} value={type.value}>
+                  <option key={type.type} value={type.type}>
                     {type.label}
                   </option>
                 ))}
