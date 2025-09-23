@@ -4,13 +4,13 @@ import { useAuth } from '../contexts/AuthContext';
 import MyIccidList from './MyIccidList';
 
 const tabList = [
-  { label: 'Iccid', key: 'iccid' },
-  { label: 'Imei', key: 'imei' },
+  { label: 'Iccid', key: 'iccid', icon: 'bi-credit-card-2-front' },
+  { label: 'Imei', key: 'imei', icon: 'bi-phone' },
 ];
 const envTabList = [
-  { label: 'Fonk', key: 'fonk' },
-  { label: 'Reg', key: 'reg' },
-  { label: 'Hotfix', key: 'hotfix' },
+  { label: 'Fonk', key: 'fonk', icon: 'bi-gear' },
+  { label: 'Reg', key: 'reg', icon: 'bi-server' },
+  { label: 'Hotfix', key: 'hotfix', icon: 'bi-lightning' },
 ];
 
 const GetIccid = () => {
@@ -205,6 +205,7 @@ const GetIccid = () => {
               onClick={() => setTab(t.key)}
               type="button"
             >
+              <i className={`bi ${t.icon}`}></i>
               {t.label}
             </button>
           ))}
@@ -219,6 +220,7 @@ const GetIccid = () => {
                 }}
                 type="button"
               >
+                <i className={`bi ${st.icon}`}></i>
                 {st.label}
               </button>
               {subTab === st.key && (
@@ -268,7 +270,9 @@ const GetIccid = () => {
                 onClick={() => setCount(prev => Math.max(1, prev - 1))}
                 aria-label="Azalt"
                 disabled={loading}
-              >-</button>
+              >
+                <i className="bi bi-dash"></i>
+              </button>
               <input
                 // type="number"
                 min={1}
@@ -287,12 +291,15 @@ const GetIccid = () => {
                 onClick={() => setCount(prev => Math.min(10, prev + 1))}
                 aria-label="Arttır"
                 disabled={loading}
-              >+</button>
+              >
+                <i className="bi bi-plus"></i>
+              </button>
             </div>
             {/* <button className="countBtn-modern" onClick={handleClaim} disabled={loading}>
               {loading ? 'Alınıyor...' : 'Claim'}
             </button> */}
             <button className="countBtn-modern" onClick={handleNewClaim} disabled={loading}>
+              <i className="bi bi-download"></i>
               {loading ? 'Alınıyor...' : 'Claim'}
             </button>
             {error && <div style={{ color: '#e11d48', marginTop: 8, fontSize: '0.98rem' }}>{error}</div>}
@@ -311,7 +318,9 @@ const GetIccid = () => {
                       title="Kopyala"
                       onClick={() => navigator.clipboard.writeText(o)}
                       type="button"
-                    >📋</button>
+                    >
+                      <i className="bi bi-clipboard"></i>
+                    </button>
                   </div>
                 ))
               )}
@@ -322,6 +331,7 @@ const GetIccid = () => {
                 type="button"
                 onClick={() => navigator.clipboard.writeText(output.join('\n'))}
               >
+                <i className="bi bi-clipboard-check"></i>
                 Tümünü Kopyala
               </button>
             </div>
