@@ -24,8 +24,9 @@ const GetIccid = () => {
   const { baseUrl, user } = useAuth();
   const [imeiParams, setImeiParams] = useState([]);
   const [iccidParams, setIccidParams] = useState([]);
-  const [dealer, setDealer] = useState('7101717');
+  const [dealer, setDealer] = useState('');
   const [dealerParams, setDealerParams] = useState([]);
+  const [dealerCounts, setDealerCounts] = useState([]); // { dealer, gsm_type, count }
 
   // const typeAndSubTabToOldType = (type, subTab) => {
   //   if (type === 'postpaid' && subTab === 'fonk') {
@@ -108,13 +109,12 @@ const GetIccid = () => {
       const data = await response.json();
       if (!response.ok || data.error) {
         setError(data.error || 'Bir hata oluştu');
-        // setIccidParams([]);
       } else {
-        console.log(data)
+        // Beklenen format: [{ dealer, gsm_type: 'pre'|'post', count }]
+        setDealerCounts(Array.isArray(data) ? data : []);
       }
     } catch (err) {
       setError('Bir hata oluştu');
-      // setIccidParams([]);
     }
   }
 
@@ -125,6 +125,11 @@ const GetIccid = () => {
     getDealerParams();
     getIccidCountByDealer();
   }, []);
+
+  // Dealer değiştiğinde sayımları tazele
+  useEffect(() => {
+    getIccidCountByDealer();
+  }, [dealer]);
 
   // const handleClaim = async () => {
   //   let oldType = typeAndSubTabToOldType(type, subTab);
@@ -185,6 +190,8 @@ const GetIccid = () => {
       } else {
         setOutput(data.map(d => d.iccid));
         setError('');
+        // Başarılı claim sonrası sayımları tazele
+        getIccidCountByDealer();
       }
     } catch (err) {
       setError('Sunucu hatası');
@@ -193,6 +200,20 @@ const GetIccid = () => {
       setLoading(false);
     }
   }
+
+  // Buton içi rozet için sayıyı getir
+  const getCountForType = (tpValue) => {
+    // tpValue 'post' | 'pre'
+    const key = (tpValue || '').toLowerCase();
+    if (key !== 'post' && key !== 'pre') return 0;
+
+    if (dealer) {
+      const item = dealerCounts.find(d => String(d.dealer) === String(dealer));
+      return item ? (item[key] || 0) : 0;
+    }
+    // Dealer seçilmemişse tüm dealer toplamı
+    return dealerCounts.reduce((sum, d) => sum + (d[key] || 0), 0);
+  };
 
   return (
     <div className="pageWrapper">
@@ -257,8 +278,31 @@ const GetIccid = () => {
                     setType(tp.value);
                   }}
                   type="button"
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', padding: '10px 14px', borderRadius: '12px' }}
                 >
-                  {tp.name}
+                  <span style={{ fontWeight: 600 }}>{tp.name}</span>
+                  {tab === 'iccid' && (() => {
+                    const isPost = (tp.value || '').toLowerCase() === 'post';
+                    const count = getCountForType(tp.value);
+                    const badgeStyle = {
+                      background: isPost ? '#ece9ff' : '#e6fffb',
+                      color: isPost ? '#4338ca' : '#0f766e',
+                      borderRadius: '9999px',
+                      padding: '4px 10px',
+                      fontSize: '12px',
+                      fontWeight: 800,
+                      lineHeight: 1,
+                      minWidth: '36px',
+                      textAlign: 'center',
+                      boxShadow: '0 2px 6px rgba(0,0,0,0.08)',
+                      border: '1px solid rgba(0,0,0,0.06)'
+                    };
+                    return (
+                      <span className="typeCountBadge" style={badgeStyle}>
+                        {count}
+                      </span>
+                    );
+                  })()}
                 </button>
               ))}
             </div>
