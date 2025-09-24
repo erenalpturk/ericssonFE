@@ -25,6 +25,7 @@ const GetIccid = () => {
   const [imeiParams, setImeiParams] = useState([]);
   const [iccidParams, setIccidParams] = useState([]);
   const [dealer, setDealer] = useState('');
+  const [dealerName, setDealerName] = useState('');
   const [dealerParams, setDealerParams] = useState([]);
   const [dealerCounts, setDealerCounts] = useState([]); // { dealer, gsm_type, count }
 
@@ -254,7 +255,7 @@ const GetIccid = () => {
                       <button
                         key={dl.id}
                         className={dealer === dl.value ? "dealerBtn selected" : "dealerBtn"}
-                        onClick={() => setDealer(dl.value)}
+                        onClick={() => {setDealer(dl.value); setDealerName(dl.name)}}
                         type="button"
                       >
                         {dl.name}
@@ -269,6 +270,25 @@ const GetIccid = () => {
         <div className="contentRow">
           {/* Type */}
           <div className="typeCol">
+            <div className="infoBar">
+              <div className="infoItem">
+                <i className="bi bi-building"></i>
+                {/* <span className="infoLabel">Dealer</span> */}
+                <span className="infoValue">{dealerName || 'Seçilmedi'}</span>
+              </div>
+              <div className="divider"></div>
+              <div className="infoItem">
+                <i className="bi bi-layers"></i>
+                {/* <span className="infoLabel">Ortam</span> */}
+                <span className="infoValue">{subTab}</span>
+              </div>
+              <div className="divider"></div>
+              <div className="infoItem">
+                <i className="bi bi-sim"></i>
+                {/* <span className="infoLabel">Tip</span> */}
+                <span className={`infoBadge ${type === 'post' ? 'post' : 'pre'}`}>{type === 'post' ? 'Postpaid' : 'Prepaid'}</span>
+              </div>
+            </div>
             <div className="typeList">
               {(tab === 'iccid' ? iccidParams : imeiParams).map(tp => (
                 <button

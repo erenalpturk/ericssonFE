@@ -417,3 +417,58 @@
 .actionBtn-modern:hover {
   background: linear-gradient(90deg, #4f46e5 0%, #2563eb 100%);
 }
+
+.infoBar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: linear-gradient(135deg, rgba(102,126,234,0.08), rgba(118,75,162,0.08));
+  border: 2px solid rgba(35, 190, 51, 0.8);
+  padding: 10px 14px;
+  border-radius: 12px;
+  margin-bottom: 14px;
+}
+
+.infoItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.infoItem i {
+  color: #667eea;
+}
+
+.infoLabel {
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.infoValue {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.divider {
+  width: 1px;
+  height: 16px;
+  background: rgba(0,0,0,0.1);
+}
+
+.infoBadge {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 12px;
+  border: 1px solid rgba(0,0,0,0.06);
+}
+
+.infoBadge.post {
+  background: #ece9ff;
+  color: #4338ca;
+}
+
+.infoBadge.pre {
+  background: #e6fffb;
+  color: #0f766e;
+}
