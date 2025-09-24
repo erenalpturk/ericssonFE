@@ -27,33 +27,8 @@ const GetIccid = () => {
   const [dealer, setDealer] = useState('');
   const [dealerName, setDealerName] = useState('');
   const [dealerParams, setDealerParams] = useState([]);
-  const [dealerCounts, setDealerCounts] = useState([]); // { dealer, gsm_type, count }
-
-  // const typeAndSubTabToOldType = (type, subTab) => {
-  //   if (type === 'postpaid' && subTab === 'fonk') {
-  //     return 'fonkpos';
-  //   } else if (type === 'prepaid' && subTab === 'fonk') {
-  //     return 'fonkpre';
-  //   } else if (type === 'postpaid' && subTab === 'reg') {
-  //     return 'regpos';
-  //   } else if (type === 'prepaid' && subTab === 'reg') {
-  //     return 'regpre';
-  //   } else if (type === 'postpaid' && subTab === 'hotfix') {
-  //     return 'hotfixpos';
-  //   } else if (type === 'prepaid' && subTab === 'hotfix') {
-  //     return 'hotfixpre';
-  //   } else if (type === 'dkpostpaid' && subTab === 'fonk') {
-  //     return 'fonkdkpos';
-  //   } else if (type === 'dkprepaid' && subTab === 'fonk') {
-  //     return 'fonkdkpre';
-  //   } else if (type === 'dkpostpaid' && subTab === 'reg') {
-  //     return 'regdkpos';
-  //   } else if (type === 'dkprepaid' && subTab === 'reg') {
-  //     return 'regdkpre';
-  //   } else {
-  //     return null;
-  //   }
-  // }
+  const [dealerCounts, setDealerCounts] = useState([]); // { dealer, pre, post, total }
+  const [typeCounts, setTypeCounts] = useState({ pre: 0, post: 0 });
 
   const getDealerParams = async () => {
     try {
@@ -103,7 +78,6 @@ const GetIccid = () => {
     }
   }
 
-
   const getIccidCountByDealer = async () => {
     try {
       const response = await fetch(`${baseUrl}/iccid/iccidCountByDealer`);
@@ -111,14 +85,12 @@ const GetIccid = () => {
       if (!response.ok || data.error) {
         setError(data.error || 'Bir hata oluştu');
       } else {
-        // Beklenen format: [{ dealer, gsm_type: 'pre'|'post', count }]
         setDealerCounts(Array.isArray(data) ? data : []);
       }
     } catch (err) {
       setError('Bir hata oluştu');
     }
   }
-
 
   useEffect(() => {
     getImeiParams();
@@ -127,43 +99,19 @@ const GetIccid = () => {
     getIccidCountByDealer();
   }, []);
 
-  // Dealer değiştiğinde sayımları tazele
+  // Dealer veya sayımlar değiştiğinde typeCounts'ı güncelle
   useEffect(() => {
-    getIccidCountByDealer();
-  }, [dealer]);
-
-  // const handleClaim = async () => {
-  //   let oldType = typeAndSubTabToOldType(type, subTab);
-  //   setLoading(true);
-  //   setError('');
-  //   setOutput([]);
-  //   try {
-  //     const response = await fetch(`${baseUrl}/iccid/getIccid/${oldType}/${user.sicil_no}/${count}`, {
-  //       method: 'POST'
-  //     });
-  //     const data = await response.json();
-  //     if (!response.ok || data.error) {
-  //       setError(data.error || 'Bir hata oluştu');
-  //       setOutput([]);
-  //     } else {
-  //       if (data.iccid) {
-  //         setOutput([data.iccid]);
-  //       } else if (Array.isArray(data)) {
-  //         setOutput(data.map(d => d.iccid));
-  //       } else {
-  //         setOutput([]);
-  //       }
-  //     }
-  //   } catch (err) {
-  //     setError('Sunucu hatası');
-  //     setOutput([]);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
+    if (dealer) {
+      const item = dealerCounts.find(d => String(d.dealer) === String(dealer));
+      setTypeCounts({ pre: item?.pre || 0, post: item?.post || 0 });
+    } else {
+      const pre = dealerCounts.reduce((sum, d) => sum + (d.pre || 0), 0);
+      const post = dealerCounts.reduce((sum, d) => sum + (d.post || 0), 0);
+      setTypeCounts({ pre, post });
+    }
+  }, [dealer, dealerCounts]);
 
   const handleNewClaim = async () => {
-    //console.log(subTab, type, dealer, user.sicil_no, count);
     if (dealer === '') {
       setError('Dealer seçilmedi');
       setOutput([]);
@@ -201,20 +149,6 @@ const GetIccid = () => {
       setLoading(false);
     }
   }
-
-  // Buton içi rozet için sayıyı getir
-  const getCountForType = (tpValue) => {
-    // tpValue 'post' | 'pre'
-    const key = (tpValue || '').toLowerCase();
-    if (key !== 'post' && key !== 'pre') return 0;
-
-    if (dealer) {
-      const item = dealerCounts.find(d => String(d.dealer) === String(dealer));
-      return item ? (item[key] || 0) : 0;
-    }
-    // Dealer seçilmemişse tüm dealer toplamı
-    return dealerCounts.reduce((sum, d) => sum + (d[key] || 0), 0);
-  };
 
   return (
     <div className="pageWrapper">
@@ -275,19 +209,16 @@ const GetIccid = () => {
             <div className="infoBar">
               <div className="infoItem">
                 <i className="bi bi-building"></i>
-                {/* <span className="infoLabel">Dealer</span> */}
                 <span className="infoValue">{dealerName || 'Seçilmedi'}</span>
               </div>
               <div className="divider"></div>
               <div className="infoItem">
                 <i className="bi bi-layers"></i>
-                {/* <span className="infoLabel">Ortam</span> */}
                 <span className="infoValue">{subTab}</span>
               </div>
               <div className="divider"></div>
               <div className="infoItem">
                 <i className="bi bi-sim"></i>
-                {/* <span className="infoLabel">Tip</span> */}
                 <span className={`infoBadge ${type === 'post' ? 'post' : 'pre'}`}>{type === 'post' ? 'Postpaid' : 'Prepaid'}</span>
               </div>
             </div>
@@ -305,7 +236,7 @@ const GetIccid = () => {
                   <span style={{ fontWeight: 600 }}>{tp.name}</span>
                   {tab === 'iccid' && (() => {
                     const isPost = (tp.value || '').toLowerCase() === 'post';
-                    const count = getCountForType(tp.value);
+                    const countValue = typeCounts[(tp.value || '').toLowerCase()] || 0;
                     const badgeStyle = {
                       background: isPost ? '#ece9ff' : '#e6fffb',
                       color: isPost ? '#4338ca' : '#0f766e',
@@ -321,7 +252,7 @@ const GetIccid = () => {
                     };
                     return (
                       <span className="typeCountBadge" style={badgeStyle}>
-                        {count}
+                        {countValue}
                       </span>
                     );
                   })()}
