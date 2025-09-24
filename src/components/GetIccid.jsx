@@ -241,6 +241,8 @@ const GetIccid = () => {
                 className={subTab === st.key ? "subTab selected" : "subTab"}
                 onClick={() => {
                   setSubTab(st.key);
+                  setDealerName('');
+                  setDealer('');
                 }}
                 type="button"
               >
