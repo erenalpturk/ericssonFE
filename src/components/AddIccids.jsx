@@ -44,7 +44,7 @@ const AddIccids = ({ onClose }) => {
       const environment = iccidTypes.find(t => t.type === type).environment;
       const gsm_type = iccidTypes.find(t => t.type === type).gsm_type;
       const dealer = iccidTypes.find(t => t.type === type).dealer;
-      const response = await fetch(`${baseUrl}/iccid/formatAndInsertIccids/${type}/${environment}/${gsm_type}/${dealer}/${user.sicil_no}`, {
+      const response = await fetch(`${baseUrl}/iccid/formatAndInsertIccids/${type}/${environment}/${gsm_type}/${dealer}/${user.sicil_no}/15`, {
         method: 'POST',
         headers: {
           'Content-Type': 'text/plain',

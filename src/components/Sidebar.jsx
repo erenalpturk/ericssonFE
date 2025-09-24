@@ -84,13 +84,13 @@ function Sidebar({ isCollapsed, onToggle }) {
             color: 'text-emerald-500',
             roles: ['admin', 'support', 'tester']
         },
-        // {
-        //     path: '/iccid-management',
-        //     icon: 'bi-gear-wide-connected',
-        //     label: 'Yeni ICCID Ekle',
-        //     color: 'text-emerald-500',
-        //     roles: ['admin', 'support']
-        // },
+        {
+            path: '/iccid-management',
+            icon: 'bi-gear-wide-connected',
+            label: 'Yeni ICCID Ekle',
+            color: 'text-emerald-500',
+            roles: ['admin', 'support']
+        },
         {
             path: '/sms-decrypt',
             icon: 'bi-shield-lock-fill',
