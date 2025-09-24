@@ -497,7 +497,7 @@ const MyIccidList = ({ output }) => {
                       )}
                     </th>
                     <th onClick={() => handleSort('type')} style={{ cursor: 'pointer' }}>
-                      Tip
+                      Stok
                       {sortConfig.key === 'type' && (
                         <span className="ml-1">
                           {sortConfig.direction === 'asc' ? '↑' : '↓'}
@@ -513,7 +513,7 @@ const MyIccidList = ({ output }) => {
                       )}
                     </th>
                     <th onClick={() => handleSort('stock')} style={{ cursor: 'pointer' }}>
-                      Stok
+                      Tip
                       {sortConfig.key === 'type' && (
                         <span className="ml-1">
                           {sortConfig.direction === 'asc' ? '↑' : '↓'}
@@ -579,10 +579,10 @@ const MyIccidList = ({ output }) => {
                         </select> */}
                         <button
                           onClick={() => handleStatusChange(row.iccidid, 'available')}
-                          className={row.added_by === user.sicil_no ? 'action-btn success' : 'action-btn danger'}
+                          className={'action-btn danger'}
                           disabled={row.stock === 'available'}
                         >
-                          {row.added_by === user.sicil_no ? 'Temizle' : 'İade Et'}
+                          {'İade Et'}
                         </button>
                       </td>
                       <td className={`status ${getStatusColor(row.stock)}`}>

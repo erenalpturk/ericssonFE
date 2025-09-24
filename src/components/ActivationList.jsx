@@ -18,6 +18,9 @@ import MoreHorizOutlinedIcon from '@mui/icons-material/MoreHorizOutlined';
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import DeleteIcon from '@mui/icons-material/Delete';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import RestoreFromTrashIcon from '@mui/icons-material/RestoreFromTrash';
 import AddIcon from '@mui/icons-material/Add';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import { startOfDay, endOfDay } from 'date-fns';
@@ -44,6 +47,8 @@ const ActivationList = () => {
   const noteInputRef = useRef(null);
   const [noteLoading, setNoteLoading] = useState(null);
   const [statusLoading, setStatusLoading] = useState(null);
+  const [vsblLoading, setVsblLoading] = useState(null);
+  const [showDeleted, setShowDeleted] = useState(false);
   const [dateFilter, setDateFilter] = useState({
     startDate: null,
     endDate: null
@@ -127,6 +132,13 @@ const ActivationList = () => {
 
   const filterData = (data) => {
     return data.filter(item => {
+      // is_vsbl filtreleme: varsayılan aktifleri göster, silinenleri gizle
+      if (showDeleted) {
+        if (!(Number(item.is_vsbl) === 0)) return false;
+      } else {
+        if (Number(item.is_vsbl) === 0) return false;
+      }
+
       if (searchText) {
         const searchLower = searchText.toLowerCase();
         const matchesSearch = Object.values(item).some(value =>
@@ -307,6 +319,36 @@ const ActivationList = () => {
     }
   };
 
+  const handleVsblChange = async (activationId, is_vsbl) => {
+    try {
+      setVsblLoading(activationId);
+      const response = await fetch(`${baseUrl}/iccid/update-activation`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          activationId,
+          is_vsbl,
+        }),
+      });
+
+      if (response.ok) {
+        setActivations(prev => prev.map(activation =>
+          activation.activationid === activationId
+            ? { ...activation, is_vsbl: is_vsbl }
+            : activation
+        ));
+      } else {
+        showError('Görünürlük güncellenirken bir hata oluştu');
+      }
+    } catch (error) {
+      showError('Görünürlük güncellenirken bir hata oluştu');
+    } finally {
+      setVsblLoading(null);
+    }
+  };
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (editingNote && noteInputRef.current && !noteInputRef.current.contains(event.target)) {
@@ -478,6 +520,21 @@ const ActivationList = () => {
                   }}
                 />
               </div>
+              <Tooltip title={showDeleted ? 'Silinenleri gösteriliyor' : 'Silinenleri göster'} arrow>
+                <IconButton
+                  size="small"
+                  onClick={() => setShowDeleted((prev) => !prev)}
+                  sx={{
+                    background: showDeleted ? 'rgba(239,68,68,0.12)' : 'rgba(0,0,0,0.04)',
+                    color: showDeleted ? '#dc2626' : 'rgba(0,0,0,0.6)',
+                    '&:hover': {
+                      background: showDeleted ? 'rgba(239,68,68,0.18)' : 'rgba(0,0,0,0.08)'
+                    }
+                  }}
+                >
+                  <DeleteOutlineIcon sx={{ fontSize: 18 }} />
+                </IconButton>
+              </Tooltip>
               <Button
                 variant={isTodayFilterActive ? "contained" : "outlined"}
                 size="small"
@@ -870,6 +927,69 @@ const ActivationList = () => {
                                 <ContentCopyIcon fontSize="inherit" style={{ fontSize: 16 }} />
                               </IconButton>
                             </Tooltip>
+                            {Number(row.is_vsbl) === 0 ? (
+                              <Tooltip title="Geri Yükle" arrow>
+                                <span>
+                                  <IconButton
+                                    size="small"
+                                    onClick={() => handleVsblChange(row.activationid, 1)}
+                                    disabled={vsblLoading === row.activationid}
+                                    sx={{
+                                      background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(5, 150, 105, 0.08))',
+                                      borderRadius: '6px',
+                                      boxShadow: 1,
+                                      color: '#059669',
+                                      mt: 1,
+                                      '&:hover': {
+                                        background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.16), rgba(5, 150, 105, 0.16))',
+                                        color: '#047857'
+                                      },
+                                      '&:disabled': {
+                                        background: 'rgba(128, 128, 128, 0.1)',
+                                        color: 'rgba(128, 128, 128, 0.5)'
+                                      }
+                                    }}
+                                  >
+                                    {vsblLoading === row.activationid ? (
+                                      <CircularProgress size={16} sx={{ color: '#059669' }} />
+                                    ) : (
+                                      <RestoreFromTrashIcon fontSize="inherit" style={{ fontSize: 16 }} />
+                                    )}
+                                  </IconButton>
+                                </span>
+                              </Tooltip>
+                            ) : (
+                            <Tooltip title={Number(row.is_vsbl) === 0 ? 'Zaten silindi' : 'Sil'} arrow>
+                              <span>
+                                <IconButton
+                                  size="small"
+                                  onClick={() => handleVsblChange(row.activationid, 0)}
+                                  disabled={vsblLoading === row.activationid || Number(row.is_vsbl) === 0}
+                                  sx={{
+                                    background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.08), rgba(220, 38, 38, 0.08))',
+                                    borderRadius: '6px',
+                                    boxShadow: 1,
+                                    color: '#dc2626',
+                                    mt: 1,
+                                    '&:hover': {
+                                      background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.16), rgba(220, 38, 38, 0.16))',
+                                      color: '#b91c1c'
+                                    },
+                                    '&:disabled': {
+                                      background: 'rgba(128, 128, 128, 0.1)',
+                                      color: 'rgba(128, 128, 128, 0.5)'
+                                    }
+                                  }}
+                                >
+                                  {vsblLoading === row.activationid ? (
+                                    <CircularProgress size={16} sx={{ color: '#dc2626' }} />
+                                  ) : (
+                                    <DeleteIcon fontSize="inherit" style={{ fontSize: 16 }} />
+                                  )}
+                                </IconButton>
+                              </span>
+                            </Tooltip>
+                            )}
                             <Tooltip title={
                               // Eğer kullanıcı orijinal sahip ve data transfer edilmişse
                               row.transfer_user && row.original_owner === user.sicil_no && row.original_owner !== (row.current_owner || row.user)
