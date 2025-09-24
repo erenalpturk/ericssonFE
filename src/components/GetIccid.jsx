@@ -4,8 +4,8 @@ import { useAuth } from '../contexts/AuthContext';
 import MyIccidList from './MyIccidList';
 
 const tabList = [
-  { label: 'Iccid', key: 'iccid', icon: 'bi-credit-card-2-front' },
-  { label: 'Imei', key: 'imei', icon: 'bi-phone' },
+  { label: 'Iccid', key: 'iccid', icon: 'bi-credit-card-2-front', isActive: true },
+  { label: 'Imei', key: 'imei', icon: 'bi-phone', isActive: false },
 ];
 const envTabList = [
   { label: 'Fonk', key: 'fonk', icon: 'bi-gear' },
@@ -204,6 +204,8 @@ const GetIccid = () => {
               className={tab === t.key ? "tab selected" : "tab"}
               onClick={() => setTab(t.key)}
               type="button"
+              disabled={!t.isActive}
+              style={{ opacity: t.isActive ? 1 : 0.5, cursor: t.isActive ? 'pointer' : 'not-allowed' }}
             >
               <i className={`bi ${t.icon}`}></i>
               {t.label}
@@ -300,7 +302,7 @@ const GetIccid = () => {
             </button> */}
             <button className="countBtn-modern" onClick={handleNewClaim} disabled={loading}>
               <i className="bi bi-download"></i>
-              {loading ? 'Alınıyor...' : 'Claim'}
+              {loading ? 'Alınıyor...' : 'Al'}
             </button>
             {error && <div style={{ color: '#e11d48', marginTop: 8, fontSize: '0.98rem' }}>{error}</div>}
           </div>
