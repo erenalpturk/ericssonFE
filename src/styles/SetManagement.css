@@ -49,6 +49,19 @@
   box-shadow: 0 2px 8px rgba(0,0,0,0.03);
 }
 
+.set-accordion.oldest-set {
+  background: #ffebee;
+  border-color: #f44336;
+}
+
+.set-accordion.oldest-set .set-header {
+  background: #f443369f;
+  color: rgb(0, 0, 0);
+  border-radius: 10px 10px 0 0;
+}
+
+
+
 .set-header {
   display: flex;
   justify-content: space-between;
@@ -65,6 +78,22 @@
   gap: 12px;
   cursor: pointer;
   flex: 1;
+}
+
+.set-name-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.last-updated {
+  font-size: 0.8rem;
+  color: #666;
+  font-weight: 400;
+}
+
+.oldest-set .last-updated {
+  color: #000000;
 }
 
 .set-header-left:hover {

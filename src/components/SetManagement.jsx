@@ -205,7 +205,7 @@ const SetManagement = () => {
       setErrorMessage('ICCID girişi yapılmadı');
       return;
     }
-const type = gsmType === 'post' && environment === 'fonk' ? 'fonkpos' : gsmType === 'post' && environment === 'reg' ? 'regpos' : gsmType === 'post' && environment === 'hotfix' ? 'hotfixpos' : gsmType === 'pre' && environment === 'fonk' ? 'fonkpre' : gsmType === 'pre' && environment === 'reg' ? 'regpre' : gsmType === 'pre' && environment === 'hotfix' ? 'hotfixpre' : null;
+    const type = gsmType === 'post' && environment === 'fonk' ? 'fonkpos' : gsmType === 'post' && environment === 'reg' ? 'regpos' : gsmType === 'post' && environment === 'hotfix' ? 'hotfixpos' : gsmType === 'pre' && environment === 'fonk' ? 'fonkpre' : gsmType === 'pre' && environment === 'reg' ? 'regpre' : gsmType === 'pre' && environment === 'hotfix' ? 'hotfixpre' : null;
     try {
       setLoading(true);
       const response = await fetch(`${baseUrl}/iccid/formatAndInsertIccids/${type}/${environment}/${gsmType}/${dealer}/${user.sicil_no}/${selectedSet.id}`, {
@@ -268,7 +268,7 @@ const type = gsmType === 'post' && environment === 'fonk' ? 'fonkpos' : gsmType 
   };
 
   // Set içindeki ICCID'leri temizle
-  const handleClearSet = async (setId) => {
+  const handleUpdateSetIccidStatus = async (setId, status) => {
     if (!window.confirm('Bu set içindeki tüm ICCID\'leri temizlemek istediğinizden emin misiniz?')) {
       return;
     }
@@ -280,7 +280,7 @@ const type = gsmType === 'post' && environment === 'fonk' ? 'fonkpos' : gsmType 
         },
         body: JSON.stringify({
           set_table_id: setId,
-          status: 'available'
+          status: status
         }),
       });
 
@@ -347,11 +347,33 @@ const type = gsmType === 'post' && environment === 'fonk' ? 'fonkpos' : gsmType 
       <div className="sets-list">
         {sets.map(set => {
           const counts = getSetStatusCounts(set.id);
+          
+          // En eski güncelleme tarihini bul
+          const oldestDate = sets
+            .filter(s => s.last_updated_at)
+            .reduce((oldest, current) => {
+              if (!oldest) return current;
+              return new Date(current.last_updated_at) < new Date(oldest.last_updated_at) ? current : oldest;
+            }, null);
+          
+          const isOldest = oldestDate && set.last_updated_at && 
+            new Date(set.last_updated_at).getTime() === new Date(oldestDate.last_updated_at).getTime();
+          
           return (
-            <div key={set.id} className="set-accordion">
+            <div key={set.id} className={`set-accordion ${isOldest ? 'oldest-set' : ''}`}>
               <div className="set-header">
                 <div className="set-header-left" onClick={() => toggleSet(set.id)}>
-                  <span>{set.set_name}</span>
+                  <div className="set-name-container">
+                    <span>{set.set_name}</span>
+                    {set.last_updated_at && (
+                      <span className="last-updated">
+                        Son güncelleme: {new Date(set.last_updated_at).toLocaleString("tr-TR", {
+                          dateStyle: "short",
+                          timeStyle: "short",
+                        })}
+                      </span>
+                    )}
+                  </div>
                   <span className="arrow">{set.open ? '▲' : '▼'}</span>
                 </div>
                 <div className="set-header-actions">
@@ -365,11 +387,21 @@ const type = gsmType === 'post' && environment === 'fonk' ? 'fonkpos' : gsmType 
                     className="clear-set-btn"
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleClearSet(set.id);
+                      handleUpdateSetIccidStatus(set.id, 'available');
                     }}
                     title="Set içindeki tüm ICCID'leri temizle"
                   >
-                    Temizle
+                    Temizlendi
+                  </button>
+                  <button
+                    className="clear-set-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleUpdateSetIccidStatus(set.id, 'sold');
+                    }}
+                    title="Set içindeki tüm ICCID'leri satıldı olarak işaretle"
+                  >
+                    Satıldı
                   </button>
                   <button
                     className="delete-set-btn"
@@ -418,7 +450,10 @@ const type = gsmType === 'post' && environment === 'fonk' ? 'fonkpos' : gsmType 
                         </span>
                         <span className="detail-item">
                           <span className="detail-label">Kullanma tarihi:</span>
-                          <span className="detail-value">{iccid.updated_at}</span>
+                          <span className="detail-value">{new Date(iccid.updated_at).toLocaleString("tr-TR", {
+                            dateStyle: "short",
+                            timeStyle: "short",
+                          })}</span>
                         </span>
                         <span className={`stock-badge ${iccid.stock}`}>
                           {iccid.stock === 'available' ? 'Müsait' :
