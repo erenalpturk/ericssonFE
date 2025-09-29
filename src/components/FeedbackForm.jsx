@@ -68,8 +68,6 @@ const FeedbackForm = ({ onSuccess, onClose }) => {
                 user_email: user.email || ''
             };
             
-            console.log('Feedback Payload:', payload);
-            
             const response = await axios.post('/feedback/create', payload);
             
             if (response.data.success) {

@@ -331,7 +331,7 @@ const SetManagement = () => {
       fetchUserAllIccid();
     }
   }, [user]);
-
+console.log(sets);
   return (
     <div className="modern-page">
       <h1>Set Yönetimi</h1>

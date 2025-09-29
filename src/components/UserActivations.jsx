@@ -19,20 +19,10 @@ const UserActivations = () => {
       setLoading(true);
       setError(null);
       
-      console.log('Fetching user activations with period:', period);
       const url = `${baseUrl}/stats/user-activations?period=${period}`;
-      console.log('Request URL:', url);
       
       const response = await fetch(url);
       const result = await response.json();
-      
-      console.log('Response received:', {
-        success: result.success,
-        period: result.data?.period,
-        totalActivations: result.data?.total_stats?.total_activations,
-        totalUsers: result.data?.total_stats?.total_users,
-        warning: result.data?.warning
-      });
       
       if (result.success) {
         setData(result.data);
